@@ -10,3 +10,6 @@ install.packages("RColorBrewer")
 
 # for printing tables compatible with LaTeX
 install.packages("xtable")
+
+# enables the use of strings (for plot titles etc.)
+install.packages("tidyverse")
