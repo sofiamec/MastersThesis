@@ -9,12 +9,13 @@ Marine <- read.table("../../Data/Raw_data/Marine_COGcountsRaw.txt", header=T, ro
 #===================================================================================================================================
 #=========================================== Functions ==============================================================================
 #===================================================================================================================================
-## Resample-function
-  # input arguments:
-    # Data = the data to sample from
-    # n = number of samples in the new datasets
-    # m = sequencing depth for each sample in the new datasets
-  # output:  the resampled data in a large dataframe containing n*2 groups
+# Resample
+# This function resamples a new datasets with n*2 samples and m reads in each sample 
+# input arguments:
+  # Data = the data to sample from
+  # n = number of samples in the new datasets
+  # m = sequencing depth for each sample in the new datasets
+# output:  the resampled data in a large dataframe containing n*2 groups
 resample = function(Data, n, m){
   sampleVector=sample(ncol(Data), 2*n)                      # vector w. the columnnumber of the sampled samples for both datasets
   DataNew=data.frame(row.names(Data), stringsAsFactors = F) # dataframe to put the resampled data in
@@ -36,7 +37,7 @@ resample = function(Data, n, m){
 #===================================================================================================================================
 
 # Summary of low counts
-# For a given dataset, this function computes genes which will be removed when filtering.
+# For a given dataset, this function computes genes which should be removed when filtering.
 # It also prints how many genes will be removed respectively kept.
 # input: Data = the data to be filtered
 # output: r = a logical vector with 1 if a gene should be removed, and 0 if it should be kept. 
@@ -49,20 +50,66 @@ compute_low_counts=function(Data){
     b[i]<-sum(Data[i,]==0)/ncol(Data)>0.75
     r[i]<-a[i]+b[i]
   }
-  cat(sprintf("Removed: %s\n", sum(r!=0)))
-  cat(sprintf("Kept: %s\n", sum(r==0)))
+  cat(sprintf("Number of genes with low counts:        %s\n", sum(r!=0)))
+  cat(sprintf("Number of genes wiht acceptable counts: %s\n", sum(r==0)))
   return(r)
+}
+
+#===================================================================================================================================
+
+# Remove low counts
+# For a given dataset, this function removes genes with low counts (>75 % or an average count <3).
+# input: Data = the data to remove genes from
+# output: 
+remove_low_counts=function(Data){
+  
+  a=rowSums(Data)<3
+  b=vector()
+  r=vector()
+  for (i in 1:nrow(Data)) {
+    b[i]<-sum(Data[i,]==0)/ncol(Data)>0.75
+    r[i]<-a[i]+b[i]
+  }
+  FilteredData=Data[r==0,]
+  return(FilteredData)
 }
 
 #===================================================================================================================================
 #===================================================================================================================================
 
+################################### Test whether to filter the original data or not  ##############################
+# Remove when desicion has been made!
 
-ResampledData=resample(Gut2, n=50, m=2000000)  # resampling of data
-Data1=ResampledData[[1]]                       # extract resampled dataset1
-Data2=ResampledData[[2]]                       # extract resampled dataset2
+# WITHOUT filtering the original data
+ResampData=resample(Gut2, n=60, m=2000000)  # resampling of data
+Data1=ResampData[[1]]                       # extract resampled dataset1
+Data2=ResampData[[2]]                       # extract resampled dataset2
 
 # check number of genes wiht low counts in the prduced datasets
-countsData1=compute_low_counts(Data1)
-countsData2=compute_low_counts(Data2)
+countsData1=compute_low_counts(Data1) 
+countsData2=compute_low_counts(Data2) 
+
+# filter resampled datasets
+Data1Filter=remove_low_counts(Data1)
+summary(colSums(Data1Filter))
+Data2Filter=remove_low_counts(Data2)
+summary(colSums(Data2Filter))
+
+
+# WITH filtering of the original data
+Gut2Filter <- remove_low_counts(Gut2)
+
+ResampData2=resample(Gut2Filter, n=60, m=2000000)  # resampling of data
+Data3=ResampData2[[1]]                             # extract resampled dataset1
+Data4=ResampData2[[2]]                             # extract resampled dataset2
+
+# check number of genes wiht low counts in the prduced datasets
+countsData3=compute_low_counts(Data3) #remove: 62 keep 3536
+countsData4=compute_low_counts(Data4) # remove: 33 keep: 3565
+
+# Filter the resampled datasets
+Data3Filter=remove_low_counts(Data3)
+summary(colSums(Data3Filter))
+Data4Filter=remove_low_counts(Data4)
+summary(colSums(Data4Filter))
 
