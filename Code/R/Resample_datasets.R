@@ -102,3 +102,10 @@ countsResampData2=compute_low_counts(ResampData2)
 ResampData2Filter=remove_low_counts(ResampData2)
 summary(colSums(ResampData2Filter))
 
+#################################################################################################################
+
+# Save generated dataset to intermediate folder
+write.csv(ResampData2, file="../../Intermediate/ResampData.csv")
+
+
+
