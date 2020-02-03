@@ -31,7 +31,7 @@ resample = function(Data, n, m){
   rownames(DataNew) <- DataNew[,1]                  # add genes as row names
   DataNew <- DataNew[,-1]                           # remove column containg genes
   DataNew[is.na(DataNew)] <- 0                      # set all "NA" to 0
-  return(list(DataNew[1:n], DataNew[(n+1):(2*n)]))  # didivde into two datasets
+  return(DataNew)  
 }
 
 #===================================================================================================================================
@@ -82,34 +82,23 @@ remove_low_counts=function(Data){
 
 # WITHOUT filtering the original data
 ResampData=resample(Gut2, n=60, m=2000000)  # resampling of data
-Data1=ResampData[[1]]                       # extract resampled dataset1
-Data2=ResampData[[2]]                       # extract resampled dataset2
 
-# check number of genes wiht low counts in the prduced datasets
-countsData1=compute_low_counts(Data1) 
-countsData2=compute_low_counts(Data2) 
+# check number of genes wiht low counts in the prduced dataset
+countsResampData=compute_low_counts(ResampData)  
 
 # filter resampled datasets
-Data1Filter=remove_low_counts(Data1)
-summary(colSums(Data1Filter))
-Data2Filter=remove_low_counts(Data2)
-summary(colSums(Data2Filter))
-
+ResampDataFilter=remove_low_counts(ResampData)
+summary(colSums(ResampDataFilter))
 
 # WITH filtering of the original data
 Gut2Filter <- remove_low_counts(Gut2)
 
 ResampData2=resample(Gut2Filter, n=60, m=2000000)  # resampling of data
-Data3=ResampData2[[1]]                             # extract resampled dataset1
-Data4=ResampData2[[2]]                             # extract resampled dataset2
 
 # check number of genes wiht low counts in the prduced datasets
-countsData3=compute_low_counts(Data3) #remove: 62 keep 3536
-countsData4=compute_low_counts(Data4) # remove: 33 keep: 3565
+countsResampData2=compute_low_counts(ResampData2)
 
 # Filter the resampled datasets
-Data3Filter=remove_low_counts(Data3)
-summary(colSums(Data3Filter))
-Data4Filter=remove_low_counts(Data4)
-summary(colSums(Data4Filter))
+ResampData2Filter=remove_low_counts(ResampData2)
+summary(colSums(ResampData2Filter))
 
