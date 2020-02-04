@@ -1,5 +1,3 @@
-library(gsubfn) 
-
 # Resample new datasets
 
 # Original datasets
@@ -7,6 +5,9 @@ Gut1 <-read.table("../../Data/Raw_data/HumanGutI_COGcountsRaw.txt", header=T, ro
 Gut2 <- read.table("../../Data/Raw_data/HumanGutII_COGcountsRaw.txt", header=T, row.names = 1)
 Marine <- read.table("../../Data/Raw_data/Marine_COGcountsRaw.txt", header=T, row.names = 1)
 
+# In order to get the same results each time
+seed=100
+set.seed(seed=seed)
 
 #===================================================================================================================================
 #=========================================== Functions ==============================================================================
@@ -77,6 +78,59 @@ remove_low_counts=function(Data){
 }
 
 #===================================================================================================================================
+
+# Introducing DAGs
+# For a resampled dataset (including both groups), this function introduces DAGs by
+# downsampling a given fraction of genes. The DAGs will be balanced in the two groups.
+# Input: Data = the resampled dataset including both groups (dataset 1 and 2)
+#        q = the fold change. Ex. 10. Will result in relative abundance between datasets.
+#        f = the desired (total) fraction of genes to be downsampled (the output will not follow this exactly)
+# Outut: downSampledData = the new dataset with introduced DAGs. Analysis should be performed on this dataset
+#        DAGs = a matrix with an overview of which genes have been downsampled in which dataset with the given q
+introducing_DAGs = function(Data, q, f){
+  
+  downSampledData = Data
+  nDAGs = 2 * round(f*nrow(Data)/2) # the total number of genes to be downsampled if we don't allow unbalanced DAGs
+  #nDAGs = trunc(f*nrow(Data)+0.5) # the total number of genes to be downsampled if we allow unbalanced DAGs
+  
+  # Creating empty matrix for overview of DAGs
+  DAGs = matrix(ncol = 2, nrow = nrow(Data)) 
+  colnames(DAGs) = c(sprintf("Sample 1 to %d", ncol(Data)/2),sprintf("Sample %d to %d", ncol(Data)/2+1, ncol(Data)))
+  rownames(DAGs) <- rownames(Data)
+  # Selecting random genes
+  randomGenes <- sample(nrow(Data),nDAGs) # Selects n random genes in the dataset which will be downsampled. 
+  if (nDAGs==1|| nDAGs==0) {
+    print("Too few DAGs introduced")
+    nDAGs=0
+  }
+  # if we don't allow unbalanced DAGs
+  rG1 <- randomGenes[1:(nDAGs/2)] # will be downsampled in dataset 1 
+  rG2 <- randomGenes[(nDAGs/2+1):nDAGs] # will be downsampled in dataset 2
+  
+  
+  # if we allow unbalanced DAGs (May not work)
+  #rG1 <- randomGenes[1:floor(nDAGs/2)] # will be downsampled in dataset 1 
+  #rG2 <- randomGenes[ceiling(nDAGs/2):nDAGs] # will be downsampled in dataset 2
+  
+  for (gene in rG1) {
+    for (sample in 1:(ncol(Data)/2)) {
+      downSampledData[gene,sample] <- rbinom(n = 1 ,size = Data[gene,sample] ,prob = 1/q)
+    }
+    DAGs[gene, 1] <- -q
+  }
+  
+  for (gene in rG2) {
+    for (sample in (ncol(Data)/2+1):(ncol(Data))) {
+      downSampledData[gene,sample] <- rbinom(n = 1 ,size = Data[gene,sample] ,prob = 1/q) 
+      DAGs[gene, 2] <- -q
+    }
+  }
+  
+  DAGs<-DAGs[rowSums(DAGs, na.rm=T)!=0,]
+  return(list(downSampledData,DAGs))
+}
+
+#===================================================================================================================================
 #===================================================================================================================================
 
 ################################### Test whether to filter the original data or not  ##############################
@@ -114,48 +168,11 @@ ResampData2 <- read.csv(file="../../Intermediate/ResampData.csv", header = T, ro
 
 #################################################################################################################
 
-test<-ResampData2[1:19,1:20]
+# Downsampling the resampled dataset
+resultList<- introducing_DAGs(Data = ResampData2, q = 10, f = 0.10)
+downSampledData<-resultList[[1]]
+DAGs<-resultList[[2]]
 
-
-Data=test
-q=10 # the fold change. Will result in relative abundance between datasets
-f=0.10 # the total fraction of genes to be downsampled in the datasets
-
-# returns a detaset with downsampled genes. The dataset includes both groups (dataset 1 and 2)
-# It also returns a matrix with an overview of which genes that have been downsampled in which dataset
-introducing_DAGs = function(Data, q, f){
-  
-  downSampledData = Data
-  nDAGs = round(f*nrow(Data)) # the total number of genes to be downsampled
-  # Creating empty matrix for overview of DAGs
-  DAGs = matrix(ncol = 2, nrow = nrow(Data)) 
-  colnames(DAGs) = c(sprintf("Sample 1 to %d", ncol(Data)/2),sprintf("Sample %d to %d", ncol(Data)/2+1, ncol(Data)))
-  rownames(DAGs) <- rownames(Data)
-  # Selecting random genes
-  randomGenes <- sample(nrow(Data),nDAGs) # Selects n random genes in the dataset which will be downsampled. 
-  rG1 <- randomGenes[1:(nDAGs/2)] # will be downsampled in dataset 1 
-  rG2 <- randomGenes[(nDAGs/2+1):nDAGs] # will be downsampled in dataset 2
-  
-  for (gene in rG1) {
-    for (sample in 1:(ncol(Data)/2)) {
-      downSampledData[gene,sample] <- rbinom(n = 1 ,size = Data[gene,sample] ,prob = 1/q)
-    }
-    DAGs[gene, 1] <- -q
-    
-  }
-  
-  for (gene in rG2) {
-    for (sample in (ncol(Data)/2+1):(ncol(Data))) {
-      downSampledData[gene,sample] <- rbinom(n = 1 ,size = Data[gene,sample] ,prob = 1/q) 
-      DAGs[gene, 2] <- -q
-    }
-    
-  }
-  
-  DAGs<-DAGs[rowSums(DAGs, na.rm=T)!=0,]
-  return(list(downSampledData,DAGs))
-}
-
-
-list[new,matrix] <- introducing_DAGs(Data, q, f)
-
+# Saving downsampled datasets and corresponding overview of DAGs
+write.csv(downSampledData, file=sprintf("../../Intermediate/downSampledData_seed%d.csv",seed))
+write.csv(DAGs, file=sprintf("../../Intermediate/DAGs_seed%d.csv",seed))
