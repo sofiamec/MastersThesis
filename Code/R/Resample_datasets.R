@@ -1,3 +1,5 @@
+library(gsubfn) 
+
 # Resample new datasets
 
 # Original datasets
@@ -10,19 +12,19 @@ Marine <- read.table("../../Data/Raw_data/Marine_COGcountsRaw.txt", header=T, ro
 #=========================================== Functions ==============================================================================
 #===================================================================================================================================
 # Resample
-# This function resamples a new datasets with n*2 samples and m reads in each sample 
+# This function resamples a new datasets with n*2 samples and d reads in each sample (depth) 
 # input arguments:
   # Data = the data to sample from
   # n = number of samples in the new datasets
-  # m = sequencing depth for each sample in the new datasets
+  # d = sequencing depth for each sample in the new datasets
 # output:  the resampled data in a large dataframe containing n*2 groups
-resample = function(Data, n, m){
+resample = function(Data, n, d){
   sampleVector=sample(ncol(Data), 2*n)                      # vector w. the columnnumber of the sampled samples for both datasets
   DataNew=data.frame(row.names(Data), stringsAsFactors = F) # dataframe to put the resampled data in
   
   for (i in 1:(2*n)){
     readList <- rep(row.names(Data), times=Data[,sampleVector[i]])                # vector containing each read as one entry 
-    sampledReads <- sample(readList, size=m)                                      # vector with m resampled reads from "readList"
+    sampledReads <- sample(readList, size=d)                                      # vector with d resampled reads from "readList"
     sampledVector <- as.data.frame(table(sampledReads), stringsAsFactors = FALSE) # assemble vector "sampledReads" into dataframe
     colnames(sampledVector) <- c("Gene",colnames(Data[sampleVector[i]]))          # name the columns according to the sample-name  
     DataNew <- merge(DataNew, sampledVector, by.x = 1, by.y = 1, all.x = T)       # insert "sampledVector" to "DataNew"
@@ -81,7 +83,7 @@ remove_low_counts=function(Data){
 # Remove when desicion has been made!
 
 # WITHOUT filtering the original data
-ResampData=resample(Gut2, n=60, m=2000000)  # resampling of data
+ResampData=resample(Gut2, n=60, d=2000000)  # resampling of data
 
 # check number of genes wiht low counts in the prduced dataset
 countsResampData=compute_low_counts(ResampData)  
@@ -93,7 +95,7 @@ summary(colSums(ResampDataFilter))
 # WITH filtering of the original data
 Gut2Filter <- remove_low_counts(Gut2)
 
-ResampData2=resample(Gut2Filter, n=60, m=2000000)  # resampling of data
+ResampData2=resample(Gut2Filter, n=60, d=2000000)  # resampling of data
 
 # check number of genes wiht low counts in the prduced datasets
 countsResampData2=compute_low_counts(ResampData2)
@@ -107,5 +109,53 @@ summary(colSums(ResampData2Filter))
 # Save generated dataset to intermediate folder
 write.csv(ResampData2, file="../../Intermediate/ResampData.csv")
 
+# Load generated dataset from intermediate folder
+ResampData2 <- read.csv(file="../../Intermediate/ResampData.csv", header = T, row.names = 1)
 
+#################################################################################################################
+
+test<-ResampData2[1:19,1:20]
+
+
+Data=test
+q=10 # the fold change. Will result in relative abundance between datasets
+f=0.10 # the total fraction of genes to be downsampled in the datasets
+
+# returns a detaset with downsampled genes. The dataset includes both groups (dataset 1 and 2)
+# It also returns a matrix with an overview of which genes that have been downsampled in which dataset
+introducing_DAGs = function(Data, q, f){
+  
+  downSampledData = Data
+  nDAGs = round(f*nrow(Data)) # the total number of genes to be downsampled
+  # Creating empty matrix for overview of DAGs
+  DAGs = matrix(ncol = 2, nrow = nrow(Data)) 
+  colnames(DAGs) = c(sprintf("Sample 1 to %d", ncol(Data)/2),sprintf("Sample %d to %d", ncol(Data)/2+1, ncol(Data)))
+  rownames(DAGs) <- rownames(Data)
+  # Selecting random genes
+  randomGenes <- sample(nrow(Data),nDAGs) # Selects n random genes in the dataset which will be downsampled. 
+  rG1 <- randomGenes[1:(nDAGs/2)] # will be downsampled in dataset 1 
+  rG2 <- randomGenes[(nDAGs/2+1):nDAGs] # will be downsampled in dataset 2
+  
+  for (gene in rG1) {
+    for (sample in 1:(ncol(Data)/2)) {
+      downSampledData[gene,sample] <- rbinom(n = 1 ,size = Data[gene,sample] ,prob = 1/q)
+    }
+    DAGs[gene, 1] <- -q
+    
+  }
+  
+  for (gene in rG2) {
+    for (sample in (ncol(Data)/2+1):(ncol(Data))) {
+      downSampledData[gene,sample] <- rbinom(n = 1 ,size = Data[gene,sample] ,prob = 1/q) 
+      DAGs[gene, 2] <- -q
+    }
+    
+  }
+  
+  DAGs<-DAGs[rowSums(DAGs, na.rm=T)!=0,]
+  return(list(downSampledData,DAGs))
+}
+
+
+list[new,matrix] <- introducing_DAGs(Data, q, f)
 
