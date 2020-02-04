@@ -13,3 +13,16 @@ install.packages("xtable")
 
 # enables the use of strings (for plot titles etc.)
 install.packages("tidyverse")
+
+# for analysing the datasets and identify DAGs
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+BiocManager::install("DESeq2")
+
+# for analysing the datasets and identify DAGs
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+BiocManager::install("edgeR")
+
+# for calculating overdispersion in edgeR
+install.packages("statmod")
