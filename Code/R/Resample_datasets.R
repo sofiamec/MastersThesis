@@ -13,27 +13,26 @@ set.seed(seed=seed)
 #=========================================== Functions ==============================================================================
 #===================================================================================================================================
 # Resample
-# This function resamples a new datasets with n*2 samples and d reads in each sample (depth) 
+# This function resamples a new datasets with m*2 samples and d reads in each sample (depth) 
 # input arguments:
   # Data = the data to sample from
-  # n = number of samples in the new datasets
+  # m = number of samples in the new datasets
   # d = sequencing depth for each sample in the new datasets
-# output:  the resampled data in a large dataframe containing n*2 groups
-resample = function(Data, n, d){
-  sampleVector=sample(ncol(Data), 2*n)                      # vector w. the columnnumber of the sampled samples for both datasets
+# output:  the resampled data in a large dataframe containing m*2 groups
+resample = function(Data, m, d){
+  sampleVector=sample(ncol(Data), 2*m)                      # vector w. the columnnumber of the sampled samples for both datasets
   DataNew=data.frame(row.names(Data), stringsAsFactors = F) # dataframe to put the resampled data in
   
-  for (i in 1:(2*n)){
+  for (i in 1:(2*m)){
     readList <- rep(row.names(Data), times=Data[,sampleVector[i]])                # vector containing each read as one entry 
     sampledReads <- sample(readList, size=d)                                      # vector with d resampled reads from "readList"
     sampledVector <- as.data.frame(table(sampledReads), stringsAsFactors = FALSE) # assemble vector "sampledReads" into dataframe
     colnames(sampledVector) <- c("Gene",colnames(Data[sampleVector[i]]))          # name the columns according to the sample-name  
     DataNew <- merge(DataNew, sampledVector, by.x = 1, by.y = 1, all.x = T)       # insert "sampledVector" to "DataNew"
   }
-  
-  rownames(DataNew) <- DataNew[,1]                  # add genes as row names
-  DataNew <- DataNew[,-1]                           # remove column containg genes
-  DataNew[is.na(DataNew)] <- 0                      # set all "NA" to 0
+
+  DataNew <- data.frame(DataNew[,-1], row.names=DataNew[,1]) # put first column (genes) as rownames  
+  DataNew[is.na(DataNew)] <- 0                               # set all "NA" to 0
   return(DataNew)  
 }
 
@@ -137,7 +136,7 @@ introducing_DAGs = function(Data, q, f){
 # Remove when desicion has been made!
 
 # WITHOUT filtering the original data
-ResampData=resample(Gut2, n=60, d=2000000)  # resampling of data
+ResampData=resample(Gut2, m=60, d=2000000)  # resampling of data
 
 # check number of genes wiht low counts in the prduced dataset
 countsResampData=compute_low_counts(ResampData)  
@@ -149,7 +148,7 @@ summary(colSums(ResampDataFilter))
 # WITH filtering of the original data
 Gut2Filter <- remove_low_counts(Gut2)
 
-ResampData2=resample(Gut2Filter, n=60, d=2000000)  # resampling of data
+ResampData2=resample(Gut2Filter, m=60, d=2000000)  # resampling of data
 
 # check number of genes wiht low counts in the prduced datasets
 countsResampData2=compute_low_counts(ResampData2)
