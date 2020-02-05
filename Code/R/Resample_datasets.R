@@ -161,10 +161,10 @@ summary(colSums(ResampData2Filter))
 #################################################################################################################
 
 # Save generated dataset to intermediate folder
-write.csv(ResampData2, file="../../Intermediate/ResampData.csv")
+write.csv(ResampData2, file=sprintf("../../Intermediate/ResampData_seed%d.csv",seed))
 
 # Load generated dataset from intermediate folder
-ResampData2 <- read.csv(file="../../Intermediate/ResampData.csv", header = T, row.names = 1)
+ResampData2 <- read.csv(file=sprintf("../../Intermediate/ResampData_seed%d.csv",seed), header = T, row.names = 1)
 
 #################################################################################################################
 
