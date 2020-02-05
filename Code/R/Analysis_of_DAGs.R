@@ -62,27 +62,30 @@ edgeR_analysis=function(Data){
 }
 #===================================================================================================================================
 
+################################## Comparison of methods ########################################
+# Maybe remove when one method is chosen 
 
 ######## DESeq2 ##########
 ResDESeq=DESeq2_analysis(Data = DagData)
 sum(ResDESeq$padj<0.05)
 
-# how many of the artificially introduced DAGs are among the most significant genes
+
+# how many of the artificially introduced DAGs are among the significant genes
 matchDESeq=c()
 for (i in 1:nrow(Dags)) {
-  matchDESeq[i]=sum(grepl(rownames(Dags)[i], rownames(ResDESeq[1:nrow(Dags),])))
+  matchDESeq[i]=sum(grepl(rownames(Dags)[i], rownames(ResDESeq[which(ResDESeq$padj<0.05),])))
 }
 sum(matchDESeq) 
- 
+
 
 ######## edgeR ##########
 ResEdge=edgeR_analysis(Data = DagData)
 sum(ResEdge$FDR<0.05)
 
-# how many of the artificially introduced DAGs are among the most significant genes
+# how many of the artificially introduced DAGs are among the significant genes
 matchEdge=c()
 for (i in 1:nrow(Dags)) {
-  matchEdge[i]=sum(grepl(rownames(Dags)[i], rownames(ResEdge[1:nrow(Dags),])))
+  matchEdge[i]=sum(grepl(rownames(Dags)[i], rownames(ResEdge[which(ResEdge$FDR<0.05),])))
 }
 sum(matchEdge)
 
