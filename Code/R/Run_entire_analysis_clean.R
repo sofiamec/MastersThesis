@@ -6,9 +6,13 @@ Marine <- read.table("../../Data/Raw_data/Marine_COGcountsRaw.txt", header=T, ro
 repeats=1
 
 # For a certain number of repeats, perform the entire analysis for Gut2:
-seed=1:repeats # In order to get the same results each time
+seeds=1:repeats # In order to get the same results each time
+AUCs_5 = vector(length = repeats)
+AUCs_10= vector(length = repeats)
 
 for (i in 1:repeats){
+  
+  seed=seeds[i]
   # Select dataset for resampling and downsampling
   Data=Gut2
   m=60          # Number of samples in each group (total nr samples = 2*m)
@@ -22,4 +26,11 @@ for (i in 1:repeats){
   # Run the code for analysing DAGs
 
   # ... not done
+  
+  # Save the results
+  
+  #AUCs_5[i] =
+  #AUCs_10[i] =
 }
+
+# Plot mean AUC-values/RoC-curves
