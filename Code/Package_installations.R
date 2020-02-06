@@ -18,11 +18,13 @@ install.packages("tidyverse")
 if (!requireNamespace("BiocManager", quietly = TRUE))
   install.packages("BiocManager")
 BiocManager::install("DESeq2")
-
 # for analysing the datasets and identify DAGs
-if (!requireNamespace("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
+#if (!requireNamespace("BiocManager", quietly = TRUE))
+#  install.packages("BiocManager")
 BiocManager::install("edgeR")
 
 # for calculating overdispersion in edgeR
 install.packages("statmod")
+
+# For computing AUCs
+install.packages("DescTools")

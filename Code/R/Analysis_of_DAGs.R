@@ -3,6 +3,9 @@
 # load required packages
 library(DESeq2)
 library(edgeR)
+library(DescTools)
+library(ggplot2)
+#library(RColorBrewer)
 
 seed=100  # set seed 
 
@@ -62,6 +65,47 @@ edgeR_analysis=function(Data){
 }
 #===================================================================================================================================
 
+# Computing ROC-curves and AUC-values
+# For the results from analysing DAGs in a dataset and the corresponding known DAGs,
+# this function computes AUC-values and plots the ROC-curve.
+# Inputs:   ResultsData = Results from DESeq2 or edgeR analysis. Ex: ResDESeq or ResEdge
+#           Dags = the artificially introduced DAGs (known)
+# Outputs:  ROC = a dataframe with the computed TPR- and FPR-values
+#           AUCs = The computed AUC for the entire ROC-curve and for FPR-cutoff 0.05 and 0.10.
+Compute_ROC_AUC = function(ResultsData, Dags){
+  
+  TP<-rownames(Dags)
+  nT=vector(mode = 'numeric' ,length = nrow(ResultsData)+1)
+  nF=vector(mode = 'numeric' ,length = nrow(ResultsData)+1)
+  for (i in 1:nrow(ResultsData)){
+    if (match(rownames(ResultsData)[i],TP, nomatch = F)!=0){
+      nT[i+1]=nT[i]+1
+      nF[i+1]=nF[i]
+    }
+    else{
+      nT[i+1]=nT[i]
+      nF[i+1]=nF[i]+1
+    }
+  }
+  
+  nT<-nT[-c(1)]
+  nF<-nF[-c(1)]
+  
+  TPR<-nT/nrow(Dags)
+  FPR<-nF/(nrow(ResultsData)-nrow(Dags))
+  
+  AUCtot <- AUC(FPR, TPR, from = min(x, na.rm = TRUE), to = max(x, na.rm = TRUE), method = c("trapezoid"), absolutearea = FALSE, subdivisions = 100, na.rm = FALSE)
+  AUC5 <- AUC(FPR, TPR, from = min(x, na.rm = TRUE), to = 0.05, method = c("trapezoid"), absolutearea = FALSE, subdivisions = 100, na.rm = FALSE)
+  AUC10 <- AUC(FPR, TPR, from = min(x, na.rm = TRUE), to = 0.1, method = c("trapezoid"), absolutearea = FALSE, subdivisions = 100, na.rm = FALSE)
+  
+  ROC <- data.frame(TPR,FPR)
+  AUCs <- data.frame(AUC5,AUC10,AUCtot,seed)
+  return(list(ROC, AUCs))
+}
+
+#===================================================================================================================================
+
+
 ################################## Comparison of methods ########################################
 # Maybe remove when one method is chosen 
 
@@ -89,3 +133,35 @@ for (i in 1:nrow(Dags)) {
 }
 sum(matchEdge)
 
+#===================================================================================================================================
+# Computing ROC and AUC
+
+# Plot-function
+#inputs:
+saveName="Gut2"
+plotName="Human Gut II"
+savePlot=F
+
+# Plotting both deseq and edge (Lägg till detta i funktionen Compute_ROC_AUC när vi bestämt oss för edgeR eller DESeq!)
+deseqROC <- data.frame(Compute_ROC_AUC(ResDESeq,Dags)[[1]], "DESeq", seed)
+edgeROC <- data.frame(Compute_ROC_AUC(ResEdge,Dags)[[1]], "edgeR", seed)
+colnames(deseqROC)[3]<-"Dataset"
+colnames(edgeROC)[3]<-"Dataset"
+
+ROC <- rbind(deseqROC,edgeROC)
+
+title=sprintf("ROC-curves for analysis of %s seed %d", plotName, seed)
+
+ROCplot <- ggplot(data=ROC, aes(x=FPR, y=TPR, color=Dataset)) +  geom_line() + 
+  theme(plot.title = element_text(hjust = 0.5)) +  theme_minimal() + 
+  scale_color_manual(values=c('#7FCDBB','#225EA8')) +
+  labs(title=title, x = "False Positive Rate", y = "True Positive Rate")
+
+print(ROCplot)
+
+if(savePlot == TRUE){
+  path_save <-  sprintf("../../Result/%s_ROC_seed%d.pdf",saveName, seed)
+  ggsave(filename = path_save2, plot = p2, height = 5, width = 6)
+  dev.off()
+  print(p2)
+}
