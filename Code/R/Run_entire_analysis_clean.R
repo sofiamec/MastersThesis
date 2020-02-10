@@ -5,15 +5,10 @@
 
 library(plyr)
 
-
-# Function for always rounding 0.5, 0.05 etc upwards
-round2 <- function(x, n) {
-  z = trunc(abs(x)*10^n +0.5)/10^n *sign(x)
-  return(z)
-}
+colorScale9<-c("#FFFFD9", "#EDF8B1", "#C7E9B4", "#7FCDBB", "#41B6C4", "#1D91C0", "#225EA8", "#253494", "#081D58")
+color1=colorScale9[7]
 
 # CREATE ALL FOLDERS REQUIRED!
-
 
 
 # General settings
@@ -62,17 +57,19 @@ for (run in 1:repeats){
 
 #rm(plotExpDesign,saveExpDesign)
 
+colnames(meanROC)[3]<-"meanTPR"
 meanROC2<-ddply(meanROC, "FPR", summarise,
-              N    = length(mean),
-              mean = mean(mean),
-              sd   = sd(mean),
+              N    = length(meanTPR),
+              mean = mean(meanTPR),
+              sd   = sd(meanTPR),
               se   = sd / sqrt(N)
 )
 
 # Plot mean AUC-values/RoC-curves
 #savePlot = FALSE
 
-meanROCplot <- ggplot(data=meanROC2, aes(x=FPR, y=mean)) +  geom_line() +  theme_minimal() + 
+meanROCplot <- ggplot(data=meanROC2, aes(x=FPR, y=mean)) +  theme_minimal() + 
+  geom_ribbon(aes(ymin=(mean-sd), ymax=(mean+sd)), alpha = 0.2, fill = color1) + geom_line(color=color1, size=1) +
   labs(title=sprintf("Mean ROC-curve for analysis of %s", plotName), 
        subtitle = sprintf("Experimental design: %s", plotExpDesign),
        x = "False Positive Rate", y = "True Positive Rate")
