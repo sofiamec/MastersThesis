@@ -1,6 +1,18 @@
+# Required
+
+# seed = selectedSeed
+# Data = Gut2
+# saveName = "Gut2"
+# saveExpDesign = "m60_d2e6_q10_f0.10"
+# m = 60 nr     samples in one group
+# d = 2000000   seq. depth
+# q = 10        the fold change for downsampling
+# f = 0.1       the fraction of genes to be downsampled
+
 
 # In order to get the same results each time
-set.seed(seed=seed)
+seed=selectedSeed
+set.seed(seed = seed)
 
 #===================================================================================================================================
 #=========================================== Functions ==============================================================================
@@ -53,10 +65,10 @@ compute_low_counts=function(Data){
 
 #===================================================================================================================================
 
-# Remove low counts
-# For a given dataset, this function removes genes with low counts (>75 % or an average count <3).
+# Remove low counts (genes, not samples)
+# For a given dataset, this function removes genes with low counts (>75 % zeroes or an average count <3).
 # input: Data = the data to remove genes from
-# output: 
+# output: FilteredData = the filtered inputdata
 remove_low_counts=function(Data){
   
   a=rowSums(Data)<3
@@ -149,23 +161,27 @@ countsResampData=compute_low_counts(ResampData)
 
 # Filter the resampled datasets
 ResampDataFilter=remove_low_counts(ResampData)
-summary(colSums(ResampDataFilter))
+#summary(colSums(ResampDataFilter))
 
 #################################################################################################################
 
 # Save generated dataset to intermediate folder
-write.csv(ResampData, file=sprintf("../../Intermediate/ResampData_clean_seed%d.csv",seed))
+write.csv(ResampDataFilter, file=sprintf("../../Intermediate/%s/%s_ResampData_seed%d.csv", saveExpDesign, saveName, seed))
+
+#rm(DataFilter, ResampData, countsResampData)
 
 # Load generated dataset from intermediate folder
-ResampData <- read.csv(file=sprintf("../../Intermediate/ResampData_clean_seed%d.csv",seed), header = T, row.names = 1)
+#ResampDataFilter <- read.csv(file=sprintf("../../Intermediate/%s/%s_ResampData_seed%d.csv", saveExpDesign, saveName, seed), header = T, row.names = 1)
 
 #################################################################################################################
 
 # Downsampling the resampled dataset
-resultList<- introducing_DAGs(Data = ResampData, q = q, f = f)
+resultList<- introducing_DAGs(Data = ResampDataFilter, q = q, f = f)
 downSampledData<-resultList[[1]]
 DAGs<-resultList[[2]]
 
 # Saving downsampled datasets and corresponding overview of DAGs
-write.csv(downSampledData, file=sprintf("../../Intermediate/downSampledData_clean_seed%d.csv",seed))
-write.csv(DAGs, file=sprintf("../../Intermediate/DAGs_clean_seed%d.csv",seed))
+write.csv(downSampledData, file=sprintf("../../Intermediate/%s/%s_downSampledData_seed%d.csv", saveExpDesign, saveName, seed))
+write.csv(DAGs, file=sprintf("../../Intermediate/%s/%s_DAGs_seed%d.csv", saveExpDesign, saveName, seed))
+
+#rm(ResampDataFilter) # ev. ta bort den här och tysta inläsningen av Resampdata i ANalysis of dags-scriptet
