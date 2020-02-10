@@ -159,14 +159,14 @@ rownames(GeneSummary)<-c("Human Gut I", "Human Gut II", "Marine")
 print(xtable(GeneSummary))
 
 # Boxplots for genes in each dataset
-gene_boxplot(Gut1GG,"Number of reads in Human Gut I", colorScale150, savePlot=TRUE, saveName="Gut1")
-gene_boxplot(Gut2GG,"Number of reads in Human Gut II", colorScale150, savePlot=TRUE, saveName="Gut2")
-gene_boxplot(MarineGG,"Number of reads in Marine", colorScale250, savePlot=TRUE, saveName="Marine")
+gene_boxplot(Gut1GG,"Number of reads in Human Gut I", colorScale150, savePlot=F, saveName="Gut1")
+gene_boxplot(Gut2GG,"Number of reads in Human Gut II", colorScale150, savePlot=F, saveName="Gut2")
+gene_boxplot(MarineGG,"Number of reads in Marine", colorScale250, savePlot=F, saveName="Marine")
 
 # Histogram of Sequensing depth in each dataset
 sequencing_depth_histogram(Gut1GG, bins=30, "Sequencing Depth in Human Gut I", 
-  color1, "black", savePlot=TRUE, saveName="Gut1")
+  color1, "black", savePlot=F, saveName="Gut1")
 sequencing_depth_histogram(Gut2GG, bins=30, "Sequencing Depth in Human Gut II", 
-  color1, "black", savePlot=TRUE, saveName="Gut2")
+  color1, "black", savePlot=F, saveName="Gut2")
 sequencing_depth_histogram(MarineGG, bins=30, "Sequencing Depth in Marine", 
-  color1, "black", savePlot=TRUE, saveName="Marine")
+  color1, "black", savePlot=F, saveName="Marine")

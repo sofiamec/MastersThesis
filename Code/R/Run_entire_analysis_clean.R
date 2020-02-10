@@ -12,7 +12,7 @@ color1=colorScale9[7]
 
 
 # General settings
-repeats = 3
+repeats = 10
 seeds = 1:repeats # In order to get the same results each time
 
 

@@ -15,7 +15,6 @@ library(DESeq2)
 library(edgeR)
 library(DescTools)
 library(ggplot2)
-#library(RColorBrewer)
 
 seed=selectedSeed  # set seed 
 
@@ -113,9 +112,12 @@ Compute_ROC_AUC = function(ResultsData, Dags){
   TPR<-nT/nrow(Dags)
   FPR<-nF/(nrow(ResultsData)-nrow(Dags))
   
+  # Beräkna på annat sätt!
   AUCtot <- AUC(FPR, TPR, from = min(x, na.rm = TRUE), to = max(x, na.rm = TRUE), method = c("trapezoid"), absolutearea = FALSE, subdivisions = 100, na.rm = FALSE)
   AUC5 <- AUC(FPR, TPR, from = min(x, na.rm = TRUE), to = 0.05, method = c("trapezoid"), absolutearea = FALSE, subdivisions = 100, na.rm = FALSE)
   AUC10 <- AUC(FPR, TPR, from = min(x, na.rm = TRUE), to = 0.1, method = c("trapezoid"), absolutearea = FALSE, subdivisions = 100, na.rm = FALSE)
+  
+  # Ta ut TPR/FPR? vid fixerat värde
   
   ROCs <- data.frame(TPR,FPR,seed)
   ROCs[,2] <- round2(ROCs[,2], 3) # 3 is the number of decimals here
@@ -178,8 +180,7 @@ edgeROC <- data.frame(edgeROCAUC[[1]], "edgeR")
 colnames(deseqROC)[4]<-"Dataset"
 colnames(edgeROC)[4]<-"Dataset"
 
-ROCs <- edgeROC[,-4] # fixa till när vi bestämt metod
-ROC_D_E <- rbind(deseqROC, edgeROC)
+ROCs <- deseqROC[,-4] # fixa till när vi bestämt metod
 #rm(deseqROC,edgeROC)
 
 #title=sprintf("ROC-curves for analysis of %s", plotName)
@@ -201,5 +202,5 @@ if(savePlot == TRUE){
   print(ROCplot)
 }
 
-AUCs<- as.matrix(edgeROCAUC[[2]]) # Ändra när vi bestämt metod
-meanROCs<-as.matrix(edgeROCAUC[[3]])
+AUCs<- as.matrix(deseqROCAUC[[2]]) # Ändra när vi bestämt metod
+meanROCs<-as.matrix(deseqROCAUC[[3]])
