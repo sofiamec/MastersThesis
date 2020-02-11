@@ -4,12 +4,14 @@
 #Marine <- read.table("../../Data/Raw_data/Marine_COGcountsRaw.txt", header=T, row.names = 1)
 
 library(plyr)
+# Required packages for DAGs analysis:
+library(DESeq2)
+library(edgeR)
+library(DescTools)
+library(ggplot2)
 
 colorScale9<-c("#FFFFD9", "#EDF8B1", "#C7E9B4", "#7FCDBB", "#41B6C4", "#1D91C0", "#225EA8", "#253494", "#081D58")
 color1=colorScale9[7]
-
-# CREATE ALL FOLDERS REQUIRED!
-
 
 # General settings
 repeats = 2
@@ -60,7 +62,7 @@ for (run in 1:repeats){
 }
 
 #rm(plotExpDesign,saveExpDesign)
-
+ROC$seed<-as.factor(ROC$seed)
 colnames(meanROC)[3]<-"meanTPR"
 meanROC2<-ddply(meanROC, "FPR", summarise,
               N    = length(meanTPR),
@@ -71,13 +73,13 @@ meanROC2<-ddply(meanROC, "FPR", summarise,
 
 
 # Plot individual ROC-plots
-
-ROCplot <- ggplot(data=ROC, aes(x=FPR, y=TPR), color=seed) +  geom_line() + 
+ROCplot <- ggplot(data=ROC, aes(x=FPR, y=TPR, group=seed)) +  geom_line(aes(color=seed)) + 
   theme(plot.title = element_text(hjust = 0.5)) +  theme_minimal() + 
-  scale_color_manual(values=c('#7FCDBB','#225EA8')) +
+  scale_color_manual(values=c('#EDF8B1','#7FCDBB','#225EA8')) +
   labs(title=sprintf("ROC-curves for analysis of %s", plotName), 
        subtitle = sprintf("Experimental design: %s", plotExpDesign),
-       x = "False Positive Rate", y = "True Positive Rate")
+       x = "False Positive Rate", y = "True Positive Rate") +
+  xlim(0, 1)+  ylim(0, 1)
 
 print(ROCplot)
 
@@ -90,11 +92,11 @@ if(savePlot == TRUE){
 
 # Plot mean AUC-values/RoC-curves
 #savePlot = FALSE
-
 meanROCplot <- ggplot(data=meanROC2, aes(x=FPR, y=mean)) +  theme_minimal() + 
   geom_ribbon(aes(ymin=(mean-sd), ymax=(mean+sd)), alpha = 0.2, fill = color1) + geom_line(color=color1, size=1) +
   labs(title=sprintf("Mean ROC-curve for analysis of %s", plotName), 
        subtitle = sprintf("Experimental design: %s", plotExpDesign),
-       x = "False Positive Rate", y = "True Positive Rate")
+       x = "False Positive Rate", y = "True Positive Rate")+
+  xlim(0, 1)+  ylim(0, 1)
 
 print(meanROCplot)
