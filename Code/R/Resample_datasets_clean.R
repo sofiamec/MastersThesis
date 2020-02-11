@@ -1,4 +1,4 @@
-# Required
+# Required from run_entire_analysis script
 
 # seed = selectedSeed
 # Data = Gut2
@@ -112,11 +112,6 @@ introducing_DAGs = function(Data, q, f){
   rG1 <- randomGenes[1:(nDAGs/2)] # will be downsampled in dataset 1 
   rG2 <- randomGenes[(nDAGs/2+1):nDAGs] # will be downsampled in dataset 2
   
-  
-  # if we allow unbalanced DAGs (May not work)
-  #rG1 <- randomGenes[1:floor(nDAGs/2)] # will be downsampled in dataset 1 
-  #rG2 <- randomGenes[ceiling(nDAGs/2):nDAGs] # will be downsampled in dataset 2
-  
   for (gene in rG1) {
     for (sample in 1:(ncol(Data)/2)) {
       downSampledData[gene,sample] <- rbinom(n = 1 ,size = Data[gene,sample] ,prob = 1/q)
@@ -138,50 +133,25 @@ introducing_DAGs = function(Data, q, f){
 #===================================================================================================================================
 #===================================================================================================================================
 
-################################### Test whether to filter the original data or not  ##############################
-# Remove when desicion has been made!
+#################################################################################################################
 
-# WITHOUT filtering the original data
-#ResampData=resample(Gut2, m=60, d=2000000)  # resampling of data
+# filter original data
+DataFilter <- remove_low_counts(Data=Data)
 
-# check number of genes wiht low counts in the prduced dataset
-#countsResampData=compute_low_counts(ResampData)  
-
-# filter resampled datasets
-#ResampDataFilter=remove_low_counts(ResampData)
-#summary(colSums(ResampDataFilter))
-
-# WITH filtering of the original data
-DataFilter <- remove_low_counts(Data)
-
-ResampData=resample(DataFilter, m=m, d=d)  # resampling of data
+# Resample data
+ResampData=resample(Data=DataFilter, m=m, d=d)
 
 # check number of genes wiht low counts in the prduced datasets
 countsResampData=compute_low_counts(ResampData)
 
-# Filter the resampled datasets
-ResampDataFilter=remove_low_counts(ResampData)
-#summary(colSums(ResampDataFilter))
-
-#################################################################################################################
-
-# Save generated dataset to intermediate folder
-write.csv(ResampDataFilter, file=sprintf("../../Intermediate/%s/%s_ResampData_seed%d.csv", saveExpDesign, saveName, seed))
-
-#rm(DataFilter, ResampData, countsResampData)
-
-# Load generated dataset from intermediate folder
-#ResampDataFilter <- read.csv(file=sprintf("../../Intermediate/%s/%s_ResampData_seed%d.csv", saveExpDesign, saveName, seed), header = T, row.names = 1)
-
 #################################################################################################################
 
 # Downsampling the resampled dataset
-resultList<- introducing_DAGs(Data = ResampDataFilter, q = q, f = f)
-downSampledData<-resultList[[1]]
+resultList<- introducing_DAGs(Data = ResampData, q = q, f = f)
+DownSampledData<-resultList[[1]]
 DAGs<-resultList[[2]]
 
 # Saving downsampled datasets and corresponding overview of DAGs
-write.csv(downSampledData, file=sprintf("../../Intermediate/%s/%s_downSampledData_seed%d.csv", saveExpDesign, saveName, seed))
+write.csv(DownSampledData, file=sprintf("../../Intermediate/%s/%s_DownSampledData_seed%d.csv", saveExpDesign, saveName, seed))
 write.csv(DAGs, file=sprintf("../../Intermediate/%s/%s_DAGs_seed%d.csv", saveExpDesign, saveName, seed))
 
-#rm(ResampDataFilter) # ev. ta bort den här och tysta inläsningen av Resampdata i ANalysis of dags-scriptet

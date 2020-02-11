@@ -1,13 +1,20 @@
 # Resample new datasets
+# This script can be run individually, so one can manage these steps more in detail.
 
 # Original datasets
-Gut1 <-read.table("../../Data/Raw_data/HumanGutI_COGcountsRaw.txt", header=T, row.names = 1)
 Gut2 <- read.table("../../Data/Raw_data/HumanGutII_COGcountsRaw.txt", header=T, row.names = 1)
 Marine <- read.table("../../Data/Raw_data/Marine_COGcountsRaw.txt", header=T, row.names = 1)
 
-# In order to get the same results each time
-seed=100
-set.seed(seed=seed)
+# Required
+seed = 100                            
+Data = Gut2
+saveName = "Gut2"
+saveExpDesign = "m10_d2e5_q2_f0.10"
+m = 10                                # samples in one group
+d = 200000                            # seq. depth
+q = 2                                 # the fold change for downsampling
+f = 0.1                               # the fraction of genes to be downsampled
+set.seed(seed=seed)                   # In order to get the same results each time
 
 #===================================================================================================================================
 #=========================================== Functions ==============================================================================
@@ -106,11 +113,6 @@ introducing_DAGs = function(Data, q, f){
   rG1 <- randomGenes[1:(nDAGs/2)] # will be downsampled in dataset 1 
   rG2 <- randomGenes[(nDAGs/2+1):nDAGs] # will be downsampled in dataset 2
   
-  
-  # if we allow unbalanced DAGs (May not work)
-  #rG1 <- randomGenes[1:floor(nDAGs/2)] # will be downsampled in dataset 1 
-  #rG2 <- randomGenes[ceiling(nDAGs/2):nDAGs] # will be downsampled in dataset 2
-  
   for (gene in rG1) {
     for (sample in 1:(ncol(Data)/2)) {
       downSampledData[gene,sample] <- rbinom(n = 1 ,size = Data[gene,sample] ,prob = 1/q)
@@ -132,46 +134,27 @@ introducing_DAGs = function(Data, q, f){
 #===================================================================================================================================
 #===================================================================================================================================
 
-################################### Test whether to filter the original data or not  ##############################
-# Remove when desicion has been made!
-
-# WITHOUT filtering the original data
-ResampData=resample(Gut2, m=60, d=2000000)  # resampling of data
-
-# check number of genes wiht low counts in the prduced dataset
-countsResampData=compute_low_counts(ResampData)  
-
-# filter resampled datasets
-ResampDataFilter=remove_low_counts(ResampData)
-summary(colSums(ResampDataFilter))
-
-# WITH filtering of the original data
-Gut2Filter <- remove_low_counts(Gut2)
-
-ResampData2=resample(Gut2Filter, m=60, d=2000000)  # resampling of data
-
-# check number of genes wiht low counts in the prduced datasets
-countsResampData2=compute_low_counts(ResampData2)
-
-# Filter the resampled datasets
-ResampData2Filter=remove_low_counts(ResampData2)
-summary(colSums(ResampData2Filter))
-
 #################################################################################################################
 
-# Save generated dataset to intermediate folder
-write.csv(ResampData2, file=sprintf("../../Intermediate/ResampData_seed%d.csv",seed))
+# filter original data
+DataFilter <- remove_low_counts(Data=Data)
 
-# Load generated dataset from intermediate folder
-ResampData2 <- read.csv(file=sprintf("../../Intermediate/ResampData_seed%d.csv",seed), header = T, row.names = 1)
+# Resample data
+ResampData=resample(Data=DataFilter, m=m, d=d)
+
+# check number of genes wiht low counts in the prduced datasets
+countsResampData=compute_low_counts(ResampData)
+
+# Save generated dataset to intermediate folder
+write.csv(ResampData, file=sprintf("../../Intermediate/%s/%s/ResampData_seed%d.csv", saveName, saveExpDesign, seed))
 
 #################################################################################################################
 
 # Downsampling the resampled dataset
-resultList<- introducing_DAGs(Data = ResampData2, q = 10, f = 0.10)
-downSampledData<-resultList[[1]]
+resultList<- introducing_DAGs(Data = ResampData, q = q, f = f)
+DownSampledData<-resultList[[1]]
 DAGs<-resultList[[2]]
 
 # Saving downsampled datasets and corresponding overview of DAGs
-write.csv(downSampledData, file=sprintf("../../Intermediate/downSampledData_seed%d.csv",seed))
-write.csv(DAGs, file=sprintf("../../Intermediate/DAGs_seed%d.csv",seed))
+write.csv(DownSampledData, file=sprintf("../../Intermediate/%s/%s/DownSampledData_seed%d.csv", saveName, saveExpDesign, seed))
+write.csv(DAGs, file=sprintf("../../Intermediate/%s/%s/DAGs_seed%d.csv",saveName, saveExpDesign, seed))
