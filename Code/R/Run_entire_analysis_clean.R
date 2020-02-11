@@ -1,8 +1,3 @@
-# Original datasets
-#Gut1 <-read.table("../../Data/Raw_data/HumanGutI_COGcountsRaw.txt", header=T, row.names = 1)
-#Gut2 <- read.table("../../Data/Raw_data/HumanGutII_COGcountsRaw.txt", header=T, row.names = 1)
-#Marine <- read.table("../../Data/Raw_data/Marine_COGcountsRaw.txt", header=T, row.names = 1)
-
 library(plyr)
 
 colorScale9<-c("#FFFFD9", "#EDF8B1", "#C7E9B4", "#7FCDBB", "#41B6C4", "#1D91C0", "#225EA8", "#253494", "#081D58")
@@ -10,6 +5,13 @@ color1=colorScale9[7]
 
 # CREATE ALL FOLDERS REQUIRED!
 
+# Original datasets
+Gut2Original <- read.table("../../Data/Raw_data/HumanGutII_COGcountsRaw.txt", header=T, row.names = 1)
+MarineOriginal <- read.table("../../Data/Raw_data/Marine_COGcountsRaw.txt", header=T, row.names = 1)
+
+# Filter out samples with sequencing depth below the maximum sequencing depth of the experimental design
+Gut2 = Gut2Original[,colSums(Gut2Original)>=5000000]
+Marine=MarineOriginal[,colSums(MarineOriginal)>=10000000]
 
 # General settings
 repeats = 2
@@ -25,8 +27,8 @@ q = 2        # Fold-change for downsampling
 f = 0.10      # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
 
 
-### GUT 2 ###
-Data = read.table("../../Data/Raw_data/HumanGutII_COGcountsRaw.txt", header=T, row.names = 1) # Gut2
+### Gut2 ###
+Data = Gut2
 saveName = "Gut2"
 plotName = "Human Gut II"
 
