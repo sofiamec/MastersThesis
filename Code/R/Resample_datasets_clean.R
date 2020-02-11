@@ -152,6 +152,6 @@ DownSampledData<-resultList[[1]]
 DAGs<-resultList[[2]]
 
 # Saving downsampled datasets and corresponding overview of DAGs
-write.csv(DownSampledData, file=sprintf("../../Intermediate/%s/%s_DownSampledData_seed%d.csv", saveExpDesign, saveName, seed))
-write.csv(DAGs, file=sprintf("../../Intermediate/%s/%s_DAGs_seed%d.csv", saveExpDesign, saveName, seed))
+write.csv(DownSampledData, file=sprintf("../../Intermediate/%s/%s/DownSampledData_seed%d.csv", saveName, saveExpDesign, seed))
+write.csv(DAGs, file=sprintf("../../Intermediate/%s/%s/DAGs_seed%d.csv", saveName, saveExpDesign, seed))
 
