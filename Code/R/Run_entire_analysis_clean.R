@@ -17,7 +17,7 @@ seeds = 1:repeats # In order to get the same results each time
 
 
 # Experimental design 1 for selected data
-saveExpDesign = "m60_d2e6_q2_f010" # or name it otherwise. NOTE: f0.10 doesn't work
+saveExpDesign = "m60_d2e6_q2_f10" # or name it otherwise. NOTE: f0.10 doesn't work
 plotExpDesign = "m = 60, d = 2000000, q = 2, f = 0.10"
 m = 60        # Number of samples in each group (total nr samples = 2*m)
 d = 2000000   # Desired sequencing depth per sample. It will not be exct
@@ -30,6 +30,10 @@ Data = read.table("../../Data/Raw_data/HumanGutII_COGcountsRaw.txt", header=T, r
 saveName = "Gut2"
 plotName = "Human Gut II"
 
+# Create folder if it doesn't exist
+if (!dir.exists(sprintf("../../Intermediate/%s/%s", saveName, saveExpDesign))){
+  dir.create(file.path("../../Intermediate", sprintf("%s", saveName), sprintf("%s", saveExpDesign)), recursive = T)
+}
 
 # For a certain number of repeats, perform the entire analysis for a selected experimental design for Gut2:
 AUC = data.frame(AUC5=numeric(0), AUC10 = numeric(0), AUCtot = numeric(0), seed = numeric(0))

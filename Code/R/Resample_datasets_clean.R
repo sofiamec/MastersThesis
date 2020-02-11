@@ -3,7 +3,7 @@
 # seed = selectedSeed
 # Data = Gut2
 # saveName = "Gut2"
-# saveExpDesign = "m60_d2e6_q10_f0.10"
+# saveExpDesign = "m60_d2e6_q10_f10"
 # m = 60 nr     samples in one group
 # d = 2000000   seq. depth
 # q = 10        the fold change for downsampling
