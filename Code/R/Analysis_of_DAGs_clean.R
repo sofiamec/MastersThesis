@@ -10,10 +10,9 @@
 
 
 # load required packages
-library(DESeq2)
-library(edgeR)
-library(DescTools)
-library(ggplot2)
+#library(DESeq2)
+#library(DescTools)
+#library(ggplot2)
 
 seed=selectedSeed  # set seed 
 
@@ -99,9 +98,10 @@ Compute_ROC_AUC = function(ResultsData, Dags, seed){
   # Ta ut TPR/FPR? vid fixerat värde
   
   ROCs <- data.frame(TPR,FPR,seed)
-  ROCs[,2] <- round2(ROCs[,2], 3) # 3 is the number of decimals here
+  ROCs2 <- ROCs
+  ROCs2[,2] <- round2(ROCs2[,2], 3) # 3 is the number of decimals here
   
-  meanROCs<-ddply(ROCs, "FPR", summarise,
+  meanROCs<-ddply(ROCs2, "FPR", summarise,
                  N    = length(TPR),
                  mean = mean(TPR),
                  sd   = sd(TPR),
@@ -115,14 +115,14 @@ Compute_ROC_AUC = function(ResultsData, Dags, seed){
 
 ######## DESeq2 ##########
 ResDESeq=DESeq2_analysis(Data = DagData)
-cat(sprintf("Number of significant genes with DESeq2 for %s: %d     (exp. design: %s)", plotName, sum(ResDESeq$padj<0.05),plotExpDesign))
+cat(sprintf("Number of significant genes with DESeq2 for %s: %d     (exp. design: %s)\n", plotName, sum(ResDESeq$padj<0.05),plotExpDesign))
 
 # how many of the artificially introduced DAGs are among the significant genes
 matchDESeq=c()
 for (i in 1:nrow(Dags)) {
   matchDESeq[i]=sum(grepl(rownames(Dags)[i], rownames(ResDESeq[which(ResDESeq$padj<0.05),])))
 }
-cat(sprintf("Number of TP genes with DESeq2 for %s: %d              (exp. design: %s)", plotName, sum(matchDESeq), plotExpDesign)) 
+cat(sprintf("Number of TP genes with DESeq2 for %s: %d              (exp. design: %s)\n", plotName, sum(matchDESeq), plotExpDesign)) 
 
 rm(matchDESeq)
 
