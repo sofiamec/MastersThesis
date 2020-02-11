@@ -1,9 +1,8 @@
 library(plyr)
 # Required packages for DAGs analysis:
 library(DESeq2)
-library(edgeR)
-library(DescTools)
 library(ggplot2)
+library(pracma)
 
 colorScale9<-c("#FFFFD9", "#EDF8B1", "#C7E9B4", "#7FCDBB", "#41B6C4", "#1D91C0", "#225EA8", "#253494", "#081D58")
 color1=colorScale9[7]
@@ -41,7 +40,7 @@ if (!dir.exists(sprintf("../../Intermediate/%s/%s", saveName, saveExpDesign))){
 }
 
 # For a certain number of repeats, perform the entire analysis for a selected experimental design for Gut2:
-AUC = data.frame(AUC5=numeric(0), AUC10 = numeric(0), AUCtot = numeric(0), seed = numeric(0))
+AUC = data.frame(AUC5=numeric(0), AUC10 = numeric(0), AUCtot = numeric(0), TPR5=numeric(0), TPR10=numeric(0),seed = numeric(0))
 ROC = data.frame(TPR=numeric(0), FPR=numeric(0),seed=numeric(0))
 meanROC = data.frame(FPR=numeric(0),N=numeric(0),mean=numeric(0), sd=numeric(0),se=numeric(0))
 

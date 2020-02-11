@@ -2,8 +2,8 @@
 
 # load required packages
 library(DESeq2)
-library(DescTools)
 library(ggplot2)
+library(pracma)
 
 
 # Select parameters
@@ -11,7 +11,7 @@ saveName = "Gut2"
 plotName="Human Gut II"
 saveExpDesign = "m60_d2e6_q2_f010"
 plotExpDesign = "m = 60, d = 2000000, q = 2, f = 0.10"
-seed=1  # set seed 
+seed=1  
 savePlot=F
 
 
@@ -91,22 +91,26 @@ Compute_ROC_AUC = function(ResultsData, Dags, seed, plotExpDesign, plotName, sav
   TPR<-nT/nrow(Dags)
   FPR<-nF/(nrow(ResultsData)-nrow(Dags))
   
-  # Beräkna på annat sätt
-  AUCtot <- AUC(FPR, TPR, from = min(x, na.rm = TRUE), to = max(x, na.rm = TRUE), method = c("trapezoid"), absolutearea = FALSE, subdivisions = 100, na.rm = FALSE)
-  AUC5 <- AUC(FPR, TPR, from = min(x, na.rm = TRUE), to = 0.05, method = c("trapezoid"), absolutearea = FALSE, subdivisions = 100, na.rm = FALSE)
-  AUC10 <- AUC(FPR, TPR, from = min(x, na.rm = TRUE), to = 0.1, method = c("trapezoid"), absolutearea = FALSE, subdivisions = 100, na.rm = FALSE)
+  # Compute AUC and TPR at certain FPR
+  AUC5<-trapz(FPR[FPR<=0.05],TPR[FPR<=0.05])/max(FPR[FPR<=0.05])
+  AUC10<-trapz(FPR[FPR<=0.1],TPR[FPR<=0.1])/max(FPR[FPR<=0.1])
+  AUCtot<-trapz(FPR,TPR)
+  TPR5<-max(TPR[FPR<=0.05])
+  TPR10<-max(TPR[FPR<=0.1])
+  AUCs <- data.frame(AUC5,AUC10,AUCtot,TPR5,TPR10,seed)
   
-  # Ta ut TPR-värde vid fixerat FPR
+  rm(AUC5,AUC10,AUCtot, TPR5,TPR10)
+  
   ROCs <- data.frame(TPR,FPR,seed)
-  ROCs[,2] <- round2(ROCs[,2], 3) # 3 is the number of decimals here
+  ROCs2<-ROCs
+  ROC2s[,2] <- round2(ROCs2[,2], 3) # 3 is the number of decimals here
   
-  meanROCs<-ddply(ROCs, "FPR", summarise,
+  meanROCs<-ddply(ROCs2, "FPR", summarise,
                   N    = length(TPR),
                   mean = mean(TPR),
                   sd   = sd(TPR),
-                  se   = sd / sqrt(N)
-  )               
-  AUCs <- data.frame(AUC5,AUC10,AUCtot,seed)
+                  se   = sd / sqrt(N) )
+  rm(ROCs2)
   
   ROCplot <- ggplot(data=ROCs, aes(x=FPR, y=TPR)) +  geom_line() + 
     theme(plot.title = element_text(hjust = 0.5)) +  theme_minimal() + 
@@ -130,14 +134,14 @@ Compute_ROC_AUC = function(ResultsData, Dags, seed, plotExpDesign, plotName, sav
 
 ######## DESeq2 ##########
 ResDESeq=DESeq2_analysis(Data = DagData)
-cat(sprintf("Number of significant genes with DESeq2 for %s: %d     (exp. design: %s)", plotName, sum(ResDESeq$padj<0.05),plotExpDesign))
+cat(sprintf("Number of significant genes with DESeq2 for %s: %d     (exp. design: %s)\n", plotName, sum(ResDESeq$padj<0.05),plotExpDesign))
 
 # how many of the artificially introduced DAGs are among the significant genes
 matchDESeq=c()
 for (i in 1:nrow(Dags)) {
   matchDESeq[i]=sum(grepl(rownames(Dags)[i], rownames(ResDESeq[which(ResDESeq$padj<0.05),])))
 }
-cat(sprintf("Number of TP genes with DESeq2 for %s: %d              (exp. design: %s)", plotName, sum(matchDESeq), plotExpDesign))
+cat(sprintf("Number of TP genes with DESeq2 for %s: %d              (exp. design: %s)\n", plotName, sum(matchDESeq), plotExpDesign))
 
 #===================================================================================================================================
 # Computing ROC and AUC

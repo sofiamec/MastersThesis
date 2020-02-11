@@ -24,7 +24,7 @@ BiocManager::install("DESeq2")
 #BiocManager::install("edgeR")
 
 # for calculating overdispersion in edgeR
-install.packages("statmod")
+#install.packages("statmod")
 
-# For computing AUCs
-install.packages("DescTools")
+# For computing AUCs with trapeziodal rule
+install.packages("pracma")
