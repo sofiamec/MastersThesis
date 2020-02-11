@@ -2,7 +2,6 @@
 
 # load required packages
 library(DESeq2)
-library(edgeR)
 library(DescTools)
 library(ggplot2)
 

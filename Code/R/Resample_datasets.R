@@ -2,8 +2,12 @@
 # This script can be run individually, so one can manage these steps more in detail.
 
 # Original datasets
-Gut2 <- read.table("../../Data/Raw_data/HumanGutII_COGcountsRaw.txt", header=T, row.names = 1)
-Marine <- read.table("../../Data/Raw_data/Marine_COGcountsRaw.txt", header=T, row.names = 1)
+Gut2Original <- read.table("../../Data/Raw_data/HumanGutII_COGcountsRaw.txt", header=T, row.names = 1)
+MarineOriginal <- read.table("../../Data/Raw_data/Marine_COGcountsRaw.txt", header=T, row.names = 1)
+
+# Filter out samples with sequencing depth below the maximum sequencing depth of the experimental design
+Gut2 = Gut2Original[,colSums(Gut2Original)>=5000000]
+Marine=MarineOriginal[,colSums(MarineOriginal)>=10000000]
 
 # Required
 seed = 100                            
