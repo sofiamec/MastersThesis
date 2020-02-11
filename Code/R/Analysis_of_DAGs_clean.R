@@ -37,7 +37,7 @@ round2 <- function(x, n) {
 # DESeq2-analysis
 # This function uses DESeq2 to identfy DAGs in a dataset containing two groups
 # Input: Data = the data to analyse
-# Output: a dataframe containing the adjusted p-value and log2fold-change for each gene, ordered with increading padj
+# Output: a dataframe containing the p-value and log2fold-change for each gene, ordered with increading p-values
 DESeq2_analysis=function(Data){
   m=ncol(Data)/2                  # number of samples in each group in the dataset
   
@@ -48,12 +48,12 @@ DESeq2_analysis=function(Data){
   ResultDESeq<-DESeq(CountsDataset)                                       # Perform analysis 
   Res=results(ResultDESeq, independentFiltering=FALSE, cooksCutoff=FALSE) # extract results
   
-  Result=data.frame(rownames(Data), Res$padj, Res$log2FoldChange)         # dataframe with genes, padj and log2fold-change
+  Result=data.frame(rownames(Data), Res$pvalue, Res$log2FoldChange)       # dataframe with genes, p-values and log2fold-change
   Result <- data.frame(Result[,-1], row.names=Result[,1])                 # put first column (genes) as rowname
-  colnames(Result) <- c("padj", "log2foldchange")                         # name the columns
+  colnames(Result) <- c("p-value", "log2foldchange")                      # name the columns
   
   
-  ResultSorted=Result[order(Result[,1]),]                                 # order with increasing padj
+  ResultSorted=Result[order(Result[,1]),]                                 # order with increasing p-value
   
   return(ResultSorted)
 }
