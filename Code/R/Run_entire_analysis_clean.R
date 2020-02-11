@@ -12,7 +12,7 @@ color1=colorScale9[7]
 
 
 # General settings
-repeats = 10
+repeats = 2
 seeds = 1:repeats # In order to get the same results each time
 
 
@@ -48,7 +48,7 @@ for (run in 1:repeats){
   savePlot = FALSE
   source("Analysis_of_DAGs_clean.R")
 
-  # Save the results (currently for edgeR)
+  # Save the results 
   AUC[run,] <- AUCs
   ROC <- rbind(ROC,ROCs)
   meanROC<-rbind(meanROC, meanROCs)
@@ -64,6 +64,25 @@ meanROC2<-ddply(meanROC, "FPR", summarise,
               sd   = sd(meanTPR),
               se   = sd / sqrt(N)
 )
+
+
+# Plot individual ROC-plots
+
+ROCplot <- ggplot(data=ROC, aes(x=FPR, y=TPR), color=seed) +  geom_line() + 
+  theme(plot.title = element_text(hjust = 0.5)) +  theme_minimal() + 
+  scale_color_manual(values=c('#7FCDBB','#225EA8')) +
+  labs(title=sprintf("ROC-curves for analysis of %s", plotName), 
+       subtitle = sprintf("Experimental design: %s", plotExpDesign),
+       x = "False Positive Rate", y = "True Positive Rate")
+
+print(ROCplot)
+
+if(savePlot == TRUE){
+  path_save <-  sprintf("../../Result/%s/%s/ROC_seed%d.pdf", saveName, saveExpDesign, seed)
+  ggsave(filename = path_save, plot = ROCplot, height = 5, width = 6)
+  dev.off()
+  print(ROCplot)
+}
 
 # Plot mean AUC-values/RoC-curves
 #savePlot = FALSE
