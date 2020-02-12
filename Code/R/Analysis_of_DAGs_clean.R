@@ -8,21 +8,7 @@
 # saveExpDesign = 
 # plotExpDesign =
 
-
-# load required packages
-#library(DESeq2)
-#library(ggplot2)
-#library(pracma)
-
 seed=selectedSeed  # set seed 
-
-# resampled (and filtered) data without DAGS
-# ResampData <- read.csv(file=sprintf("../../Intermediate/%s/%s/ResampData_seed%d.csv", saveName, saveExpDesign,seed), header = T, row.names = 1) 
-
-# resampled data with DAGs
-DownSampledData <- read.csv(file=sprintf("../../Intermediate/%s/%s/downSampledData_seed%d.csv", saveName, saveExpDesign,seed), header = T, row.names = 1)
-DAGs <- read.csv(file=sprintf("../../Intermediate/%s/%s/DAGs_seed%d.csv", saveName, saveExpDesign, seed), header = T, row.names = 1)
-
 #===================================================================================================================================
 #=========================================== Functions ==============================================================================
 #===================================================================================================================================
@@ -120,7 +106,6 @@ for (i in 1:nrow(DAGs)) {
   matchDESeq[i]=sum(grepl(rownames(DAGs)[i], rownames(ResDESeq[which(ResDESeq<0.05),,drop=F])))
 }
 cat(sprintf("Number of TP genes with DESeq2 for %s: %d out of %d   (exp. design: %s)\n", plotName, sum(matchDESeq), nrow(DAGs), plotExpDesign))
-rm(matchDESeq)
 
 #===================================================================================================================================
 # Computing ROC and AUC
@@ -129,4 +114,6 @@ deseqROCAUC<-Compute_ROC_AUC(ResDESeq,DAGs, seed)
 ROCs <- data.frame(deseqROCAUC[[1]])
 AUCs<- as.matrix(deseqROCAUC[[2]]) 
 meanROCs<-as.matrix(deseqROCAUC[[3]])
-rm(deseqROCAUC)
+
+# remove variables/datasets
+rm(deseqROCAUC, DownSampledData, matchDESeq, DAGs, i)

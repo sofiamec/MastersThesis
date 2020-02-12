@@ -44,6 +44,7 @@ remove_low_counts=function(Data){
 Gut2 <- remove_low_counts(Gut2Intermediate)
 Marine <- remove_low_counts(MarineIntermediate)
 
+rm(Gut2Original, Gut2Intermediate, MarineOriginal, MarineIntermediate) # remove original and intermediate datasets
 #===================================================================================================================================
 ## General settings:
 

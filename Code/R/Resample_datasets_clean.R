@@ -120,16 +120,17 @@ ResampData=resample(Data=Data, m=m, d=d)
 
 # check number of genes wiht low counts in the prduced datasets
 countsResampData=compute_low_counts(ResampData)
-rm(countsResampData)
+
 #################################################################################################################
 
 # Downsampling the resampled dataset
 resultList<- introducing_DAGs(Data = ResampData, q = q, f = f)
 DownSampledData<-resultList[[1]]
 DAGs<-resultList[[2]]
-rm(resultList)
 
 # Saving downsampled datasets and corresponding overview of DAGs
 write.csv(DownSampledData, file=sprintf("../../Intermediate/%s/%s/DownSampledData_seed%d.csv", saveName, saveExpDesign, seed))
 write.csv(DAGs, file=sprintf("../../Intermediate/%s/%s/DAGs_seed%d.csv", saveName, saveExpDesign, seed))
 
+# remove variables/datasets
+rm(countsResampData, resultList)
