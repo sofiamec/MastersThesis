@@ -5,10 +5,34 @@
 Gut2Original <- read.table("../../Data/Raw_data/HumanGutII_COGcountsRaw.txt", header=T, row.names = 1)
 MarineOriginal <- read.table("../../Data/Raw_data/Marine_COGcountsRaw.txt", header=T, row.names = 1)
 
-# Filter out samples with sequencing depth below the maximum sequencing depth of the experimental design
-Gut2 = Gut2Original[,colSums(Gut2Original)>=5000000]
-Marine=MarineOriginal[,colSums(MarineOriginal)>=10000000]
+#===================================================================================================================================
+# Filter original datasets
 
+# Filter out samples with sequencing depth below the maximum sequencing depth of the experimental design
+Gut2Intermediate = Gut2Original[,colSums(Gut2Original)>=5000000]
+MarineIntermediate = MarineOriginal[,colSums(MarineOriginal)>=10000000]
+
+############## Function to Remove low counts #################################################################
+# For a given dataset, this function removes genes with low counts (>75 % or an average count <3).
+# input: Data = the data to remove genes from
+# output: 
+remove_low_counts=function(Data){
+  
+  a=rowSums(Data)<3
+  b=vector()
+  r=vector()
+  for (i in 1:nrow(Data)) {
+    b[i]<-sum(Data[i,]==0)/ncol(Data)>0.75
+    r[i]<-a[i]+b[i]
+  }
+  FilteredData=Data[r==0,]
+  return(FilteredData)
+}
+###############################################################################################################
+
+# Filter out genes with too low counts 
+Gut2 <- remove_low_counts(Gut2Intermediate)
+Marine <- remove_low_counts(MarineIntermediate)
 
 #===================================================================================================================================
 ## Selecting parameters and data:
@@ -21,7 +45,8 @@ d = 10000    # Desired sequencing depth per sample. It will not be exct
 q = 2         # Fold-change for downsampling
 f = 0.10      # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
 
-set.seed(seed=seed)                   # In order to get the same results each time
+set.seed(seed=seed)   # In order to get the same results each time
+
 { # Quickly gives the case the correct names
   if (all(dim(Data) == dim(Gut2))){
     saveName = "Gut2"
@@ -105,25 +130,6 @@ compute_low_counts=function(Data){
 
 #===================================================================================================================================
 
-# Remove low counts
-# For a given dataset, this function removes genes with low counts (>75 % or an average count <3).
-# input: Data = the data to remove genes from
-# output: 
-remove_low_counts=function(Data){
-  
-  a=rowSums(Data)<3
-  b=vector()
-  r=vector()
-  for (i in 1:nrow(Data)) {
-    b[i]<-sum(Data[i,]==0)/ncol(Data)>0.75
-    r[i]<-a[i]+b[i]
-  }
-  FilteredData=Data[r==0,]
-  return(FilteredData)
-}
-
-#===================================================================================================================================
-
 # Introducing DAGs
 # For a resampled dataset (including both groups), this function introduces DAGs by
 # downsampling a given fraction of genes. The DAGs will be balanced in the two groups.
@@ -175,16 +181,13 @@ introducing_DAGs = function(Data, q, f){
 
 #################################################################################################################
 
-# filter original data
-DataFilter <- remove_low_counts(Data=Data)
-
 # Resample data
-ResampData=resample(Data=DataFilter, m=m, d=d)
+ResampData=resample(Data=Data, m=m, d=d)
 
-# check number of genes wiht low counts in the prduced datasets
+# check number of genes wiht low counts in the prduced dataset
 countsResampData=compute_low_counts(ResampData)
 
-# Save generated dataset to intermediate folder
+# Save generated dataset with no effects to intermediate folder
 write.csv(ResampData, file=sprintf("../../Intermediate/%s/%s/ResampData_seed%d.csv", saveName, saveExpDesign, seed))
 
 #################################################################################################################

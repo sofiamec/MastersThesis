@@ -1,6 +1,5 @@
 # Required from run_entire_analysis script
 
-# seed = selectedSeed
 # Data = Gut2
 # saveName = "Gut2"
 # saveExpDesign = "m60_d2e6_q10_f10"
@@ -65,25 +64,6 @@ compute_low_counts=function(Data){
 
 #===================================================================================================================================
 
-# Remove low counts (genes, not samples)
-# For a given dataset, this function removes genes with low counts (>75 % zeroes or an average count <3).
-# input: Data = the data to remove genes from
-# output: FilteredData = the filtered inputdata
-remove_low_counts=function(Data){
-  
-  a=rowSums(Data)<3
-  b=vector()
-  r=vector()
-  for (i in 1:nrow(Data)) {
-    b[i]<-sum(Data[i,]==0)/ncol(Data)>0.75
-    r[i]<-a[i]+b[i]
-  }
-  FilteredData=Data[r==0,]
-  return(FilteredData)
-}
-
-#===================================================================================================================================
-
 # Introducing DAGs
 # For a resampled dataset (including both groups), this function introduces DAGs by
 # downsampling a given fraction of genes. The DAGs will be balanced in the two groups.
@@ -135,21 +115,19 @@ introducing_DAGs = function(Data, q, f){
 
 #################################################################################################################
 
-# filter original data
-DataFilter <- remove_low_counts(Data=Data)
-
 # Resample data
-ResampData=resample(Data=DataFilter, m=m, d=d)
+ResampData=resample(Data=Data, m=m, d=d)
 
 # check number of genes wiht low counts in the prduced datasets
 countsResampData=compute_low_counts(ResampData)
-
+rm(countsResampData)
 #################################################################################################################
 
 # Downsampling the resampled dataset
 resultList<- introducing_DAGs(Data = ResampData, q = q, f = f)
 DownSampledData<-resultList[[1]]
 DAGs<-resultList[[2]]
+rm(resultList)
 
 # Saving downsampled datasets and corresponding overview of DAGs
 write.csv(DownSampledData, file=sprintf("../../Intermediate/%s/%s/DownSampledData_seed%d.csv", saveName, saveExpDesign, seed))
