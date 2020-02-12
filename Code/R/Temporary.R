@@ -1,4 +1,15 @@
 
+### Exploration of Gut1
+# check ordered sequencing depth for Gut1 
+Gut1Depth=data.frame(colnames(Gut1), as.numeric(colSums(Gut1)))
+gut1Order <- order(Gut1Depth[,2])
+Gut1DepthSorted <- Gut1Depth[gut1Order,]  
+
+gene_boxplot(Gut1GG,"Number of reads in Human Gut I", colorScale150, savePlot=F, saveName="Gut1")
+
+sequencing_depth_histogram(Gut1GG, bins=30, "Sequencing Depth in Human Gut I", 
+                           color1, "black", savePlot=F, saveName="Gut1")
+
 #===================================================================================================================================
 # edgeR-analysis
 # This function uses edgeR to identfy DAGs in a dataset containing two groups
