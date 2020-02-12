@@ -104,6 +104,7 @@ resample = function(Data, m, d){
 
   DataNew <- data.frame(DataNew[,-1], row.names=DataNew[,1]) # put first column (genes) as rownames  
   DataNew[is.na(DataNew)] <- as.integer(0)                   # set all "NA" to 0 (as integers, since DESeq2 require integer counts)
+  
   return(DataNew)  
 }
 
