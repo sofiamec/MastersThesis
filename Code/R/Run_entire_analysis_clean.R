@@ -174,9 +174,9 @@ meanROC2<-ddply(meanROC, "FPR", summarise,
 colnames(meanROC2)[3]<-"meanTPR"
 
 # Plot mean RoC-curves for certain experimental design
-meanROCplot <- ggplot(data=meanROC2, aes(x=FPR, y=meanTPR, fill="#22A88433")) +  theme_minimal() + 
+meanROCplot <- ggplot(data=meanROC2, aes(x=FPR, y=meanTPR)) +  theme_minimal() + 
   geom_ribbon(aes(ymin=(meanTPR-sd), ymax=(meanTPR+sd), fill="#22A88433"), alpha = 0.2) + 
-  geom_line(aes(color="#22A88433")) + 
+  geom_line(aes(color="#22A88433")) + theme(legend.position = "none") +
   labs(title=sprintf("Mean ROC-curve for analysis of %s", plotName), 
        subtitle = sprintf("Experimental design: %s     (%s repeats)", plotExpDesign, repeats),
        x = "False Positive Rate", y = "True Positive Rate")+
@@ -206,11 +206,14 @@ AUCfinal$`sequencing depth`<-as.factor(AUCfinal$`sequencing depth`)
 AUCfinal$`group size`<-as.factor(AUCfinal$`group size`)
 
 ggplot(AUCfinal, aes(x=AUCfinal$`group size`, y=AUCfinal$`sequencing depth`, fill=AUCfinal$`mean total AUC`)) +
-  geom_tile() + scale_fill_viridis_c(begin = 0.2, end = 0.6) + scale_x_discrete(position = "top") +  
+  geom_tile(aes(fill = AUCfinal$`mean total AUC`)) + geom_text(aes(label = round(AUCfinal$`mean total AUC` , 2))) +
+  scale_fill_viridis_c(begin = 0, end = 1, alpha = 0.5) +  
   scale_y_discrete(limits = rev(levels(as.factor(AUCfinal$`sequencing depth`)))) +
+  theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank(), axis.line = element_blank(), panel.background=element_rect(fill = "white") ) +
   labs(title=sprintf("Mean total AUC-values for analysis of %s", plotName), 
        #subtitle = sprintf("Experimental designs with group size %d     (%s repeats each)", M, repeats),
-       x = "Group size", y = "Sequencing depth",  color = "sequensing depth", fill = "AUC-values") +
+       x = "Group size", y = "Sequencing depth",  color = "sequensing depth", fill = "AUC-values") 
   
 
 ### Plot mean RoC-curves for all experimental designs
