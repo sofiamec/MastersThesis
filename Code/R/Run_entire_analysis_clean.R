@@ -40,7 +40,6 @@ repeats = 2
 seeds = 1:repeats # In order to get the same results each time
 
 
-
 #===================================================================================================================================
 ## Selecting parameters and data:
 
@@ -83,7 +82,9 @@ if (!dir.exists(sprintf("../../Intermediate/%s/%s", saveName, saveExpDesign))){
   dir.create(file.path("../../Intermediate", sprintf("%s", saveName), sprintf("%s", saveExpDesign)), recursive = T)
 }
 
-
+if (!dir.exists(sprintf("../../Result/%s/%s", saveName, saveExpDesign))){
+  dir.create(file.path("../../Result", sprintf("%s", saveName), sprintf("%s", saveExpDesign)), recursive = T)
+}
 
 #===================================================================================================================================
 ## Run the analysis:
@@ -113,13 +114,6 @@ for (run in 1:repeats){
 
 #rm(plotExpDesign,saveExpDesign)
 ROC$seed<-as.factor(ROC$seed)
-colnames(meanROC)[3]<-"meanTPR"
-meanROC2<-ddply(meanROC, "FPR", summarise,
-              N    = length(meanTPR),
-              mean = mean(meanTPR),
-              sd   = sd(meanTPR),
-              se   = sd / sqrt(N)
-)
 
 # Plot individual ROC-plots
 ROCplot <- ggplot(data=ROC, aes(x=FPR, y=TPR, group=seed)) +  geom_line(aes(color=seed)) + 
@@ -138,6 +132,14 @@ if(savePlot == TRUE){
   dev.off()
   print(ROCplot)
 }
+
+colnames(meanROC)[3]<-"meanTPR"
+meanROC2<-ddply(meanROC, "FPR", summarise,
+                N    = length(meanTPR),
+                mean = mean(meanTPR),
+                sd   = sd(meanTPR),
+                se   = sd / sqrt(N)
+)
 
 # Plot mean AUC-values/RoC-curves
 meanROCplot <- ggplot(data=meanROC2, aes(x=FPR, y=mean)) +  theme_minimal() + 
