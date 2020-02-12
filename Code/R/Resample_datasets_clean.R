@@ -1,6 +1,5 @@
 # Required from run_entire_analysis script
 
-# seed = selectedSeed
 # Data = Gut2
 # saveName = "Gut2"
 # saveExpDesign = "m60_d2e6_q10_f10"

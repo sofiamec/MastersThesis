@@ -181,7 +181,7 @@ DataFilter <- remove_low_counts(Data=Data)
 # Resample data
 ResampData=resample(Data=DataFilter, m=m, d=d)
 
-# check number of genes wiht low counts in the prduced datasets
+# check number of genes wiht low counts in the prduced dataset
 countsResampData=compute_low_counts(ResampData)
 
 # Save generated dataset to intermediate folder
