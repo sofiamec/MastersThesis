@@ -45,7 +45,7 @@ DESeq2_analysis=function(Data){
   DesignMatrix <- data.frame(group=factor(c(rep(1,m),rep(0,m))))          # define the different groups 
   CountsDataset<-DESeqDataSetFromMatrix(countData=Data, 
                                         DesignMatrix, design=~group)      # combine design matrix and data into a dataset
-  ResultDESeq<-DESeq(CountsDataset)                                       # Perform analysis 
+  ResultDESeq<-suppressMessages(DESeq(CountsDataset))                     # Perform analysis (suppress messages from it) 
   Res=results(ResultDESeq, independentFiltering=FALSE, cooksCutoff=FALSE) # extract results
   
   Result=data.frame(rownames(Data), Res$pvalue, Res$log2FoldChange)       # dataframe with genes, p-values and log2fold-change
