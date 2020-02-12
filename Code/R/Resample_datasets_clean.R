@@ -64,25 +64,6 @@ compute_low_counts=function(Data){
 
 #===================================================================================================================================
 
-# Remove low counts (genes, not samples)
-# For a given dataset, this function removes genes with low counts (>75 % zeroes or an average count <3).
-# input: Data = the data to remove genes from
-# output: FilteredData = the filtered inputdata
-remove_low_counts=function(Data){
-  
-  a=rowSums(Data)<3
-  b=vector()
-  r=vector()
-  for (i in 1:nrow(Data)) {
-    b[i]<-sum(Data[i,]==0)/ncol(Data)>0.75
-    r[i]<-a[i]+b[i]
-  }
-  FilteredData=Data[r==0,]
-  return(FilteredData)
-}
-
-#===================================================================================================================================
-
 # Introducing DAGs
 # For a resampled dataset (including both groups), this function introduces DAGs by
 # downsampling a given fraction of genes. The DAGs will be balanced in the two groups.
@@ -134,11 +115,8 @@ introducing_DAGs = function(Data, q, f){
 
 #################################################################################################################
 
-# filter original data
-DataFilter <- remove_low_counts(Data=Data)
-
 # Resample data
-ResampData=resample(Data=DataFilter, m=m, d=d)
+ResampData=resample(Data=Data, m=m, d=d)
 
 # check number of genes wiht low counts in the prduced datasets
 countsResampData=compute_low_counts(ResampData)
