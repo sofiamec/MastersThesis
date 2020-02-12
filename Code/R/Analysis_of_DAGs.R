@@ -5,23 +5,51 @@ library(DESeq2)
 library(ggplot2)
 library(pracma)
 
+#===================================================================================================================================
+## Selecting parameters and data:
 
-# Select parameters
-saveName = "Gut2"
-plotName="Human Gut II"
-saveExpDesign = "m60_d2e6_q2_f010"
-plotExpDesign = "m = 60, d = 2000000, q = 2, f = 0.10"
+saveName = "Gut2" # Choose dataset. Ex: "Gut2" or "Marine"
+m = 60        # Number of samples in each group (total nr samples = 2*m)
+d = 10000    # Desired sequencing depth per sample. It will not be exct
+q = 2         # Fold-change for downsampling
+f = 0.10      # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
 seed=1  
 savePlot=F
 
+{ # Quickly gives the case the correct names
+  if (saveName == "Gut2"){
+    plotName = "Human Gut II"
+  } else if (saveName == "Marine"){
+    plotName = "Marine"
+  } else {
+    sprintf("Missing name for dataset")
+  }
+  
+  if (d==1e4||d==1e5||d==5e5){
+    dD=d/1000
+    prefix="k"
+  } else if(d==1e6||d==5e6||d==10e6){
+    dD=d/1000000
+    prefix="M"
+  } else {
+    dD=d
+    sprintf("wrong d")
+    prefix=""
+  }
+  # Names for a certain dataset and name    # Results in:
+  saveExpDesign = sprintf("m%d_d%d%s_q%d_f%d", m, dD, prefix, q, f*100)
+  plotExpDesign = sprintf("m=%d, d=%d%s, q=%d, f=%d%%",m,dD,prefix,q,f*100)
+}
+rm(dD,prefix)
 
-# resampled data without DAGS
-#ResampData <- read.csv(file=sprintf("../../Intermediate/%s/%s/ResampData_seed%d.csv", saveName,saveExpDesign,seed), header = T, row.names = 1) 
+# Create folder for certain case if it doesn't exist
+if (!dir.exists(sprintf("../../Result/%s/%s", saveName, saveExpDesign))){
+  dir.create(file.path("../../Result", sprintf("%s", saveName), sprintf("%s", saveExpDesign)), recursive = T)
 
 # resampled data with DAGs
 DagData <- read.csv(file=sprintf("../../Intermediate/%s/%s/DownSampledData_seed%d.csv",saveName,saveExpDesign,seed), header = T, row.names = 1)
 Dags <- read.csv(file=sprintf("../../Intermediate/%s/%s/DAGs_seed%d.csv", saveName, saveExpDesign,seed), header = T, row.names = 1)
-
+}
 #===================================================================================================================================
 #=========================================== Functions ==============================================================================
 #===================================================================================================================================

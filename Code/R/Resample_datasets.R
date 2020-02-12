@@ -9,16 +9,51 @@ MarineOriginal <- read.table("../../Data/Raw_data/Marine_COGcountsRaw.txt", head
 Gut2 = Gut2Original[,colSums(Gut2Original)>=5000000]
 Marine=MarineOriginal[,colSums(MarineOriginal)>=10000000]
 
+
+#===================================================================================================================================
+## Selecting parameters and data:
+
 # Required
-seed = 100                            
+seed = 1
 Data = Gut2
-saveName = "Gut2"
-saveExpDesign = "m10_d2e5_q2_f10"
-m = 10                                # samples in one group
-d = 200000                            # seq. depth
-q = 2                                 # the fold change for downsampling
-f = 0.1                               # the fraction of genes to be downsampled
+m = 60        # Number of samples in each group (total nr samples = 2*m)
+d = 10000    # Desired sequencing depth per sample. It will not be exct
+q = 2         # Fold-change for downsampling
+f = 0.10      # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
+
 set.seed(seed=seed)                   # In order to get the same results each time
+{ # Quickly gives the case the correct names
+  if (all(dim(Data) == dim(Gut2))){
+    saveName = "Gut2"
+    plotName = "Human Gut II"
+  } else if (all(dim(Data)==dim(Marine))){
+    saveName = "Marine"
+    plotName = "Marine"
+  } else {
+    sprintf("Missing name for dataset")
+  }
+  
+  if (d==1e4||d==1e5||d==5e5){
+    dD=d/1000
+    prefix="k"
+  } else if(d==1e6||d==5e6||d==10e6){
+    dD=d/1000000
+    prefix="M"
+  } else {
+    dD=d
+    sprintf("wrong d")
+    prefix=""
+  }
+  # Names for a certain dataset and name    # Results in:
+  saveExpDesign = sprintf("m%d_d%d%s_q%d_f%d", m, dD, prefix, q, f*100)
+  plotExpDesign = sprintf("m=%d, d=%d%s, q=%d, f=%d%%",m,dD,prefix,q,f*100)
+}
+rm(dD,prefix)
+
+# Create folder for certain case if it doesn't exist
+if (!dir.exists(sprintf("../../Intermediate/%s/%s", saveName, saveExpDesign))){
+  dir.create(file.path("../../Intermediate", sprintf("%s", saveName), sprintf("%s", saveExpDesign)), recursive = T)
+}
 
 #===================================================================================================================================
 #=========================================== Functions ==============================================================================

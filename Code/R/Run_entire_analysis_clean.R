@@ -3,23 +3,12 @@
 
 #===================================================================================================================================
 ## Loading Libraries:
+
 library(plyr)
-# Required packages for exploration:
-
-# Required packages for resampling:
-
 # Required packages for DAGs analysis:
 library(DESeq2)
 library(ggplot2)
 library(pracma)
-
-
-#===================================================================================================================================
-## Selecting colour palettes:
-
-colorScale9<-c("#FFFFD9", "#EDF8B1", "#C7E9B4", "#7FCDBB", "#41B6C4", "#1D91C0", "#225EA8", "#253494", "#081D58")
-color1=colorScale9[7]
-
 
 #===================================================================================================================================
 ## Loading data:
@@ -30,8 +19,7 @@ MarineOriginal <- read.table("../../Data/Raw_data/Marine_COGcountsRaw.txt", head
 
 # Filter out samples with sequencing depth below the maximum sequencing depth of the experimental design
 Gut2 = Gut2Original[,colSums(Gut2Original)>=5000000]
-Marine=MarineOriginal[,colSums(MarineOriginal)>=10000000]
-
+Marine = MarineOriginal[,colSums(MarineOriginal)>=10000000]
 
 #===================================================================================================================================
 ## General settings:
@@ -39,12 +27,15 @@ Marine=MarineOriginal[,colSums(MarineOriginal)>=10000000]
 repeats = 2
 seeds = 1:repeats # In order to get the same results each time
 
+# Colour palettes:
+colorScale9<-c("#FFFFD9", "#EDF8B1", "#C7E9B4", "#7FCDBB", "#41B6C4", "#1D91C0", "#225EA8", "#253494", "#081D58")
+color1=colorScale9[7]
 
 #===================================================================================================================================
 ## Selecting parameters and data:
 
 Data = Gut2
-m = 60        # Number of samples in each group (total nr samples = 2*m)
+m = 3        # Number of samples in each group (total nr samples = 2*m)
 d = 10000    # Desired sequencing depth per sample. It will not be exct
 q = 2         # Fold-change for downsampling
 f = 0.10      # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
@@ -73,7 +64,7 @@ f = 0.10      # Desired total fraction of genes to be downsampled. It will not b
   }
   # Names for a certain dataset and name    # Results in:
   saveExpDesign = sprintf("m%d_d%d%s_q%d_f%d", m, dD, prefix, q, f*100)
-  plotExpDesign = "m = 60, d = 2000000, q = 2, f = 0.10"
+  plotExpDesign = sprintf("m=%d, d=%d%s, q=%d, f=%d%%",m,dD,prefix,q,f*100)
 }
 rm(dD,prefix)
 

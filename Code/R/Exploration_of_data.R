@@ -89,28 +89,9 @@ sequencing_depth_histogram = function(DataGG, bins, title, fillcolor, bordercolo
   }
 }
 
-
-## NOT DONE ##
-
-# Performs the entire exploration of a given dataset
-# Input: Data = the dataset to be explored (rownames required)
-# Output: rData = a logical vector with 1 if a gene should be removed and 0 if it should be kept (regarding low counts) 
-explore_dataset = function(Data){
-  
-  DataGG <- reshaping_dataset(Data)
-  
-  rData <- compute_low_counts(Data)
-  
-  return(rData)
-  
-}
-
-
-
 # ==================================== Loading Datasets ====================================#
-Gut1<-read.table("../../Data/Raw_data/HumanGutI_COGcountsRaw.txt",header = T,row.names = 1)
-Gut2<-read.table("../../Data/Raw_data/HumanGutII_COGcountsRaw.txt",header = T,row.names = 1)
-Marine<-read.table("../../Data/Raw_data/Marine_COGcountsRaw.txt",header = T,row.names = 1)
+Gut2Original<-read.table("../../Data/Raw_data/HumanGutII_COGcountsRaw.txt",header = T,row.names = 1)
+MarineOriginal<-read.table("../../Data/Raw_data/Marine_COGcountsRaw.txt",header = T,row.names = 1)
 
 # ===================================== Colour selection ===================================#
 # Default colors
@@ -123,50 +104,40 @@ colorScale500<-colorRampPalette(brewer.pal(9, "YlGnBu"))(500)
 #==================================== Exploration of data ==================================#
 
 # Reshaping datasets for ggplot
-Gut1GG<-reshaping_dataset(Gut1)
-Gut2GG<-reshaping_dataset(Gut2)
-MarineGG<-reshaping_dataset(Marine)
+Gut2GGOriginal<-reshaping_dataset(Gut2Original)
+MarineGGOriginal<-reshaping_dataset(MarineOriginal)
 
 # Computing low counts
-rGut1<-compute_low_counts(Gut1)
-rGut2<-compute_low_counts(Gut2)
-rMarine<-compute_low_counts(Marine)
-
-# check ordered sequencing depth for Gut1 
-Gut1Depth=data.frame(colnames(Gut1), as.numeric(colSums(Gut1)))
-gut1Order <- order(Gut1Depth[,2])
-Gut1DepthSorted <- Gut1Depth[gut1Order,]  
+rGut2<-compute_low_counts(Gut2Original)
+rMarine<-compute_low_counts(MarineOriginal)
 
 ### For all datasets
 # General info
-numberOfSamples <- c(ncol(Gut1),ncol(Gut2),ncol(Marine))
-numberOfGenes <- c(nrow(Gut1),nrow(Gut2),nrow(Marine))
-lowCountGenes <- c(sum(rGut1!=0),sum(rGut2!=0),sum(rMarine!=0))
+numberOfSamples <- c(ncol(Gut2Original),ncol(MarineOriginal))
+numberOfGenes <- c(nrow(Gut2Original),nrow(MarineOriginal))
+lowCountGenes <- c(sum(rGut2!=0),sum(rMarine!=0))
 
 Dimensions <- cbind(numberOfSamples, numberOfGenes, lowCountGenes)
 colnames(Dimensions)<-c("Total number of samples", "Total number of genes", "Genes with low counts")
-rownames(Dimensions)<-c("Gut I", "Gut II", "Marine")
+rownames(Dimensions)<-c("Gut II", "Marine")
 print(xtable(Dimensions))
 
 # Summary of Sequensing depths (reads per sample)
-SeqSummary<-rbind(summary(colSums(Gut1)),summary(colSums(Gut2)),summary(colSums(Marine)))
-rownames(SeqSummary)<-c("Human Gut I", "Human Gut II", "Marine")
+SeqSummary<-rbind(summary(colSums(Gut2Original)),summary(colSums(MarineOriginal)))
+rownames(SeqSummary)<-c("Human Gut II", "Marine")
 print(xtable(SeqSummary))
 
 # Summary of reads per gene
-GeneSummary<-rbind(summary(rowSums(Gut1)),summary(rowSums(Gut2)),summary(rowSums(Marine)))
-rownames(GeneSummary)<-c("Human Gut I", "Human Gut II", "Marine")
+GeneSummary<-rbind(summary(rowSums(Gut2Original)),summary(rowSums(MarineOriginal)))
+rownames(GeneSummary)<-c("Human Gut II", "Marine")
 print(xtable(GeneSummary))
 
 # Boxplots for genes in each dataset
-gene_boxplot(Gut1GG,"Number of reads in Human Gut I", colorScale150, savePlot=F, saveName="Gut1")
-gene_boxplot(Gut2GG,"Number of reads in Human Gut II", colorScale150, savePlot=F, saveName="Gut2")
-gene_boxplot(MarineGG,"Number of reads in Marine", colorScale250, savePlot=F, saveName="Marine")
+gene_boxplot(Gut2GGOriginal,"Number of reads in Human Gut II", colorScale150, savePlot=F, saveName="Gut2")
+gene_boxplot(MarineGGOriginal,"Number of reads in Marine", colorScale250, savePlot=F, saveName="Marine")
 
 # Histogram of Sequensing depth in each dataset
-sequencing_depth_histogram(Gut1GG, bins=30, "Sequencing Depth in Human Gut I", 
-  color1, "black", savePlot=F, saveName="Gut1")
-sequencing_depth_histogram(Gut2GG, bins=30, "Sequencing Depth in Human Gut II", 
+sequencing_depth_histogram(Gut2GGOriginal, bins=30, "Sequencing Depth in Human Gut II", 
   color1, "black", savePlot=F, saveName="Gut2")
-sequencing_depth_histogram(MarineGG, bins=30, "Sequencing Depth in Marine", 
+sequencing_depth_histogram(MarineGGOriginal, bins=30, "Sequencing Depth in Marine", 
   color1, "black", savePlot=F, saveName="Marine")
