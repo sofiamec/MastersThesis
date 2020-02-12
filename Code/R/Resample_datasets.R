@@ -45,7 +45,8 @@ d = 10000    # Desired sequencing depth per sample. It will not be exct
 q = 2         # Fold-change for downsampling
 f = 0.10      # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
 
-set.seed(seed=seed)                   # In order to get the same results each time
+set.seed(seed=seed)   # In order to get the same results each time
+
 { # Quickly gives the case the correct names
   if (all(dim(Data) == dim(Gut2))){
     saveName = "Gut2"
@@ -186,7 +187,7 @@ ResampData=resample(Data=Data, m=m, d=d)
 # check number of genes wiht low counts in the prduced dataset
 countsResampData=compute_low_counts(ResampData)
 
-# Save generated dataset to intermediate folder
+# Save generated dataset with no effects to intermediate folder
 write.csv(ResampData, file=sprintf("../../Intermediate/%s/%s/ResampData_seed%d.csv", saveName, saveExpDesign, seed))
 
 #################################################################################################################

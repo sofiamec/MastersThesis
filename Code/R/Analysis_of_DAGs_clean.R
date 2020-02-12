@@ -55,7 +55,6 @@ DESeq2_analysis=function(Data){
 }
 
 #===================================================================================================================================
-
 # Computing ROC-curves and AUC-values
 # For the results from analysing DAGs in a dataset and the corresponding known DAGs,
 # this function computes AUC-values and plots the ROC-curve.
@@ -121,7 +120,6 @@ for (i in 1:nrow(DAGs)) {
   matchDESeq[i]=sum(grepl(rownames(DAGs)[i], rownames(ResDESeq[which(ResDESeq<0.05),,drop=F])))
 }
 cat(sprintf("Number of TP genes with DESeq2 for %s: %d out of %d   (exp. design: %s)\n", plotName, sum(matchDESeq), nrow(DAGs), plotExpDesign))
-
 rm(matchDESeq)
 
 #===================================================================================================================================
