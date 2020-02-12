@@ -19,8 +19,30 @@ Gut2Original <- read.table("../../Data/Raw_data/HumanGutII_COGcountsRaw.txt", he
 MarineOriginal <- read.table("../../Data/Raw_data/Marine_COGcountsRaw.txt", header=T, row.names = 1)
 
 # Filter out samples with sequencing depth below the maximum sequencing depth of the experimental design
-Gut2 = Gut2Original[,colSums(Gut2Original)>=5000000]
-Marine = MarineOriginal[,colSums(MarineOriginal)>=10000000]
+Gut2Intermediate = Gut2Original[,colSums(Gut2Original)>=5000000]
+MarineIntermediate = MarineOriginal[,colSums(MarineOriginal)>=10000000]
+
+############## Function to Remove low counts #################################################################
+# For a given dataset, this function removes genes with low counts (>75 % or an average count <3).
+# input: Data = the data to remove genes from
+# output: 
+remove_low_counts=function(Data){
+  
+  a=rowSums(Data)<3
+  b=vector()
+  r=vector()
+  for (i in 1:nrow(Data)) {
+    b[i]<-sum(Data[i,]==0)/ncol(Data)>0.75
+    r[i]<-a[i]+b[i]
+  }
+  FilteredData=Data[r==0,]
+  return(FilteredData)
+}
+###############################################################################################################
+
+# Filter out genes with too low counts 
+Gut2 <- remove_low_counts(Gut2Intermediate)
+Marine <- remove_low_counts(MarineIntermediate)
 
 #===================================================================================================================================
 ## General settings:
