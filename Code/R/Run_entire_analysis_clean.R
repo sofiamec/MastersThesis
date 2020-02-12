@@ -140,7 +140,9 @@ meanROCplot <- ggplot(data=meanROC2, aes(x=FPR, y=mean)) +  theme_minimal() +
        x = "False Positive Rate", y = "True Positive Rate")+
   xlim(0, 1)+  ylim(0, 1)
 
-path_save <-  sprintf("../../Result/%s/%s/meanROC.pdf", saveName, saveExpDesign)
-ggsave(filename = path_save, plot = meanROCplot, height = 5, width = 6)
-dev.off()
-print(meanROCplot)
+if(savePlot == TRUE){
+  path_save <-  sprintf("../../Result/%s/%s/meanROC.pdf", saveName, saveExpDesign)
+  ggsave(filename = path_save, plot = meanROCplot, height = 5, width = 6)
+  dev.off()
+  print(meanROCplot)
+}
