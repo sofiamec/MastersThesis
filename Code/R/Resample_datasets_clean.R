@@ -134,4 +134,4 @@ write.csv(DownSampledData, file=sprintf("../../Intermediate/%s/%s/DownSampledDat
 write.csv(DAGs, file=sprintf("../../Intermediate/%s/%s/DAGs_seed%d.csv", saveName, saveExpDesign, seed))
 
 # remove variables/datasets
-rm(countsResampData, resultList)
+rm(ResampData, countsResampData, resultList)

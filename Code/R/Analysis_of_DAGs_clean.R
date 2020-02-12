@@ -116,4 +116,4 @@ AUCs<- as.matrix(deseqROCAUC[[2]])
 meanROCs<-as.matrix(deseqROCAUC[[3]])
 
 # remove variables/datasets
-rm(deseqROCAUC, DownSampledData, matchDESeq, DAGs, i)
+rm(DownSampledData, matchDESeq, deseqROCAUC, ResDESeq, DAGs, i)
