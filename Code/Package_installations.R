@@ -7,6 +7,7 @@ install.packages("reshape2")
 
 # for visualisation in nice colours
 install.packages("RColorBrewer")
+install.packages("viridis")
 
 # for printing tables compatible with LaTeX
 install.packages("xtable")

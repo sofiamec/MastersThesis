@@ -5,6 +5,7 @@
 ## Loading Libraries:
 
 library(plyr)
+library(viridis)
 # Required packages for DAGs analysis:
 library(DESeq2)
 library(ggplot2)
@@ -39,6 +40,21 @@ m = 3        # Number of samples in each group (total nr samples = 2*m)
 d = 10000    # Desired sequencing depth per sample. It will not be exct
 q = 2         # Fold-change for downsampling
 f = 0.10      # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
+
+groupSize<-c(3,5)#,10,30,50)
+sequencingDepth<-c(10000,100000)#,500000,1000000,5000000)
+
+
+AUCfinal = data.frame(AUC5=numeric(0), AUC10 = numeric(0), AUCtot = numeric(0), TPR5=numeric(0), TPR10=numeric(0), sequencingDepth = character(0), groupSize = character(0))
+meanROCfinal = data.frame(FPR=numeric(0),N=numeric(0),meanTPR=numeric(0), sd=numeric(0),se=numeric(0),d = character(0), m = character(0))
+# Looping all parameters, creating different setups
+for (group in 1:length(groupSize)){
+  for (seq in 1:length(sequencingDepth)) {
+    m=groupSize[group]
+    d=sequencingDepth[seq]
+
+
+
 
 { # Quickly gives the case the correct names
   if (all(dim(Data) == dim(Gut2))){
@@ -109,16 +125,17 @@ ROC$seed<-as.factor(ROC$seed)
 # Plot individual ROC-plots
 ROCplot <- ggplot(data=ROC, aes(x=FPR, y=TPR, group=seed)) +  geom_line(aes(color=seed)) + 
   theme(plot.title = element_text(hjust = 0.5)) +  theme_minimal() + 
-  scale_color_manual(values=c('#EDF8B1','#7FCDBB','#225EA8')) +
+  scale_color_viridis(begin = 0.2, end = 0.6, discrete=TRUE) +
+  #scale_color_manual(values=colorRampPalette(brewer.pal(9, "Spectral"))(repeats))+ #c('#225EA8','#7FCDBB','#EDF8B1')) +
   labs(title=sprintf("ROC-curves for analysis of %s", plotName), 
        subtitle = sprintf("Experimental design: %s", plotExpDesign),
-       x = "False Positive Rate", y = "True Positive Rate") +
+       colour="repeats", x = "False Positive Rate", y = "True Positive Rate") +
   xlim(0, 1)+  ylim(0, 1)
 
 print(ROCplot)
 
 if(savePlot == TRUE){
-  path_save <-  sprintf("../../Result/%s/%s/ROC_seed%d.pdf", saveName, saveExpDesign, seed)
+  path_save <-  sprintf("../../Result/%s/%s/individualROCs.pdf", saveName, saveExpDesign, seed)
   ggsave(filename = path_save, plot = ROCplot, height = 5, width = 6)
   dev.off()
   print(ROCplot)
@@ -131,14 +148,21 @@ meanROC2<-ddply(meanROC, "FPR", summarise,
                 sd   = sd(meanTPR),
                 se   = sd / sqrt(N)
 )
+colnames(meanROC2)[3]<-"meanTPR"
 
-# Plot mean AUC-values/RoC-curves
-meanROCplot <- ggplot(data=meanROC2, aes(x=FPR, y=mean)) +  theme_minimal() + 
-  geom_ribbon(aes(ymin=(mean-sd), ymax=(mean+sd)), alpha = 0.2, fill = color1) + geom_line(color=color1, size=1) +
+# Plot mean RoC-curves for certain experimental design
+meanROCplot <- ggplot(data=meanROC2, aes(x=FPR, y=meanTPR, fill="#22A88433")) +  theme_minimal() + 
+  geom_ribbon(aes(ymin=(meanTPR-sd), ymax=(meanTPR+sd), fill="#22A88433"), alpha = 0.2) + 
+  geom_line(aes(color="#22A88433")) + 
   labs(title=sprintf("Mean ROC-curve for analysis of %s", plotName), 
        subtitle = sprintf("Experimental design: %s     (%s repeats)", plotExpDesign, repeats),
        x = "False Positive Rate", y = "True Positive Rate")+
-  xlim(0, 1)+  ylim(0, 1)
+  xlim(0, 1)+  ylim(0, 1) +
+  scale_fill_viridis_d(begin = 0.2, end = 0.6) +
+  scale_colour_viridis_d(begin = 0.2, end = 0.6)
+
+
+print(meanROCplot)
 
 if(savePlot == TRUE){
   path_save <-  sprintf("../../Result/%s/%s/meanROC.pdf", saveName, saveExpDesign)
@@ -146,3 +170,70 @@ if(savePlot == TRUE){
   dev.off()
   print(meanROCplot)
 }
+AUCfinal<-rbind(AUCfinal,c(colMeans(AUC[,1:5]),d,m))
+meanROCfinal<-rbind(meanROCfinal,data.frame(meanROC2,d,m))
+  }
+}
+
+# Summarising results:
+colnames(AUCfinal)<-c("mean AUC_{0.05}", "mean AUC_{0.10}", "mean total AUC", "mean TPR_{0.05}", "mean TPR_{0.10}", "sequencing depth", "group size" )
+meanROCfinal$d<-as.factor(meanROCfinal$d)
+meanROCfinal$m<-as.factor(meanROCfinal$m)
+AUCfinal$`sequencing depth`<-as.factor(AUCfinal$`sequencing depth`)
+AUCfinal$`group size`<-as.factor(AUCfinal$`group size`)
+
+ggplot(AUCfinal, aes(x=AUCfinal$`group size`, y=AUCfinal$`sequencing depth`, fill=AUCfinal$`mean total AUC`)) +
+  geom_tile() + scale_fill_viridis_c(begin = 0.2, end = 0.6) + scale_x_discrete(position = "top") +  
+  scale_y_discrete(limits = rev(levels(as.factor(AUCfinal$`sequencing depth`)))) +
+  labs(title=sprintf("Mean total AUC-values for analysis of %s", plotName), 
+       #subtitle = sprintf("Experimental designs with group size %d     (%s repeats each)", M, repeats),
+       x = "Group size", y = "Sequencing depth",  color = "sequensing depth", fill = "AUC-values") +
+  
+
+### Plot mean RoC-curves for all experimental designs
+# mean plots with set groupsize
+for (group in 1:length(groupSize)){
+  M=groupSize[group]
+  
+  meanROCplotseq <- ggplot(data=meanROCfinal[meanROCfinal$m==M,], aes(x=FPR, y=meanTPR, fill=d)) +  theme_minimal() + 
+    geom_ribbon(aes(ymin=(meanTPR-sd), ymax=(meanTPR+sd),fill = d), alpha=0.2) +
+    geom_line(aes(color = d)) +
+    labs(title=sprintf("Mean ROC-curves for analysis of %s", plotName), 
+         subtitle = sprintf("Experimental designs with group size %d     (%s repeats each)", M, repeats),
+         x = "False Positive Rate", y = "True Positive Rate",  color = "sequensing depth", fill = "sequensing depth") +
+    xlim(0, 1) +  ylim(0, 1) +
+    scale_fill_viridis_d(begin = 0.2, end = 0.6) +
+    scale_colour_viridis_d(begin = 0.2, end = 0.6)
+  
+  print(meanROCplotseq)
+  
+  if(savePlot == TRUE){
+    path_save <-  sprintf("../../Result/%s/meanROC_groupsize%d.pdf", saveName, M)
+    ggsave(filename = path_save, plot = meanROCplotseq, height = 5, width = 6)
+    dev.off()
+    print(meanROCplotseq)}
+}
+
+# mean plots with set sequencing depth
+for (seq in 1:length(sequencingDepth)) {
+  D=sequencingDepth[seq]
+  
+  meanROCplotgroup <- ggplot(data=meanROCfinal[meanROCfinal$d==D,], aes(x=FPR, y=meanTPR, fill=m)) +  theme_minimal() + 
+    geom_ribbon(aes(ymin=(meanTPR-sd), ymax=(meanTPR+sd),fill = m), alpha=0.2) +
+    geom_line(aes(color = m)) +
+    labs(title=sprintf("Mean ROC-curves for analysis of %s", plotName), 
+         subtitle = sprintf("Experimental designs with sequencing depth %d     (%s repeats each)", D, repeats),
+         x = "False Positive Rate", y = "True Positive Rate",  color = "group size", fill = "group size") +
+    xlim(0, 1) +  ylim(0, 1) +
+    scale_fill_viridis_d(begin = 0.2, end = 0.6) +
+    scale_colour_viridis_d(begin = 0.2, end = 0.6)
+  
+  print(meanROCplotgroup)
+  
+  if(savePlot == TRUE){
+    path_save <-  sprintf("../../Result/%s/meanROC_depth%d.pdf", saveName, D)
+    ggsave(filename = path_save, plot = meanROCplotgroup, height = 5, width = 6)
+    dev.off()
+    print(meanROCplotgroup)}
+}
+
