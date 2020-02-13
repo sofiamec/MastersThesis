@@ -48,7 +48,7 @@ rm(Gut2Original, Gut2Intermediate, MarineOriginal, MarineIntermediate) # remove 
 #===================================================================================================================================
 ## General settings:
 
-repeats = 2
+repeats = 10
 seeds = 1:repeats # In order to get the same results each time
 savePlot = T # change when running with 10 repeats
 
