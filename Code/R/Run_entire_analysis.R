@@ -54,12 +54,12 @@ seeds = 1:repeats # In order to get the same results each time
 #===================================================================================================================================
 ## Selecting parameters and data:
 
-Data = Gut2 #Marine
+Data = Marine # Gut2 or Marine
 q = 2         # Fold-change for downsampling
 f = 0.10      # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
 
 groupSize<-c(3,5,10,30,50)
-sequencingDepth<-c(10000,100000,500000,1000000,5000000) #10000000
+sequencingDepth<-c(10000,100000,500000,1000000, 10000000) # Gut2: 5000000, Marine: 10000000
 
 # The above sets:
 # m = Number of samples in each group (total nr samples = 2*m)
@@ -145,7 +145,7 @@ for (group in 1:length(groupSize)){
     # Plot individual ROC-plots
     ROCplot <- ggplot(data=ROC, aes(x=FPR, y=TPR, group=seed)) +  geom_line(aes(color=seed)) + 
       theme(plot.title = element_text(hjust = 0.5)) +  theme_minimal() + 
-      scale_color_viridis(begin = 0.2, end = 0.6, discrete=TRUE) +
+      scale_color_viridis(begin = 0, end = 1, discrete=TRUE) +
       #scale_color_manual(values=colorRampPalette(brewer.pal(9, "Spectral"))(repeats))+ #c('#225EA8','#7FCDBB','#EDF8B1')) +
       labs(title=sprintf("ROC-curves for analysis of %s", plotName), 
            subtitle = sprintf("Experimental design: %s", plotExpDesign),
@@ -224,7 +224,7 @@ print(heatmap)
 
 savePlot = T # change when running with 10 repeats  
 if(savePlot == TRUE){
-  path_save <-  sprintf("../../Result/%s/heatmap.pdf", saveName, M)
+  path_save <-  sprintf("../../Result/%s/heatmap.pdf", saveName)
   ggsave(filename = path_save, plot = heatmap, height = 5, width = 6)
   dev.off()
   print(heatmap)}
