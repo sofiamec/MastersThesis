@@ -1,3 +1,4 @@
+# Packages required to run Run_entire_analysis.R
 
 # for plotting
 install.packages("ggplot2")
