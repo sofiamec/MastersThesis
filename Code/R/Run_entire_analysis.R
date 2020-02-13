@@ -126,11 +126,11 @@ for (group in 1:length(groupSize)){
       selectedSeed = seeds[run]
       
       # Run the code for resampling and downsampling
-      source("Resample_datasets_clean.R")
+      source("Resample_datasets.R")
       
       # Run the code for analysing DAGs
       savePlot = FALSE
-      source("Analysis_of_DAGs_clean.R")
+      source("Analysis_of_DAGs.R")
     
       # Save the results 
       AUC[run,] <- AUCs

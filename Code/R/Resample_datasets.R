@@ -1,84 +1,17 @@
-# Resample new datasets
-# This script can be run individually, so one can manage these steps more in detail.
+# Required from run_entire_analysis script
 
-# Original datasets
-Gut2Original <- read.table("../../Data/Raw_data/HumanGutII_COGcountsRaw.txt", header=T, row.names = 1)
-MarineOriginal <- read.table("../../Data/Raw_data/Marine_COGcountsRaw.txt", header=T, row.names = 1)
+# Data = Gut2
+# saveName = "Gut2"
+# saveExpDesign = "m60_d2e6_q10_f10"
+# m = 60 nr     samples in one group
+# d = 2000000   seq. depth
+# q = 10        the fold change for downsampling
+# f = 0.1       the fraction of genes to be downsampled
 
-#===================================================================================================================================
-# Filter original datasets
 
-# Filter out samples with sequencing depth below the maximum sequencing depth of the experimental design
-Gut2Intermediate = Gut2Original[,colSums(Gut2Original)>=5000000]
-MarineIntermediate = MarineOriginal[,colSums(MarineOriginal)>=10000000]
-
-############## Function to Remove low counts #################################################################
-# For a given dataset, this function removes genes with low counts (>75 % or an average count <3).
-# input: Data = the data to remove genes from
-# output: 
-remove_low_counts=function(Data){
-  
-  a=rowSums(Data)<3
-  b=vector()
-  r=vector()
-  for (i in 1:nrow(Data)) {
-    b[i]<-sum(Data[i,]==0)/ncol(Data)>0.75
-    r[i]<-a[i]+b[i]
-  }
-  FilteredData=Data[r==0,]
-  return(FilteredData)
-}
-###############################################################################################################
-
-# Filter out genes with too low counts 
-Gut2 <- remove_low_counts(Gut2Intermediate)
-Marine <- remove_low_counts(MarineIntermediate)
-
-#===================================================================================================================================
-## Selecting parameters and data:
-
-# Required
-seed = 1
-Data = Gut2
-m = 60        # Number of samples in each group (total nr samples = 2*m)
-d = 10000    # Desired sequencing depth per sample. It will not be exct
-q = 2         # Fold-change for downsampling
-f = 0.10      # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
-
-set.seed(seed=seed)   # In order to get the same results each time
-
-{ # Quickly gives the case the correct names
-  if (all(dim(Data) == dim(Gut2))){
-    saveName = "Gut2"
-    plotName = "Human Gut II"
-  } else if (all(dim(Data)==dim(Marine))){
-    saveName = "Marine"
-    plotName = "Marine"
-  } else {
-    sprintf("Missing name for dataset")
-  }
-  
-  if (d==1e4||d==1e5||d==5e5){
-    dD=d/1000
-    prefix="k"
-  } else if(d==1e6||d==5e6||d==10e6){
-    dD=d/1000000
-    prefix="M"
-  } else {
-    dD=d
-    sprintf("wrong d")
-    prefix=""
-  }
-  # Names for a certain dataset and name    # Results in:
-  saveExpDesign = sprintf("m%d_d%d%s_q%d_f%d", m, dD, prefix, q, f*100)
-  plotExpDesign = sprintf("m=%d, d=%d%s, q=%d, f=%d%%",m,dD,prefix,q,f*100)
-}
-rm(dD,prefix)
-
-# Create folder for certain case if it doesn't exist
-if (!dir.exists(sprintf("../../Intermediate/%s/%s", saveName, saveExpDesign))){
-  dir.create(file.path("../../Intermediate", sprintf("%s", saveName), sprintf("%s", saveExpDesign)), recursive = T)
-}
+# In order to get the same results each time
+seed=selectedSeed
+set.seed(seed = seed)
 
 #===================================================================================================================================
 #=========================================== Functions ==============================================================================
@@ -101,12 +34,13 @@ resample = function(Data, m, d){
     colnames(sampledVector) <- c("Gene",colnames(Data[sampleVector[i]]))          # name the columns according to the sample-name  
     DataNew <- merge(DataNew, sampledVector, by.x = 1, by.y = 1, all.x = T)       # insert "sampledVector" to "DataNew"
   }
-
-  DataNew <- data.frame(DataNew[,-1], row.names=DataNew[,1]) # put first column (genes) as rownames  
-  DataNew[is.na(DataNew)] <- as.integer(0)                   # set all "NA" to 0 (as integers, since DESeq2 require integer counts)
   
-  return(DataNew)  
-}
+  rownames(DataNew) <- DataNew[,1]                  # add genes as row names
+  DataNew <- DataNew[,-1]                           # remove column containg genes
+  DataNew[is.na(DataNew)] <- as.integer(0)          # set all "NA" to 0 (as integers, since DESeq2 require integer counts)  return(DataNew)
+  
+  return(DataNew) 
+  }
 
 #===================================================================================================================================
 
@@ -124,8 +58,8 @@ compute_low_counts=function(Data){
     b[i]<-sum(Data[i,]==0)/ncol(Data)>0.75
     r[i]<-a[i]+b[i]
   }
-  cat(sprintf("Number of genes with low counts:        %s\n", sum(r!=0)))
-  cat(sprintf("Number of genes wiht acceptable counts: %s\n", sum(r==0)))
+  cat(sprintf("Number of genes with low counts for %s:        %s\n", deparse(substitute(Data)), sum(r!=0)))
+  cat(sprintf("Number of genes wiht acceptable counts for %s: %s\n", deparse(substitute(Data)), sum(r==0)))
   return(r)
 }
 
@@ -185,11 +119,8 @@ introducing_DAGs = function(Data, q, f){
 # Resample data
 ResampData=resample(Data=Data, m=m, d=d)
 
-# check number of genes wiht low counts in the prduced dataset
+# check number of genes wiht low counts in the prduced datasets
 countsResampData=compute_low_counts(ResampData)
-
-# Save generated dataset with no effects to intermediate folder
-write.csv(ResampData, file=sprintf("../../Intermediate/%s/%s/ResampData_seed%d.csv", saveName, saveExpDesign, seed))
 
 #################################################################################################################
 
@@ -200,4 +131,7 @@ DAGs<-resultList[[2]]
 
 # Saving downsampled datasets and corresponding overview of DAGs
 write.csv(DownSampledData, file=sprintf("../../Intermediate/%s/%s/DownSampledData_seed%d.csv", saveName, saveExpDesign, seed))
-write.csv(DAGs, file=sprintf("../../Intermediate/%s/%s/DAGs_seed%d.csv",saveName, saveExpDesign, seed))
+write.csv(DAGs, file=sprintf("../../Intermediate/%s/%s/DAGs_seed%d.csv", saveName, saveExpDesign, seed))
+
+# remove variables/datasets
+rm(ResampData, countsResampData, resultList)

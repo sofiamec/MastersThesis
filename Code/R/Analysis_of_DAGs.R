@@ -1,56 +1,14 @@
 # statistical analysis of DAGs in the resampled datasets
 
-# load required packages
-library(DESeq2)
-library(ggplot2)
-library(pracma)
+# Required "inputs"
 
-#===================================================================================================================================
-## Selecting parameters and data:
+# seed = selectedSeed 
+# saveName = "Gut2"
+# plotName = "Human Gut II"
+# saveExpDesign = 
+# plotExpDesign =
 
-saveName = "Gut2" # Choose dataset. Ex: "Gut2" or "Marine"
-m = 60        # Number of samples in each group (total nr samples = 2*m)
-d = 10000    # Desired sequencing depth per sample. It will not be exct
-q = 2         # Fold-change for downsampling
-f = 0.10      # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
-seed=1  
-savePlot=F
-
-{ # Quickly gives the case the correct names
-  if (saveName == "Gut2"){
-    plotName = "Human Gut II"
-  } else if (saveName == "Marine"){
-    plotName = "Marine"
-  } else {
-    sprintf("Missing name for dataset")
-  }
-  
-  if (d==1e4||d==1e5||d==5e5){
-    dD=d/1000
-    prefix="k"
-  } else if(d==1e6||d==5e6||d==10e6){
-    dD=d/1000000
-    prefix="M"
-  } else {
-    dD=d
-    sprintf("wrong d")
-    prefix=""
-  }
-  # Names for a certain dataset and name    # Results in:
-  saveExpDesign = sprintf("m%d_d%d%s_q%d_f%d", m, dD, prefix, q, f*100)
-  plotExpDesign = sprintf("m=%d, d=%d%s, q=%d, f=%d%%",m,dD,prefix,q,f*100)
-
-rm(dD,prefix)
-
-# Create folder for certain case if it doesn't exist
-if (!dir.exists(sprintf("../../Result/%s/%s", saveName, saveExpDesign))){
-  dir.create(file.path("../../Result", sprintf("%s", saveName), sprintf("%s", saveExpDesign)), recursive = T)
-}
-  
-# resampled data with DAGs
-DownSampledData <- read.csv(file=sprintf("../../Intermediate/%s/%s/DownSampledData_seed%d.csv",saveName,saveExpDesign,seed), header = T, row.names = 1)
-DAGs <- read.csv(file=sprintf("../../Intermediate/%s/%s/DAGs_seed%d.csv", saveName, saveExpDesign,seed), header = T, row.names = 1)
-}
+seed=selectedSeed  # set seed 
 #===================================================================================================================================
 #=========================================== Functions ==============================================================================
 #===================================================================================================================================
@@ -88,12 +46,10 @@ DESeq2_analysis=function(Data){
 # this function computes AUC-values and plots the ROC-curve.
 # Inputs:   ResultsData = Results from DESeq2 or edgeR analysis. Ex: ResDESeq or ResEdge
 #           DAGs = the artificially introduced DAGs (known)
-#           seed = the number of the selected seed
-#           savePlot = TRUE/FALSE indicates wether or not to save the ROC-plot
 # Outputs:  ROC = a dataframe with the computed TPR- and FPR-values
 #           AUCs = The computed AUC for the entire ROC-curve and for FPR-cutoff 0.05 and 0.10.
 #           meanROC = the pieciwise mean
-Compute_ROC_AUC = function(ResultsData, DAGs, seed, plotExpDesign, plotName, saveName, saveExpDesign, savePlot){
+Compute_ROC_AUC = function(ResultsData, DAGs, seed){
   
   TP<-rownames(DAGs)
   nT=vector(mode = 'numeric' ,length = nrow(ResultsData)+1)
@@ -126,31 +82,15 @@ Compute_ROC_AUC = function(ResultsData, DAGs, seed, plotExpDesign, plotName, sav
   rm(AUC5,AUC10,AUCtot, TPR5,TPR10)
   
   ROCs <- data.frame(TPR,FPR,seed)
-  ROCs2<-ROCs
-  ROC2s[,2] <- round2(ROCs2[,2], 3) # 3 is the number of decimals here
+  ROCs2 <- ROCs
+  ROCs2[,2] <- round2(ROCs2[,2], 3) # 3 is the number of decimals here
   
   meanROCs<-ddply(ROCs2, "FPR", summarise,
-                  N    = length(TPR),
-                  mean = mean(TPR),
-                  sd   = sd(TPR),
-                  se   = sd / sqrt(N) )
-  rm(ROCs2)
+                 N    = length(TPR),
+                 mean = mean(TPR),
+                 sd   = sd(TPR),
+                 se   = sd / sqrt(N))
   
-  ROCplot <- ggplot(data=ROCs, aes(x=FPR, y=TPR)) +  geom_line() + 
-    theme(plot.title = element_text(hjust = 0.5)) +  theme_minimal() + 
-    scale_color_manual(values=c('#7FCDBB','#225EA8')) +
-    labs(title=sprintf("ROC-curves for analysis of %s seed %d", plotName, seed), 
-         subtitle = sprintf("Experimental design: %s    (Seed %d)", plotExpDesign, seed),
-         x = "False Positive Rate", y = "True Positive Rate")
-  
-  print(ROCplot)
-  
-  if(savePlot == TRUE){
-    path_save <-  sprintf("../../Result/%s/%s/ROC_seed%d.pdf",saveName, saveExpDesign, seed)
-    ggsave(filename = path_save2, plot = p2, height = 5, width = 6)
-    dev.off()
-    print(p2)
-  }
   return(list(ROCs, AUCs, meanROCs))
 }
 
@@ -158,7 +98,7 @@ Compute_ROC_AUC = function(ResultsData, DAGs, seed, plotExpDesign, plotName, sav
 
 ######## DESeq2 ##########
 ResDESeq=DESeq2_analysis(Data = DownSampledData)
-cat(sprintf("Number of significant genes with DESeq2 for %s: %d     (exp. design: %s)\n", plotName, sum(ResDESeq<0.05, na.rm = T),plotExpDesign))
+cat(sprintf("Number of significant genes with DESeq2 for %s: %d     (exp. design: %s)\n", plotName, sum(ResDESeq$`p-value`<0.05, na.rm = T),plotExpDesign))
 
 # how many of the artificially introduced DAGs are among the significant genes
 matchDESeq=c()
@@ -169,8 +109,11 @@ cat(sprintf("Number of TP genes with DESeq2 for %s: %d out of %d   (exp. design:
 
 #===================================================================================================================================
 # Computing ROC and AUC
-deseqROCAUC<-Compute_ROC_AUC(ResDESeq, DAGs, seed, plotExpDesign, plotName, saveName, SaveExpDesign, savePlot)
+# Plotting both deseq and edge (Lägg till detta i funktionen Compute_ROC_AUC när vi bestämt oss för edgeR eller DESeq!)
+deseqROCAUC<-Compute_ROC_AUC(ResDESeq,DAGs, seed)
 ROCs <- data.frame(deseqROCAUC[[1]])
 AUCs<- as.matrix(deseqROCAUC[[2]]) 
 meanROCs<-as.matrix(deseqROCAUC[[3]])
 
+# remove variables/datasets
+rm(DownSampledData, matchDESeq, deseqROCAUC, ResDESeq, DAGs, i)
