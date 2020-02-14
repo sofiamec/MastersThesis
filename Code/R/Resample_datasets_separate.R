@@ -40,7 +40,7 @@ Marine <- remove_low_counts(MarineIntermediate)
 # Required
 seed = 1
 Data = Gut2
-m = 60        # Number of samples in each group (total nr samples = 2*m)
+m = 30        # Number of samples in each group (total nr samples = 2*m)
 d = 10000    # Desired sequencing depth per sample. It will not be exct
 q = 2         # Fold-change for downsampling
 f = 0.10      # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
