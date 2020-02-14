@@ -54,18 +54,19 @@ rm(Gut2Original, Gut2Intermediate, MarineOriginal, MarineIntermediate) # remove 
 #===================================================================================================================================
 ## Selecting parameters and data:
 
-Data = Gut2 # Gut2 or Marine
-repeats = 2
-savePlot = T # change when running with 10 repeats
-effectsizes=c(1.2,1.5)#,1.8,2,4)#3,5,10)
-groupSize<-c(3)#,5,10,30,50)
-sequencingDepth<-c(10000)#,100000,500000,1000000, 5000000) # Gut2: 5000000, Marine: 10000000
-sequencingDepthName<-c("10k")#,"100k","500k","1M", "5M") # Gut2: 5M, Marine: 10M
+repeats = 10
+savePlot = T
+
+Data = Gut2                                                   # Gut2 or Marine
+effectsizes=c(1.2,1.5,1.8,2,4)#3,5,10)                      # q
+groupSize<-c(3,5,10,30,50)                                  # m
+sequencingDepth<-c(10000,100000,500000,1000000, 5000000)    # d,  Gut2: 5000000, Marine: 10000000
+sequencingDepthName<-c("10k","100k","500k","1M", "5M")      # dD, Gut2: 5M, Marine: 10M
 
 # The above sets:
 # q = Fold-change for downsampling
 # m = Number of samples in each group (total nr samples = 2*m)
-# d = Desired sequencing depth per sample. It will not be exct
+# d = Desired sequencing depth per sample
 
 #===================================================================================================================================
 #===================================================================================================================================
@@ -83,9 +84,11 @@ meanROCfinal = data.frame(FPR=numeric(0),N=numeric(0),meanTPR=numeric(0), sd=num
 
 ### Looping all parameters, creating different setups
 for (group in 1:length(groupSize)){ # looping over m
+  m=groupSize[group]
+  cat(sprintf("================================== m=%d =======================================\n", m))
   for (seq in 1:length(sequencingDepth)) { # looping over d
-    m=groupSize[group]
     d=sequencingDepth[seq]
+    cat(sprintf("================================= d=%d ====================================\n", d))
   
     { # Quickly gives the case the correct names
       if (all(dim(Data) == dim(Gut2))){
@@ -111,7 +114,7 @@ for (group in 1:length(groupSize)){ # looping over m
       }
       # Names for a certain dataset and name    # Results in:
       saveExpDesign = sprintf("m%d_d%d%s_10q%d_f%d", m, dD, prefix, q*10, f*100)
-      plotExpDesign = sprintf("m=%d, d=%d%s, q=%f, f=%d%%",m,dD,prefix,q,f*100)
+      plotExpDesign = sprintf("m=%d, d=%d%s, q=%g, f=%d%%",m,dD,prefix,q,f*100)
     
       rm(dD,prefix)
       
