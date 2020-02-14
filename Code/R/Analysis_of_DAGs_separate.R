@@ -15,7 +15,6 @@ d = 10000     # Desired sequencing depth per sample. It will not be exct
 q = 2         # Fold-change for downsampling
 f = 0.10      # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
 seed=1  
-savePlot=F
 
 { # Quickly gives the case the correct name
   if (saveName == "Gut2"){
@@ -138,12 +137,6 @@ Compute_ROC_AUC = function(ResultsData, DAGs, seed, plotExpDesign, plotName, sav
   
   print(ROCplot)
   
-  if(savePlot == TRUE){
-    path_save <-  sprintf("../../Result/%s/%s/ROC_seed%d.pdf",saveName, saveExpDesign, seed)
-    ggsave(filename = path_save2, plot = p2, height = 5, width = 6)
-    dev.off()
-    print(p2)
-  }
   return(list(ROCs, AUCs, meanROCs))
 }
 
