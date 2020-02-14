@@ -4,19 +4,20 @@
 library(DESeq2)
 library(ggplot2)
 library(pracma)
+library(plyr)
 
 #===================================================================================================================================
 ## Selecting parameters and data:
 
 saveName = "Gut2" # Choose dataset. Ex: "Gut2" or "Marine"
-m = 60        # Number of samples in each group (total nr samples = 2*m)
-d = 10000    # Desired sequencing depth per sample. It will not be exct
+m = 30        # Number of samples in each group (total nr samples = 2*m)
+d = 10000     # Desired sequencing depth per sample. It will not be exct
 q = 2         # Fold-change for downsampling
 f = 0.10      # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
 seed=1  
 savePlot=F
 
-{ # Quickly gives the case the correct names
+{ # Quickly gives the case the correct name
   if (saveName == "Gut2"){
     plotName = "Human Gut II"
   } else if (saveName == "Marine"){
@@ -36,21 +37,13 @@ savePlot=F
     sprintf("wrong d")
     prefix=""
   }
-  # Names for a certain dataset and name    # Results in:
+ 
   saveExpDesign = sprintf("m%d_d%d%s_q%d_f%d", m, dD, prefix, q, f*100)
   plotExpDesign = sprintf("m=%d, d=%d%s, q=%d, f=%d%%",m,dD,prefix,q,f*100)
 
 rm(dD,prefix)
+}
 
-# Create folder for certain case if it doesn't exist
-if (!dir.exists(sprintf("../../Result/%s/%s", saveName, saveExpDesign))){
-  dir.create(file.path("../../Result", sprintf("%s", saveName), sprintf("%s", saveExpDesign)), recursive = T)
-}
-  
-# resampled data with DAGs
-DownSampledData <- read.csv(file=sprintf("../../Intermediate/%s/%s/DownSampledData_seed%d.csv",saveName,saveExpDesign,seed), header = T, row.names = 1)
-DAGs <- read.csv(file=sprintf("../../Intermediate/%s/%s/DAGs_seed%d.csv", saveName, saveExpDesign,seed), header = T, row.names = 1)
-}
 #===================================================================================================================================
 #=========================================== Functions ==============================================================================
 #===================================================================================================================================
@@ -127,7 +120,7 @@ Compute_ROC_AUC = function(ResultsData, DAGs, seed, plotExpDesign, plotName, sav
   
   ROCs <- data.frame(TPR,FPR,seed)
   ROCs2<-ROCs
-  ROC2s[,2] <- round2(ROCs2[,2], 3) # 3 is the number of decimals here
+  ROCs2[,2] <- round2(ROCs2[,2], 3) # 3 is the number of decimals here
   
   meanROCs<-ddply(ROCs2, "FPR", summarise,
                   N    = length(TPR),
