@@ -8,7 +8,7 @@
 # saveExpDesign = 
 # plotExpDesign =
 
-seed=selectedSeed  # set seed 
+rep=run  # set seed 
 #===================================================================================================================================
 #=========================================== Functions ==============================================================================
 #===================================================================================================================================
@@ -49,7 +49,7 @@ DESeq2_analysis=function(Data){
 # Outputs:  ROC = a dataframe with the computed TPR- and FPR-values
 #           AUCs = The computed AUC for the entire ROC-curve and for FPR-cutoff 0.05 and 0.10.
 #           meanROC = the pieciwise mean
-Compute_ROC_AUC = function(ResultsData, DAGs, seed){
+Compute_ROC_AUC = function(ResultsData, DAGs, rep){
   
   TP<-rownames(DAGs)
   nT=vector(mode = 'numeric' ,length = nrow(ResultsData)+1)
@@ -77,11 +77,11 @@ Compute_ROC_AUC = function(ResultsData, DAGs, seed){
   AUCtot<-trapz(FPR,TPR)
   TPR5<-max(TPR[FPR<=0.05])
   TPR10<-max(TPR[FPR<=0.1])
-  AUCs <- data.frame(AUC5,AUC10,AUCtot,TPR5,TPR10,seed)
+  AUCs <- data.frame(AUC5,AUC10,AUCtot,TPR5,TPR10,rep)
   
   rm(AUC5,AUC10,AUCtot, TPR5,TPR10)
   
-  ROCs <- data.frame(TPR,FPR,seed)
+  ROCs <- data.frame(TPR,FPR,rep)
   ROCs2 <- ROCs
   ROCs2[,2] <- round2(ROCs2[,2], 3) # 3 is the number of decimals here
   
@@ -110,7 +110,7 @@ cat(sprintf("Number of TP genes for %s out of %d:  %d     (exp. design: %s)\n\n"
 #===================================================================================================================================
 # Computing ROC and AUC
 # Plotting both deseq and edge (Lägg till detta i funktionen Compute_ROC_AUC när vi bestämt oss för edgeR eller DESeq!)
-deseqROCAUC<-Compute_ROC_AUC(ResDESeq,DAGs, seed)
+deseqROCAUC<-Compute_ROC_AUC(ResDESeq,DAGs, rep)
 ROCs <- data.frame(deseqROCAUC[[1]])
 AUCs<- as.matrix(deseqROCAUC[[2]]) 
 meanROCs<-as.matrix(deseqROCAUC[[3]])

@@ -10,8 +10,7 @@
 
 
 # In order to get the same results each time
-seed=selectedSeed
-set.seed(seed = seed)
+rep=run 
 
 #===================================================================================================================================
 #=========================================== Functions ==============================================================================
@@ -130,8 +129,8 @@ DownSampledData<-resultList[[1]]
 DAGs<-resultList[[2]]
 
 # Saving downsampled datasets and corresponding overview of DAGs
-write.csv(DownSampledData, file=sprintf("../../Intermediate/%s/%s/DownSampledData_seed%d.csv", saveName, saveExpDesign, seed))
-write.csv(DAGs, file=sprintf("../../Intermediate/%s/%s/DAGs_seed%d.csv", saveName, saveExpDesign, seed))
+write.csv(DownSampledData, file=sprintf("../../Intermediate/%s/%s/DownSampledData_run%d.csv", saveName, saveExpDesign, rep))
+write.csv(DAGs, file=sprintf("../../Intermediate/%s/%s/DAGs_run%d.csv", saveName, saveExpDesign, rep))
 
 # remove variables/datasets
 rm(ResampData, countsResampData, resultList)

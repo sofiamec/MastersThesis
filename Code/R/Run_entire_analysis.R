@@ -58,10 +58,12 @@ repeats = 10
 savePlot = T
 
 Data = Gut2                                                 # Gut2 or Marine
-effectsizes=c(1.2,1.5,1.8,2,4)                              # q
+effectsizes=c(1.5,1.8,2,2.5,4)                              # q 
+# remove q from seeds when value is fixed!
 groupSize<-c(3,5,10,30,50)                                  # m
 sequencingDepth<-c(10000,100000,500000,1000000,5000000)     # d,  Gut2: 5000000, Marine: 10000000
 sequencingDepthName<-c("10k","100k","500k","1M", "5M")      # dD, Gut2: 5M, Marine: 10M
+boldvalue2=0                                                # Gut2: 0, Marine: 50000000
 
 # The above sets:
 # q = Fold-change for downsampling
@@ -72,11 +74,16 @@ sequencingDepthName<-c("10k","100k","500k","1M", "5M")      # dD, Gut2: 5M, Mari
 #===================================================================================================================================
 ####################################################################################################################################
 
+## old:
+#seeds = 1:(repeats*length(groupSize)*length(sequencingDepth)*length(effectsizes)) # In order to get the same results each time
+#selectedSeed = seeds[run] # used to be in inner for-llop
+
+set.seed(100)
+
 for (effect in 1:length(effectsizes)) { # looping over q
   q=effectsizes[effect]
 
 f = 0.10      # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
-seeds = 1:repeats # In order to get the same results each time
 
 # Creating empty results-matrices
 meanAUCfinal = data.frame(AUC5=numeric(0), AUC10 = numeric(0), AUCtot = numeric(0), TPR5=numeric(0), TPR10=numeric(0), d = character(0), m = character(0))
@@ -132,13 +139,11 @@ for (group in 1:length(groupSize)){ # looping over m
     ## Run the analysis for a selected m and d:
     
     # Creating empty result-matrices
-    AUC = data.frame(AUC5=numeric(0), AUC10 = numeric(0), AUCtot = numeric(0), TPR5=numeric(0), TPR10=numeric(0),seed = numeric(0))
-    ROC = data.frame(TPR=numeric(0), FPR=numeric(0),seed=numeric(0))
+    AUC = data.frame(AUC5=numeric(0), AUC10 = numeric(0), AUCtot = numeric(0), TPR5=numeric(0), TPR10=numeric(0),rep = numeric(0))
+    ROC = data.frame(TPR=numeric(0), FPR=numeric(0),rep=numeric(0))
     meanROC = data.frame(FPR=numeric(0),N=numeric(0),mean=numeric(0), sd=numeric(0),se=numeric(0))
     
     for (run in 1:repeats){
-      
-      selectedSeed = seeds[run]
       
       # Run the code for resampling and downsampling
       source("Resample_datasets.R")
@@ -154,12 +159,12 @@ for (group in 1:length(groupSize)){ # looping over m
       rm(AUCs,ROCs,meanROCs)
     }
     
-    ROC$seed<-as.factor(ROC$seed)
+    ROC$rep<-as.factor(ROC$rep)
     
     # Plot individual ROC-plots
-    ROCplot <- ggplot(data=ROC, aes(x=FPR, y=TPR, group=seed)) +  geom_line(aes(color=seed)) + 
+    ROCplot <- ggplot(data=ROC, aes(x=FPR, y=TPR, group=rep)) +  geom_line(aes(color=rep)) + 
       theme(plot.title = element_text(hjust = 0.5)) +  theme_minimal() + 
-      scale_color_viridis(begin = 0, end = 1, discrete=TRUE) +
+      scale_color_viridis(begin = 0, end = 0.85, discrete=TRUE) +
       labs(title=sprintf("ROC-curves for %s", plotName), 
            subtitle = sprintf("Experimental design: %s", plotExpDesign),
            colour="repeats", x = "False Positive Rate", y = "True Positive Rate") +
@@ -168,7 +173,7 @@ for (group in 1:length(groupSize)){ # looping over m
     print(ROCplot)
     
     if(savePlot == TRUE){
-      path_save <-  sprintf("../../Result/%s/IntermediatePlots/individualROCs_%s.pdf", saveName, saveExpDesign, seed)
+      path_save <-  sprintf("../../Result/%s/IntermediatePlots/individualROCs_rep%s.pdf", saveName, saveExpDesign, rep)
       ggsave(filename = path_save, plot = ROCplot, height = 5, width = 6)
       dev.off()
       print(ROCplot)
@@ -216,7 +221,7 @@ for (group in 1:length(groupSize)){ # looping over m
 meanAUCfinal<-data.frame(meanAUCfinal,(meanAUCfinal[,6]*meanAUCfinal[,7]))
 colnames(meanAUCfinal)<-c("AUC5", "AUC10", "AUCtot", "TPR5", "TPR10", "d", "m" ,"md")
 
-meanAUCfinal$md[meanAUCfinal$md==5000000]<-"bold"
+meanAUCfinal$md[meanAUCfinal$md==5000000 || meanAUCfinal$md==boldvalue2]<-"bold"
 meanAUCfinal$md[meanAUCfinal$md!="bold"]<-"plain"
 
 meanAUCfinal$d<-as.factor(meanAUCfinal$d)
