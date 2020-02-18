@@ -57,8 +57,8 @@ rm(Gut2Original, Gut2Intermediate, MarineOriginal, MarineIntermediate) # remove 
 repeats = 10
 savePlot = T
 
-Data = Gut2                                                 # Gut2 or Marine
-effectsizes=c(1.5,1.8,2,2.5,4)                              # q 
+Data = Marine                                                # Gut2 or Marine
+effectsizes=c(1.5,1.8,2,2.5 )                              # q 
 # remove q from seeds when value is fixed!
 groupSize<-c(3,5,10,30,50)                                  # m
 sequencingDepth<-c(10000,100000,500000,1000000,5000000, 10000000)     # d,  Gut2: 5000000, Marine: 10000000
