@@ -98,14 +98,14 @@ Compute_ROC_AUC = function(ResultsData, DAGs, rep){
 
 ######## DESeq2 ##########
 ResDESeq=DESeq2_analysis(Data = DownSampledData)
-cat(sprintf("Number of significant genes for %s:    %d     (exp. design: %s)\n", plotName, sum(ResDESeq$`p-value`<0.05, na.rm = T),plotExpDesign))
+cat(sprintf("Significant genes for %s:    %d     (exp. design: %s)\n", saveName, sum(ResDESeq$`p-value`<0.05, na.rm = T),plotExpDesign))
 
 # how many of the artificially introduced DAGs are among the significant genes
 matchDESeq=c()
 for (i in 1:nrow(DAGs)) {
   matchDESeq[i]=sum(grepl(rownames(DAGs)[i], rownames(ResDESeq[which(ResDESeq<0.05),,drop=F])))
 }
-cat(sprintf("Number of TP genes for %s out of %d:  %d     (exp. design: %s)\n\n", plotName, nrow(DAGs), sum(matchDESeq), plotExpDesign))
+cat(sprintf("TP genes for %s out of %d:  %d     (exp. design: %s)\n\n", saveName, nrow(DAGs), sum(matchDESeq), plotExpDesign))
 
 #===================================================================================================================================
 # Computing ROC and AUC
