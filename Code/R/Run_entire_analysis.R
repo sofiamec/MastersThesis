@@ -40,6 +40,12 @@ remove_low_counts=function(Data){
   return(FilteredData)
 }
 
+## Function for always rounding 0.5, 0.05 etc upwards
+round2 <- function(x, n) {
+  z = trunc(abs(x)*10^n +0.5)/10^n *sign(x)
+  return(z)
+}
+
 #===================================================================================================================================
 # Filter out genes with too low counts 
 Gut2 <- remove_low_counts(Gut2Intermediate)
@@ -61,14 +67,15 @@ Data = Gut2                                                 # Gut2 or Marine
 effectsizes=c(1.5,1.8,2,2.5,4)                              # q 
 # remove q from seeds when value is fixed!
 groupSize<-c(3,5,10,30,50)                                  # m
-sequencingDepth<-c(10000,100000,500000,1000000,5000000)     # d,  Gut2: 5000000, Marine: 10000000
+sequencingDepth<-c(10000,100000,500000,1000000,5000000)     # d,  Gut2: 5000000, Marine: 5000000 and 10000000
 sequencingDepthName<-c("10k","100k","500k","1M", "5M")      # dD, Gut2: 5M, Marine: 10M
-boldvalue2=0                                                # Gut2: 0, Marine: 50000000
+boldvalue2="0"                                                # Gut2: "0", Marine: "50000000"
 
 # The above sets:
 # q = Fold-change for downsampling
 # m = Number of samples in each group (total nr samples = 2*m)
 # d = Desired sequencing depth per sample
+# boldvalue2 = What experimental design, apart from "5M", that should be bold in heatmaps   
 
 #===================================================================================================================================
 #===================================================================================================================================
@@ -144,6 +151,7 @@ for (group in 1:length(groupSize)){ # looping over m
     meanROC = data.frame(FPR=numeric(0),N=numeric(0),mean=numeric(0), sd=numeric(0),se=numeric(0))
     
     for (run in 1:repeats){
+      cat(sprintf("Repeat %d\n", run))
       
       # Run the code for resampling and downsampling
       source("Resample_datasets.R")
@@ -221,7 +229,8 @@ for (group in 1:length(groupSize)){ # looping over m
 meanAUCfinal<-data.frame(meanAUCfinal,(meanAUCfinal[,6]*meanAUCfinal[,7]))
 colnames(meanAUCfinal)<-c("AUC5", "AUC10", "AUCtot", "TPR5", "TPR10", "d", "m" ,"md")
 
-meanAUCfinal$md[meanAUCfinal$md==5000000 || meanAUCfinal$md==boldvalue2]<-"bold"
+meanAUCfinal$md[meanAUCfinal$md=="5000000"]<-"bold"
+meanAUCfinal$md[meanAUCfinal$md==boldvalue2]<-"bold"
 meanAUCfinal$md[meanAUCfinal$md!="bold"]<-"plain"
 
 meanAUCfinal$d<-as.factor(meanAUCfinal$d)
@@ -237,7 +246,7 @@ write.csv(meanAUCfinal, file=sprintf("../../Result/%s/AUC_10q%d.csv", saveName,1
 
 # heatmaps for AUC and TPR at FPR 0.5, 0.10 and 1
 heatmapAUCtot <- ggplot(meanAUCfinal, aes(x=meanAUCfinal$m, y=meanAUCfinal$d, fill=AUCtot)) +
-  geom_tile(aes(fill = AUCtot)) + geom_text(aes(label = round(AUCtot, 2), fontface=md))+#size=meanAUCfinal$md==30000)) +
+  geom_tile(aes(fill = AUCtot)) + geom_text(aes(label = round2(AUCtot, 2), fontface=md)) +
   scale_fill_viridis_c(begin = 0, end = 1, alpha = 0.5) +  
   scale_y_discrete(limits = rev(levels(as.factor(meanAUCfinal$d)))) +
   theme(panel.border = element_blank(), panel.grid.major = element_blank(),
@@ -252,12 +261,12 @@ if(savePlot == TRUE){
   print(heatmapAUCtot)}
 
 heatmapAUC5 <- ggplot(meanAUCfinal, aes(x=meanAUCfinal$m, y=meanAUCfinal$d, fill=AUC5)) +
-  geom_tile(aes(fill = AUC5)) + geom_text(aes(label = round(AUC5, 2), fontface=md)) +
+  geom_tile(aes(fill = AUC5)) + geom_text(aes(label = round2(AUC5, 2), fontface=md)) +
   scale_fill_viridis_c(begin = 0, end = 1, alpha = 0.5) +  
   scale_y_discrete(limits = rev(levels(as.factor(meanAUCfinal$d)))) +
   theme(panel.border = element_blank(), panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), axis.line = element_blank(), panel.background=element_rect(fill = "white") ) +
-  labs(title=sprintf("Mean AUC-values at 0.05 for %s", plotName), 
+  labs(title=sprintf("Mean AUC-values at FPR 0.05 for %s", plotName), 
        x = "Group size", y = "Sequencing depth",  color = "sequensing depth", fill = "AUC-values") 
 print(heatmapAUC5)
 if(savePlot == TRUE){
@@ -267,12 +276,12 @@ if(savePlot == TRUE){
   print(heatmapAUC5)}
 
 heatmapAUC10 <- ggplot(meanAUCfinal, aes(x=meanAUCfinal$m, y=meanAUCfinal$d, fill=AUC10)) +
-  geom_tile(aes(fill = AUC10)) + geom_text(aes(label = round(AUC10, 2), fontface=md)) +
+  geom_tile(aes(fill = AUC10)) + geom_text(aes(label = round2(AUC10, 2), fontface=md)) +
   scale_fill_viridis_c(begin = 0, end = 1, alpha = 0.5) +  
   scale_y_discrete(limits = rev(levels(as.factor(meanAUCfinal$d)))) +
   theme(panel.border = element_blank(), panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), axis.line = element_blank(), panel.background=element_rect(fill = "white") ) +
-  labs(title=sprintf("Mean AUC-values at 0.10 for %s", plotName), 
+  labs(title=sprintf("Mean AUC-values at FPR 0.10 for %s", plotName), 
        x = "Group size", y = "Sequencing depth",  color = "sequensing depth", fill = "AUC-values") 
 print(heatmapAUC10)
 if(savePlot == TRUE){
@@ -282,12 +291,12 @@ if(savePlot == TRUE){
   print(heatmapAUC10)}
 
 heatmapTPR5 <- ggplot(meanAUCfinal, aes(x=meanAUCfinal$m, y=meanAUCfinal$d, fill=TPR5)) +
-  geom_tile(aes(fill = TPR5)) + geom_text(aes(label = round(TPR5, 2), fontface=md)) +
+  geom_tile(aes(fill = TPR5)) + geom_text(aes(label = round2(TPR5, 2), fontface=md)) +
   scale_fill_viridis_c(begin = 0, end = 1, alpha = 0.5) +  
   scale_y_discrete(limits = rev(levels(as.factor(meanAUCfinal$d)))) +
   theme(panel.border = element_blank(), panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), axis.line = element_blank(), panel.background=element_rect(fill = "white") ) +
-  labs(title=sprintf("Mean TPR-values at 0.05 for %s", plotName), 
+  labs(title=sprintf("Mean TPR-values at FPR 0.05 for %s", plotName), 
        x = "Group size", y = "Sequencing depth",  color = "sequensing depth", fill = "TPR-values") 
 print(heatmapTPR5)
 if(savePlot == TRUE){
@@ -297,12 +306,12 @@ if(savePlot == TRUE){
   print(heatmapTPR5)}
 
 heatmapTPR10 <- ggplot(meanAUCfinal, aes(x=meanAUCfinal$m, y=meanAUCfinal$d, fill=TPR10)) +
-  geom_tile(aes(fill = TPR10)) + geom_text(aes(label = round(TPR10, 2), fontface=md)) +
+  geom_tile(aes(fill = TPR10)) + geom_text(aes(label = round2(TPR10, 2), fontface=md)) +
   scale_fill_viridis_c(begin = 0, end = 1, alpha = 0.5) +  
   scale_y_discrete(limits = rev(levels(as.factor(meanAUCfinal$d)))) +
   theme(panel.border = element_blank(), panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), axis.line = element_blank(), panel.background=element_rect(fill = "white") ) +
-  labs(title=sprintf("Mean TPR-values at 0.10 for %s", plotName), 
+  labs(title=sprintf("Mean TPR-values at FPR 0.10 for %s", plotName), 
        x = "Group size", y = "Sequencing depth",  color = "sequensing depth", fill = "TPR-values") 
 print(heatmapTPR10)
 if(savePlot == TRUE){
@@ -331,7 +340,7 @@ for (group in 1:length(groupSize)){
   print(meanROCplotgroup)
   
   if(savePlot == TRUE){
-    path_save <-  sprintf("../../Result/%s/meanROC_10q%d,groupsize_%d.pdf", saveName,10*q, M)
+    path_save <-  sprintf("../../Result/%s/meanROC_10q%d_groupsize_%d.pdf", saveName,10*q, M)
     ggsave(filename = path_save, plot = meanROCplotgroup, height = 5, width = 6)
     dev.off()
     print(meanROCplotgroup)}
@@ -366,7 +375,6 @@ for (seq in 1:length(sequencingDepth)) {
 }
 
 rm(group,seq)
-dev.off()
 
 }
 
