@@ -57,8 +57,8 @@ compute_low_counts=function(Data){
     b[i]<-sum(Data[i,]==0)/ncol(Data)>0.75
     r[i]<-a[i]+b[i]
   }
-  cat(sprintf("Genes with low counts:                 %s\n", sum(r!=0)))
-  cat(sprintf("Genes with acceptable counts:          %s\n", sum(r==0)))
+  cat(sprintf("Genes with low counts:            %s\n", sum(r!=0)))
+  cat(sprintf("Genes with acceptable counts:     %s\n", sum(r==0)))
   return(r)
 }
 
