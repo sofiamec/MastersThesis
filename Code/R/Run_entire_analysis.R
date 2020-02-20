@@ -61,16 +61,16 @@ rm(Gut2Original, Gut2Intermediate, MarineOriginal, MarineIntermediate) # remove 
 ## Selecting parameters and data:
 
 repeats = 10
-savePlot = T
+savePlot = F
 
 Data = Gut2                                                 # Gut2 or Marine
-effectsizes=c(1.5,1.8,2,2.5,4)                              # q 
+effectsizes=3#c(1.5,3)                                        # q 
 # remove q from seeds when value is fixed!
-groupSize<-c(3,5,10,30,50)                                  # m
-sequencingDepth<-c(10000,100000,500000,1000000,5000000)     # d,  Gut2: 5000000, Marine: 5000000 and 10000000
-sequencingDepthName<-c("10k","100k","500k","1M", "5M")      # dD, Gut2: 5M, Marine: 10M
-boldvalue2="0"                                                # Gut2: "0", Marine: "50000000"
-
+groupSize<-c(3,30)#c(3,5,10,30,50)                                  # m
+sequencingDepth<-c(100000,1000000)#c(10000,100000,500000,1000000,5000000)     # d,  Gut2: 5000000, Marine: 5000000 and 10000000
+sequencingDepthName<-c("100k","1M")#c("10k","100k","500k","1M", "5M")      # dD, Gut2: 5M, Marine: 10M
+boldvalue2="0"                                                # Gut2: "0", Marine: "50e+06"
+relations<-c(3000000,5000000)
 # The above sets:
 # q = Fold-change for downsampling
 # m = Number of samples in each group (total nr samples = 2*m)
@@ -129,8 +129,6 @@ for (group in 1:length(groupSize)){ # looping over m
       # Names for a certain dataset and name    # Results in:
       saveExpDesign = sprintf("m%d_d%d%s_10q%d_f%d", m, dD, prefix, q*10, f*100)
       plotExpDesign = sprintf("m=%d, d=%d%s, q=%g, f=%d%%",m,dD,prefix,q,f*100)
-    
-      rm(dD,prefix)
       
       # Create folder for certain case if it doesn't exist
       if (!dir.exists(sprintf("../../Intermediate/%s/%s", saveName, saveExpDesign))){
@@ -146,7 +144,7 @@ for (group in 1:length(groupSize)){ # looping over m
     ## Run the analysis for a selected m and d:
     
     # Creating empty result-matrices
-    AUC = data.frame(AUC5=numeric(0), AUC10 = numeric(0), AUCtot = numeric(0), TPR5=numeric(0), TPR10=numeric(0),rep = numeric(0))
+    AUC = data.frame(AUC1=numeric(0), AUC5 = numeric(0), AUCtot = numeric(0), TPR1=numeric(0), TPR5=numeric(0),rep = numeric(0))
     ROC = data.frame(TPR=numeric(0), FPR=numeric(0),rep=numeric(0))
     meanROC = data.frame(FPR=numeric(0),N=numeric(0),mean=numeric(0), sd=numeric(0),se=numeric(0))
     
@@ -191,13 +189,15 @@ for (group in 1:length(groupSize)){ # looping over m
     meanROC2<-ddply(meanROC, "FPR", summarise,
                     N    = length(meanTPR),
                     mean = mean(meanTPR),
-                    sd   = sd(meanTPR),
-                    se   = sd / sqrt(N))
+                    min  = min(meanTPR),
+                    max  = max(meanTPR))#,
+                    #sd   = sd(meanTPR),
+                    #se   = sd / sqrt(N))
     colnames(meanROC2)[3]<-"meanTPR"
     
     # Plot mean RoC-curves for certain experimental design
     meanROCplot <- ggplot(data=meanROC2, aes(x=FPR, y=meanTPR)) +  theme_minimal() + 
-      geom_ribbon(aes(ymin=(meanTPR-sd), ymax=(meanTPR+sd), fill="#22A88433"), alpha = 0.2) + 
+      geom_ribbon(aes(ymin=(min), ymax=(max), fill="#22A88433"), alpha = 0.2) + 
       geom_line(aes(color="#22A88433")) + theme(legend.position = "none") +
       labs(title=sprintf("Mean ROC-curve for %s", plotName), 
            subtitle = sprintf("Experimental design: %s     (%s repeats)", plotExpDesign, repeats),
@@ -215,10 +215,10 @@ for (group in 1:length(groupSize)){ # looping over m
       print(meanROCplot)
     }
     
-    meanAUCfinal<-rbind(meanAUCfinal,c(colMeans(AUC[,1:5]),d,m))
-    meanROCfinal<-rbind(meanROCfinal,data.frame(meanROC2,d,m))
+    meanAUCfinal<-rbind(meanAUCfinal,c(colMeans(AUC[,1:5]),d,m,m*d,sprintf("m=%d d=%d%s",m,dD,prefix)))
+    meanROCfinal<-rbind(meanROCfinal,data.frame(meanROC2,d,m,m*d,sprintf("m=%d d=%d%s",m,dD,prefix)))
     
-    rm(ROCplot, meanROC, meanROCplot)
+    rm(ROCplot, meanROC, meanROCplot, dD, prefix)
     rm(ROC, AUC,  meanROC2, run)
   }
 }
@@ -226,16 +226,20 @@ for (group in 1:length(groupSize)){ # looping over m
 #===================================================================================================================================
 ### Summarising results:
 
-meanAUCfinal<-data.frame(meanAUCfinal,(meanAUCfinal[,6]*meanAUCfinal[,7]))
-colnames(meanAUCfinal)<-c("AUC5", "AUC10", "AUCtot", "TPR5", "TPR10", "d", "m" ,"md")
-
-meanAUCfinal$md[meanAUCfinal$md=="5000000"]<-"bold"
+#meanAUCfinal<-data.frame(meanAUCfinal,(meanAUCfinal[,6]*meanAUCfinal[,7]))
+colnames(meanAUCfinal)<-c("AUC1", "AUC5", "AUCtot", "TPR1", "TPR5", "d", "m" ,"md","plotMD")
+#test1<-meanAUCfinal
+  
+meanAUCfinal$md[meanAUCfinal$md=="5e+06"]<-"bold"
 meanAUCfinal$md[meanAUCfinal$md==boldvalue2]<-"bold"
 meanAUCfinal$md[meanAUCfinal$md!="bold"]<-"plain"
 
 meanAUCfinal$d<-as.factor(meanAUCfinal$d)
 meanAUCfinal$m<-as.factor(meanAUCfinal$m)
 meanAUCfinal$md<-as.factor(meanAUCfinal$md)
+
+#meanROCfinal<-data.frame(meanROCfinal,(meanROCfinal[,6]*meanROCfinal[,7]))
+colnames(meanROCfinal)<-c("FPR", "N", "meanTPR", "min", "max", "d", "m" ,"md","plotMD")
 meanROCfinal$d<-as.factor(meanROCfinal$d)
 meanROCfinal$m<-as.factor(meanROCfinal$m)
 
@@ -244,7 +248,7 @@ write.csv(meanAUCfinal, file=sprintf("../../Result/%s/AUC_10q%d.csv", saveName,1
 
 
 
-# heatmaps for AUC and TPR at FPR 0.5, 0.10 and 1
+# heatmaps for AUC and TPR at FPR 0.01, 0.05 and 1
 heatmapAUCtot <- ggplot(meanAUCfinal, aes(x=meanAUCfinal$m, y=meanAUCfinal$d, fill=AUCtot)) +
   geom_tile(aes(fill = AUCtot)) + geom_text(aes(label = round2(AUCtot, 2), fontface=md)) +
   scale_fill_viridis_c(begin = 0, end = 1, alpha = 0.5) +  
@@ -275,20 +279,20 @@ if(savePlot == TRUE){
   dev.off()
   print(heatmapAUC5)}
 
-heatmapAUC10 <- ggplot(meanAUCfinal, aes(x=meanAUCfinal$m, y=meanAUCfinal$d, fill=AUC10)) +
-  geom_tile(aes(fill = AUC10)) + geom_text(aes(label = round2(AUC10, 2), fontface=md)) +
+heatmapAUC1 <- ggplot(meanAUCfinal, aes(x=meanAUCfinal$m, y=meanAUCfinal$d, fill=AUC1)) +
+  geom_tile(aes(fill = AUC1)) + geom_text(aes(label = round2(AUC1, 2), fontface=md)) +
   scale_fill_viridis_c(begin = 0, end = 1, alpha = 0.5) +  
   scale_y_discrete(limits = rev(levels(as.factor(meanAUCfinal$d)))) +
   theme(panel.border = element_blank(), panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), axis.line = element_blank(), panel.background=element_rect(fill = "white") ) +
-  labs(title=sprintf("Mean AUC-values at FPR 0.10 for %s", plotName), 
+  labs(title=sprintf("Mean AUC-values at FPR 0.01 for %s", plotName), 
        x = "Group size", y = "Sequencing depth",  color = "sequensing depth", fill = "AUC-values") 
-print(heatmapAUC10)
+print(heatmapAUC1)
 if(savePlot == TRUE){
-  path_save <-  sprintf("../../Result/%s/heatmap_AUC10_10q%d.pdf", saveName,q*10)
-  ggsave(filename = path_save, plot = heatmapAUC10, height = 5, width = 6)
+  path_save <-  sprintf("../../Result/%s/heatmap_AUC1_10q%d.pdf", saveName,q*10)
+  ggsave(filename = path_save, plot = heatmapAUC1, height = 5, width = 6)
   dev.off()
-  print(heatmapAUC10)}
+  print(heatmapAUC1)}
 
 heatmapTPR5 <- ggplot(meanAUCfinal, aes(x=meanAUCfinal$m, y=meanAUCfinal$d, fill=TPR5)) +
   geom_tile(aes(fill = TPR5)) + geom_text(aes(label = round2(TPR5, 2), fontface=md)) +
@@ -305,20 +309,20 @@ if(savePlot == TRUE){
   dev.off()
   print(heatmapTPR5)}
 
-heatmapTPR10 <- ggplot(meanAUCfinal, aes(x=meanAUCfinal$m, y=meanAUCfinal$d, fill=TPR10)) +
-  geom_tile(aes(fill = TPR10)) + geom_text(aes(label = round2(TPR10, 2), fontface=md)) +
+heatmapTPR1 <- ggplot(meanAUCfinal, aes(x=meanAUCfinal$m, y=meanAUCfinal$d, fill=TPR1)) +
+  geom_tile(aes(fill = TPR1)) + geom_text(aes(label = round2(TPR1, 2), fontface=md)) +
   scale_fill_viridis_c(begin = 0, end = 1, alpha = 0.5) +  
   scale_y_discrete(limits = rev(levels(as.factor(meanAUCfinal$d)))) +
   theme(panel.border = element_blank(), panel.grid.major = element_blank(),
         panel.grid.minor = element_blank(), axis.line = element_blank(), panel.background=element_rect(fill = "white") ) +
-  labs(title=sprintf("Mean TPR-values at FPR 0.10 for %s", plotName), 
+  labs(title=sprintf("Mean TPR-values at FPR 0.01 for %s", plotName), 
        x = "Group size", y = "Sequencing depth",  color = "sequensing depth", fill = "TPR-values") 
-print(heatmapTPR10)
+print(heatmapTPR1)
 if(savePlot == TRUE){
-  path_save <-  sprintf("../../Result/%s/heatmap_TPR10_10q%d.pdf", saveName,q*10)
-  ggsave(filename = path_save, plot = heatmapTPR10, height = 5, width = 6)
+  path_save <-  sprintf("../../Result/%s/heatmap_TPR1_10q%d.pdf", saveName,q*10)
+  ggsave(filename = path_save, plot = heatmapTPR1, height = 5, width = 6)
   dev.off()
-  print(heatmapTPR10)}
+  print(heatmapTPR1)}
 
 
 ### Plot mean RoC-curves for all experimental designs
@@ -328,7 +332,7 @@ for (group in 1:length(groupSize)){
   M=groupSize[group]
   
   meanROCplotgroup <- ggplot(data=meanROCfinal[meanROCfinal$m==M,], aes(x=FPR, y=meanTPR, fill=d)) +  theme_minimal() + 
-    geom_ribbon(aes(ymin=(meanTPR-sd), ymax=(meanTPR+sd),fill = d), alpha=0.2) +
+    geom_ribbon(aes(ymin=(min), ymax=(max),fill = d), alpha=0.2) +
     geom_line(aes(color = d)) +
     labs(title=sprintf("Mean ROC-curves for %s", plotName), 
          subtitle = sprintf("Experimental designs with group size %d     (%s repeats each)", M, repeats),
@@ -354,7 +358,7 @@ for (seq in 1:length(sequencingDepth)) {
   dD=sequencingDepthName[seq]
   
   meanROCplotdepth <- ggplot(data=meanROCfinal[meanROCfinal$d==D,], aes(x=FPR, y=meanTPR, fill=m)) +  theme_minimal() + 
-    geom_ribbon(aes(ymin=(meanTPR-sd), ymax=(meanTPR+sd),fill = m), alpha=0.2) +
+    geom_ribbon(aes(ymin=(min), ymax=(max),fill = m), alpha=0.2) +
     geom_line(aes(color = m)) +
     labs(title=sprintf("Mean ROC-curves for %s", plotName), 
          subtitle = sprintf("Experimental designs with sequencing depth %s     (%s repeats each)", dD, repeats),
@@ -374,7 +378,32 @@ for (seq in 1:length(sequencingDepth)) {
   rm(meanROCplotdepth, D,dD)
 }
 
-rm(group,seq)
+# mean plots with set groupsize and depth relation (m*d)
+for (relation in 1:length(relations)){
+  MD=relations[relation]
+  
+  meanROCplotrelation <- ggplot(data=meanROCfinal[meanROCfinal$md==MD,], aes(x=FPR, y=meanTPR, fill=plotMD)) +  theme_minimal() + 
+    geom_ribbon(aes(ymin=(min), ymax=(max),fill = plotMD), alpha=0.2) +
+    geom_line(aes(color = d)) +
+    labs(title=sprintf("Mean ROC-curves for %s", plotName), 
+         subtitle = sprintf("Experimental designs with relation/trade-off %d     (%s repeats each)", MD, repeats),
+         x = "False Positive Rate", y = "True Positive Rate",  color = "Experimental design", fill = "Experimental design") +
+    ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2))+
+    scale_fill_viridis_d(begin = 0, end = 0.85) +
+    scale_colour_viridis_d(begin = 0, end = 0.85)
+  
+  print(meanROCplotrelation)
+  
+  if(savePlot == TRUE){
+    path_save <-  sprintf("../../Result/%s/meanROC_10q%d_relation_%d.pdf", saveName,10*q, MD)
+    ggsave(filename = path_save, plot = meanROCplotrelation, height = 5, width = 6)
+    dev.off()
+    print(meanROCplotrelation)}
+  
+  rm(meanROCplotrelation, MD)
+}
+
+rm(group,seq, relation)
 
 }
 
