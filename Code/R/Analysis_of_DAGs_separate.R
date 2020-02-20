@@ -9,12 +9,12 @@ library(plyr)
 #===================================================================================================================================
 ## Selecting parameters and data:
 
-saveName = "Gut2" # Choose dataset. Ex: "Gut2" or "Marine"
-m = 30        # Number of samples in each group (total nr samples = 2*m)
-d = 10000     # Desired sequencing depth per sample. It will not be exct
-q = 2         # Fold-change for downsampling
-f = 0.10      # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
-seed=1  
+#saveName = "Marine" # Choose dataset. Ex: "Gut2" or "Marine"
+#m = 50              # Number of samples in each group (total nr samples = 2*m)
+#d = 10000000        # Desired sequencing depth per sample. It will not be exct
+#q = 1.5             # Fold-change for downsampling
+#f = 0.10            # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
+#run=7  
 
 { # Quickly gives the case the correct name
   if (saveName == "Gut2"){
@@ -37,9 +37,10 @@ seed=1
     prefix=""
   }
  
-  saveExpDesign = sprintf("m%d_d%d%s_q%d_f%d", m, dD, prefix, q, f*100)
-  plotExpDesign = sprintf("m=%d, d=%d%s, q=%d, f=%d%%",m,dD,prefix,q,f*100)
-
+  # Names for a certain dataset and name    # Results in:
+  saveExpDesign = sprintf("m%d_d%d%s_10q%d_f%d", m, dD, prefix, q*10, f*100)
+  plotExpDesign = sprintf("m=%d, d=%d%s, q=%g, f=%d%%",m,dD,prefix,q,f*100)
+  
 rm(dD,prefix)
 }
 
@@ -80,12 +81,12 @@ DESeq2_analysis=function(Data){
 # this function computes AUC-values and plots the ROC-curve.
 # Inputs:   ResultsData = Results from DESeq2 or edgeR analysis. Ex: ResDESeq or ResEdge
 #           DAGs = the artificially introduced DAGs (known)
-#           seed = the number of the selected seed
+#           run = the number of the selected run
 #           savePlot = TRUE/FALSE indicates wether or not to save the ROC-plot
 # Outputs:  ROC = a dataframe with the computed TPR- and FPR-values
 #           AUCs = The computed AUC for the entire ROC-curve and for FPR-cutoff 0.05 and 0.10.
 #           meanROC = the pieciwise mean
-Compute_ROC_AUC = function(ResultsData, DAGs, seed, plotExpDesign, plotName, saveName, saveExpDesign, savePlot){
+Compute_ROC_AUC = function(ResultsData, DAGs, run, plotExpDesign, plotName, saveName, saveExpDesign, savePlot){
   
   TP<-rownames(DAGs)
   nT=vector(mode = 'numeric' ,length = nrow(ResultsData)+1)
@@ -113,11 +114,11 @@ Compute_ROC_AUC = function(ResultsData, DAGs, seed, plotExpDesign, plotName, sav
   AUCtot<-trapz(FPR,TPR)
   TPR5<-max(TPR[FPR<=0.05])
   TPR10<-max(TPR[FPR<=0.1])
-  AUCs <- data.frame(AUC5,AUC10,AUCtot,TPR5,TPR10,seed)
+  AUCs <- data.frame(AUC5,AUC10,AUCtot,TPR5,TPR10,run)
   
   rm(AUC5,AUC10,AUCtot, TPR5,TPR10)
   
-  ROCs <- data.frame(TPR,FPR,seed)
+  ROCs <- data.frame(TPR,FPR,run)
   ROCs2<-ROCs
   ROCs2[,2] <- round2(ROCs2[,2], 3) # 3 is the number of decimals here
   
@@ -131,8 +132,8 @@ Compute_ROC_AUC = function(ResultsData, DAGs, seed, plotExpDesign, plotName, sav
   ROCplot <- ggplot(data=ROCs, aes(x=FPR, y=TPR)) +  geom_line() + 
     theme(plot.title = element_text(hjust = 0.5)) +  theme_minimal() + 
     scale_color_manual(values=c('#7FCDBB','#225EA8')) +
-    labs(title=sprintf("ROC-curves for analysis of %s seed %d", plotName, seed), 
-         subtitle = sprintf("Experimental design: %s    (Seed %d)", plotExpDesign, seed),
+    labs(title=sprintf("ROC-curves for analysis of %s run %d", plotName, run), 
+         subtitle = sprintf("Experimental design: %s    (run %d)", plotExpDesign, run),
          x = "False Positive Rate", y = "True Positive Rate")
   
   print(ROCplot)
@@ -155,7 +156,7 @@ cat(sprintf("TP genes with DESeq2 for %s: %d out of %d   (exp. design: %s)\n", s
 
 #===================================================================================================================================
 # Computing ROC and AUC
-deseqROCAUC<-Compute_ROC_AUC(ResDESeq, DAGs, seed, plotExpDesign, plotName, saveName, SaveExpDesign, savePlot)
+deseqROCAUC<-Compute_ROC_AUC(ResDESeq, DAGs, run, plotExpDesign, plotName, saveName, SaveExpDesign, savePlot)
 ROCs <- data.frame(deseqROCAUC[[1]])
 AUCs<- as.matrix(deseqROCAUC[[2]]) 
 meanROCs<-as.matrix(deseqROCAUC[[3]])
