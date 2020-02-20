@@ -73,13 +73,13 @@ Compute_ROC_AUC = function(ResultsData, DAGs, rep){
   
   # Compute AUC and TPR at certain FPR
   AUC5<-trapz(FPR[FPR<=0.05],TPR[FPR<=0.05])/max(FPR[FPR<=0.05])
-  AUC10<-trapz(FPR[FPR<=0.1],TPR[FPR<=0.1])/max(FPR[FPR<=0.1])
+  AUC1<-trapz(FPR[FPR<=0.01],TPR[FPR<=0.01])/max(FPR[FPR<=0.01])
   AUCtot<-trapz(FPR,TPR)
   TPR5<-max(TPR[FPR<=0.05])
-  TPR10<-max(TPR[FPR<=0.1])
-  AUCs <- data.frame(AUC5,AUC10,AUCtot,TPR5,TPR10,rep)
+  TPR1<-max(TPR[FPR<=0.01])
+  AUCs <- data.frame(AUC1,AUC5,AUCtot,TPR1,TPR5,rep)
   
-  rm(AUC5,AUC10,AUCtot, TPR5,TPR10)
+  rm(AUC1,AUC5,AUCtot, TPR1,TPR5)
   
   ROCs <- data.frame(TPR,FPR,rep)
   ROCs2 <- ROCs
@@ -87,9 +87,9 @@ Compute_ROC_AUC = function(ResultsData, DAGs, rep){
   
   meanROCs<-ddply(ROCs2, "FPR", summarise,
                  N    = length(TPR),
-                 mean = mean(TPR),
-                 sd   = sd(TPR),
-                 se   = sd / sqrt(N))
+                 mean = mean(TPR))
+                 #sd   = sd(TPR),
+                 #se   = sd / sqrt(N))
   
   return(list(ROCs, AUCs, meanROCs))
 }
