@@ -67,10 +67,10 @@ DESeq2_analysis=function(Data){
   ResultDESeq<-suppressMessages(DESeq(CountsDataset))                     # Perform analysis (suppress messages from it) 
   Res=results(ResultDESeq, independentFiltering=FALSE, cooksCutoff=FALSE) # extract results
   
-  Result=data.frame(rownames(Data), Res$pvalue)                             # dataframe with genes and their p-values
+  Result=data.frame(rownames(Data), Res$pvalue, Res$padj)                   # dataframe with genes, their p-values and adjusted p-values
   ResultSorted=as.data.frame(Result[order(Result[,2]),])                    # order with increasing p-value
   ResultSorted <- data.frame(ResultSorted[,-1], row.names=ResultSorted[,1]) # put first column (genes) as rowname
-  colnames(ResultSorted) <- c("p-value")                                    # name the column
+  colnames(ResultSorted) <- c("p-value", "adjusted p-value")                # name the columns
   
   return(ResultSorted)
 }
@@ -145,12 +145,12 @@ Compute_ROC_AUC = function(ResultsData, DAGs, run, plotExpDesign, plotName, save
 
 ######## DESeq2 ##########
 ResDESeq=DESeq2_analysis(Data = DownSampledData)
-cat(sprintf("Significant genes with DESeq2 for %s: %d     (exp. design: %s)\n", saveName, sum(ResDESeq<0.05, na.rm = T),plotExpDesign))
+cat(sprintf("Significant genes with DESeq2 for %s: %d     (exp. design: %s)\n", saveName, sum(ResDESeq[,2]<0.05, na.rm = T),plotExpDesign))
 
 # how many of the artificially introduced DAGs are among the significant genes
 matchDESeq=c()
 for (i in 1:nrow(DAGs)) {
-  matchDESeq[i]=sum(grepl(rownames(DAGs)[i], rownames(ResDESeq[which(ResDESeq<0.05),,drop=F])))
+  matchDESeq[i]=sum(grepl(rownames(DAGs)[i], rownames(ResDESeq[which(ResDESeq[,2]<0.05),,drop=F])))
 }
 cat(sprintf("TP genes with DESeq2 for %s: %d out of %d   (exp. design: %s)\n", saveName, sum(matchDESeq), nrow(DAGs), plotExpDesign))
 
