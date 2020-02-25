@@ -58,7 +58,7 @@ round2 <- function(x, n) {
 # DESeq2-analysis
 # This function uses DESeq2 to identfy DAGs in a dataset containing two groups
 # Input: Data = the data to analyse
-# Output: a dataframe containing the p-value for each gene, ordered with increading p-values
+# Output: a dataframe containing the p-value and the adjusted p-value for each gene, ordered with increading p-values
 DESeq2_analysis=function(Data){
   
   DesignMatrix <- data.frame(group=factor(c(rep(1,m),rep(0,m))))          # define the different groups 
