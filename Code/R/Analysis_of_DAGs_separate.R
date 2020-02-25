@@ -91,14 +91,17 @@ Compute_ROC_AUC = function(ResultsData, DAGs, run, plotExpDesign, plotName, save
   TP<-rownames(DAGs)
   nT=vector(mode = 'numeric' ,length = nrow(ResultsData)+1)
   nF=vector(mode = 'numeric' ,length = nrow(ResultsData)+1)
+  BinTP=vector(mode = 'numeric' ,length = nrow(ResultsData))
   for (i in 1:nrow(ResultsData)){
     if (match(rownames(ResultsData)[i],TP, nomatch = F)!=0){
       nT[i+1]=nT[i]+1
       nF[i+1]=nF[i]
+      BinTP[i]=1
     }
     else{
       nT[i+1]=nT[i]
       nF[i+1]=nF[i]+1
+      BinTP[i]=0
     }
   }
   
@@ -138,7 +141,7 @@ Compute_ROC_AUC = function(ResultsData, DAGs, run, plotExpDesign, plotName, save
   
   print(ROCplot)
   
-  return(list(ROCs, AUCs, meanROCs))
+  return(list(ROCs, AUCs, meanROCs, BinTP))
 }
 
 #===================================================================================================================================
@@ -160,4 +163,5 @@ deseqROCAUC<-Compute_ROC_AUC(ResDESeq, DAGs, run, plotExpDesign, plotName, saveN
 ROCs <- data.frame(deseqROCAUC[[1]])
 AUCs<- as.matrix(deseqROCAUC[[2]]) 
 meanROCs<-as.matrix(deseqROCAUC[[3]])
+BinTP=deseqROCAUC[[4]]
 
