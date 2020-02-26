@@ -54,11 +54,11 @@ round2 <- function(x, n) {
   return(z)
 }
 
-#===================================================================================================================================
+#=================================================================================================================================
 # DESeq2-analysis
 # This function uses DESeq2 to identfy DAGs in a dataset containing two groups
 # Input: Data = the data to analyse
-# Output: a dataframe containing the p-value and the adjusted p-value for each gene, ordered with increading p-values
+# Output: a dataframe containing p-values, adjusted p-values, log2 fold change and the estimated dispersion for each gene, ordered with increading p-values
 DESeq2_analysis=function(Data){
   
   DesignMatrix <- data.frame(group=factor(c(rep(1,m),rep(0,m))))          # define the different groups 
@@ -67,10 +67,13 @@ DESeq2_analysis=function(Data){
   ResultDESeq<-suppressMessages(DESeq(CountsDataset))                     # Perform analysis (suppress messages from it) 
   Res=results(ResultDESeq, independentFiltering=FALSE, cooksCutoff=FALSE) # extract results
   
-  Result=data.frame(rownames(Data), Res$pvalue, Res$padj)                   # dataframe with genes, their p-values and adjusted p-values
+  Result=data.frame(rownames(Data), Res$pvalue, Res$padj, 
+                    Res$log2FoldChange, dispersions(ResultDESeq))           # dataframe with genes, their p-values, adjusted p-values, log2fold change and dispersion estimates
+  
   ResultSorted=as.data.frame(Result[order(Result[,2]),])                    # order with increasing p-value
   ResultSorted <- data.frame(ResultSorted[,-1], row.names=ResultSorted[,1]) # put first column (genes) as rowname
-  colnames(ResultSorted) <- c("p-value", "adjusted p-value")                # name the columns
+  colnames(ResultSorted) <- c("p-value", "adjusted p-value", 
+                              "log2 fold change", "estimated dispersion")   # name the columns
   
   return(ResultSorted)
 }
