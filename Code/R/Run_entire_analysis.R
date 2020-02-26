@@ -185,7 +185,8 @@ for (effect in 1:length(effectsizes)) {           # looping over q
     }
   }
   
-  # Creating 3 extra designs
+  # Creating 3 extra designs                               
+  if (extraDesigns==T){
   for (i in 1:extraL) {              # looping over extra designs with fixed m and d
     m=extraGroups[i]
     d=extraSeqDepth[i]
@@ -202,7 +203,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
     if (!dir.exists(sprintf("../../Result/%s/IntermediatePlots", saveName))){
       dir.create(file.path("../../Result", sprintf("%s", saveName), "/IntermediatePlots"), recursive = T)
     }
-  }
+  }}
 }
 
 
