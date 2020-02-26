@@ -16,8 +16,8 @@ library(pracma)
 #                            (the rest of the code should adjust)
 #===================================================================================================================================
 ## Selecting parameters and data:
-onTerra = F                                                 # use T if running analysis on Terra (large scale settings applied)
-saveName = "Gut2"     # "Gut2" or "Marine"                  # this will in turn load the correct data
+onTerra = T                                                 # use T if running analysis on Terra (large scale settings applied)
+saveName = "Marine"     # "Gut2" or "Marine"                  # this will in turn load the correct data
 f = 0.10                                                    # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
 numberOfStrata = 3                                          # sets the number of groups for dividing gene abundance and variability
 extraDesigns=F                                              # use T if extra designs are added
@@ -211,7 +211,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
 #===================================================================================================================================
 ## Run the entire analysis for all setups of q, m and d:
 
-set.seed(100)
+
 for (effect in 1:length(effectsizes)) {           # looping over q
   q=effectsizes[effect]
   
@@ -235,6 +235,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
       saveExpDesign <- AllSaveDesigns[effect,group,seq]
       plotExpDesign <- AllPlotDesigns[effect,group,seq]
       
+      set.seed(100)
       for (run in 1:repeats){
         cat(sprintf("Repeat %d\n", run))
         
@@ -244,7 +245,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
           DAGs<-read.csv(file=sprintf("../../Intermediate/%s/%s/DAGs_run%d.csv", saveName, saveExpDesign, run),header = T,row.names = 1)
           
         } else {      
-          source("Resample_datasets.R")
+          source("Resample_datasets_sameseed.R")
         }
         
         # Run the code for analysing DAGs

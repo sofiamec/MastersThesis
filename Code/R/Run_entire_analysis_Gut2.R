@@ -16,11 +16,11 @@ library(pracma)
 #                            (the rest of the code should adjust)
 #===================================================================================================================================
 ## Selecting parameters and data:
-onTerra = F                                                 # use T if running analysis on Terra (large scale settings applied)
+onTerra = T                                                 # use T if running analysis on Terra (large scale settings applied)
 saveName = "Gut2"     # "Gut2" or "Marine"                  # this will in turn load the correct data
 f = 0.10                                                    # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
 numberOfStrata = 3                                          # sets the number of groups for dividing gene abundance and variability
-extraDesigns=F                                              # use T if extra designs are added
+extraDesigns=T                                              # use T if extra designs are added
 
 # Test-settings (CHANGE HERE!)
 if (onTerra==F){
