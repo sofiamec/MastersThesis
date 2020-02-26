@@ -12,7 +12,7 @@ library(plyr)
 #saveName = "Marine" # Choose dataset. Ex: "Gut2" or "Marine"
 #m = 50              # Number of samples in each group (total nr samples = 2*m)
 #d = 10000000        # Desired sequencing depth per sample.
-#dD = "1M"           # How the sequencing depth should be displayed
+#dD = "10M"           # How the sequencing depth should be displayed
 #q = 1.5             # Fold-change for downsampling
 #f = 0.10            # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
 #run=7  
