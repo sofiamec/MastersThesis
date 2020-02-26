@@ -1,14 +1,13 @@
 # Troubleshooting high sequencing depths 
-library(DESeq2)
 
 #=================================== Choose dataset to troubleshoot ===========================================
 saveName = "Marine" # Choose dataset. Ex: "Gut2" or "Marine"
 m = 50              # Number of samples in each group (total nr samples = 2*m)
 d = 10000000        # Desired sequencing depth per sample. It will not be exct
-dD="10M"
+dD="10M"            # display name
 q = 1.5   #1.5, 2.5          # Fold-change for downsampling
 f = 0.10            # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
-run=7    #7,10           # choose wich run to extract
+run=10    #7,10           # choose wich run to extract
 
 
 { # Quickly gives the case the correct name
@@ -30,13 +29,12 @@ run=7    #7,10           # choose wich run to extract
 DownSampledData=read.csv(sprintf("../../Intermediate/test_qvalues/%s/%s/DownSampledData_run%d.csv", saveName, saveExpDesign, run), header = T, row.names = 1)
 DAGs=read.csv(sprintf("../../Intermediate/test_qvalues/%s/%s/DAGs_run%d.csv", saveName, saveExpDesign, run), header = T, row.names = 1)
 
-# ================================================================================================================================
+# =================================== Source Analysis of DAGs ==================================================
 
-# run dataset in Analysis of DAGs
 source("Analysis_of_DAGs_separate.R")
 
-#=================================================================================================================================
-# Plot TP and FP in significance order 
+#======================================Plot TP and FP in significance-order ====================================
+
 PR=c()
 for (i in 1:nrow(DownSampledData)) {
   
@@ -56,12 +54,12 @@ ggplot(HeatmapPR, aes(x=x, y=y, fill=PR)) +
   scale_fill_viridis_d(begin = 0, end = 1, alpha = 0.5) +  
   labs(title="TP and FP in significance order", x = "Genes (from most to least significant)" , y = "  ") #, fill = "AUC-values") 
 
-#=================================================================================================================================
+#======================================= Dispersion ============================================================
 # Look att dispersion
 summary(ResDESeq[,4])
 
 
-#=================================================================================================================================
+#=================================Summary of log2 fold change for TP and FP =====================================
 # check summary for TP and FP
 
 # log2 fold change <0, TP 
@@ -81,7 +79,7 @@ ResultBFalse=ResDESeq[!rownames(ResDESeq) %in% rownames(DAGs) & ResDESeq[,3]>0 &
 summary(ResultBFalse[,3])
 
 
-# ============================================= Check for zeros ============================================= 
+# ============================================= Check for zeros ================================================= 
 # Total number of zeros in the dataset
 sum(DownSampledData==0)
 
