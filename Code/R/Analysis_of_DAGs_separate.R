@@ -11,7 +11,8 @@ library(plyr)
 
 #saveName = "Marine" # Choose dataset. Ex: "Gut2" or "Marine"
 #m = 50              # Number of samples in each group (total nr samples = 2*m)
-#d = 10000000        # Desired sequencing depth per sample. It will not be exct
+#d = 10000000        # Desired sequencing depth per sample.
+#dD = "1M"           # How the sequencing depth should be displayed
 #q = 1.5             # Fold-change for downsampling
 #f = 0.10            # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
 #run=7  
@@ -21,27 +22,11 @@ library(plyr)
     plotName = "Human Gut II"
   } else if (saveName == "Marine"){
     plotName = "Marine"
-  } else {
-    sprintf("Missing name for dataset")
-  }
-  
-  if (d==1e4||d==1e5||d==5e5){
-    dD=d/1000
-    prefix="k"
-  } else if(d==1e6||d==5e6||d==10e6){
-    dD=d/1000000
-    prefix="M"
-  } else {
-    dD=d
-    sprintf("wrong d")
-    prefix=""
-  }
+  } 
  
   # Names for a certain dataset and name    # Results in:
-  saveExpDesign = sprintf("m%d_d%d%s_10q%d_f%d", m, dD, prefix, q*10, f*100)
-  plotExpDesign = sprintf("m=%d, d=%d%s, q=%g, f=%d%%",m,dD,prefix,q,f*100)
-  
-rm(dD,prefix)
+  saveExpDesign = sprintf("m%d_d%s_10q%d_f%d", m, dD, q*10, f*100)
+  plotExpDesign = sprintf("m=%d, d=%s, q=%g, f=%d%%",m,dD,q,f*100)
 }
 
 #===================================================================================================================================
@@ -116,13 +101,13 @@ Compute_ROC_AUC = function(ResultsData, DAGs, run, plotExpDesign, plotName, save
   
   # Compute AUC and TPR at certain FPR
   AUC5<-trapz(FPR[FPR<=0.05],TPR[FPR<=0.05])/max(FPR[FPR<=0.05])
-  AUC10<-trapz(FPR[FPR<=0.1],TPR[FPR<=0.1])/max(FPR[FPR<=0.1])
+  AUC1<-trapz(FPR[FPR<=0.01],TPR[FPR<=0.01])/max(FPR[FPR<=0.01])
   AUCtot<-trapz(FPR,TPR)
   TPR5<-max(TPR[FPR<=0.05])
-  TPR10<-max(TPR[FPR<=0.1])
-  AUCs <- data.frame(AUC5,AUC10,AUCtot,TPR5,TPR10,run)
+  TPR1<-max(TPR[FPR<=0.01])
+  AUCs <- data.frame(AUC1,AUC5,AUCtot,TPR1,TPR5,run)
   
-  rm(AUC5,AUC10,AUCtot, TPR5,TPR10)
+  rm(AUC5,AUC1,AUCtot, TPR5,TPR1)
   
   ROCs <- data.frame(TPR,FPR,run)
   ROCs2<-ROCs
