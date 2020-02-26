@@ -19,7 +19,7 @@ library(pracma)
 onTerra = F                                                 # use T if running analysis on Terra (large scale settings applied)
 saveName = "Gut2"     # "Gut2" or "Marine"                  # this will in turn load the correct data
 f = 0.10                                                    # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
-
+numberOfStrata = 3                                          # sets the number of groups for dividing gene abundance and variability
 extraDesigns=F                                              # use T if extra designs are added
 
 # Test-settings (CHANGE HERE!)
@@ -83,6 +83,36 @@ round2 <- function(x, n) {
   return(z)
 }
 
+## FUNCTION that assigns factor levels for each gene in a dataset according to variability and abundance
+# The created strata will have approximately the same number of genes each  
+# Input:    Data = Gut2 or Marine
+#           n = the number of strata/levels used when dividing the data
+# Output:   DataStrata = a matrix/dataframe? of genes in the given dataset along with their respective stratas (as factors?)
+create_strata<-function(Data,numberOfStrata){
+  DataStrata<-data.frame(rownames(Data), rowSums(Data),rowVars(as.matrix(Data)))
+  n=numberOfStrata
+  # create a vector for assigning smalles to highest strata
+  repVector<-as.integer(cumsum(c(rep(nrow(Data)/n,n))))
+  repVector<-repVector-c(0,repVector)[-(length(repVector)+1)]
+  strataVector<-rep(1:n,repVector)
+  
+  # sort by abundance and assign abundance-strata
+  DataStrata<-DataStrata[order(DataStrata[,2]),] 
+  DataStrata<-cbind(DataStrata,strataVector)
+  
+  # sort by variability and assign variability-strata
+  DataStrata<-DataStrata[order(DataStrata[,3]),]
+  DataStrata<-cbind(DataStrata,strataVector)
+  
+  # rename columns, factorise strata and sort genes by original order
+  colnames(DataStrata)<-c("GeneName", "GeneAbundance", "GeneVariability", "AbundanceStrata", "VariabilityStrata")
+  DataStrata$AbundanceStrata<-as.factor(DataStrata$AbundanceStrata)
+  DataStrata$VariabilityStrata<-as.factor(DataStrata$VariabilityStrata)
+  DataStrata<-DataStrata[rownames(Data),]
+  
+  rm(n, numberOfStrata, repVector,strataVector)
+  return(DataStrata)
+}
 
 #===================================================================================================================================
 # SET-UP SECTION
@@ -123,6 +153,7 @@ if(saveName == "Gut2"){
   
   rm(Marine, MarineOriginal, MarineIntermediate)  # remove original and intermediate datasets
 }
+DataStrata<-create_strata(Data,numberOfStrata)
 
 #===================================================================================================================================
 ## Setting upp the right environment and naming designs
