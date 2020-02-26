@@ -42,6 +42,7 @@ seed = 1
 Data = Gut2
 m = 30        # Number of samples in each group (total nr samples = 2*m)
 d = 10000    # Desired sequencing depth per sample. It will not be exct
+dD="10k"      # display name
 q = 2         # Fold-change for downsampling
 f = 0.10      # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
 
@@ -58,22 +59,11 @@ set.seed(seed=seed)   # In order to get the same results each time
     sprintf("Missing name for dataset")
   }
   
-  if (d==1e4||d==1e5||d==5e5){
-    dD=d/1000
-    prefix="k"
-  } else if(d==1e6||d==5e6||d==10e6){
-    dD=d/1000000
-    prefix="M"
-  } else {
-    dD=d
-    sprintf("wrong d")
-    prefix=""
-  }
   # Names for a certain dataset and name    # Results in:
-  saveExpDesign = sprintf("m%d_d%d%s_q%d_f%d", m, dD, prefix, q, f*100)
-  plotExpDesign = sprintf("m=%d, d=%d%s, q=%d, f=%d%%",m,dD,prefix,q,f*100)
+  saveExpDesign = sprintf("m%d_d%s_q%d_f%d", m, dD, q, f*100)
+  plotExpDesign = sprintf("m=%d, d=%s, q=%d, f=%d%%", m, dD, q, f*100)
 }
-rm(dD,prefix)
+
 
 # Create folder for certain case if it doesn't exist
 if (!dir.exists(sprintf("../../Intermediate/%s/%s", saveName, saveExpDesign))){
@@ -102,8 +92,9 @@ resample = function(Data, m, d){
     DataNew <- merge(DataNew, sampledVector, by.x = 1, by.y = 1, all.x = T)       # insert "sampledVector" to "DataNew"
   }
 
-  DataNew <- data.frame(DataNew[,-1], row.names=DataNew[,1]) # put first column (genes) as rownames  
+  DataNew <- data.frame(row.names=DataNew[,1], DataNew[,-1]) # put first column (genes) as rownames  
   DataNew[is.na(DataNew)] <- as.integer(0)                   # set all "NA" to 0 (as integers, since DESeq2 require integer counts)
+  DataNew <- DataNew[!rowSums(DataNew)==0,]                  # remove genes with count 0 for ALL samples
   
   return(DataNew)  
 }

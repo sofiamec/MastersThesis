@@ -34,9 +34,9 @@ resample = function(Data, m, d){
     DataNew <- merge(DataNew, sampledVector, by.x = 1, by.y = 1, all.x = T)       # insert "sampledVector" to "DataNew"
   }
   
-  rownames(DataNew) <- DataNew[,1]                  # add genes as row names
-  DataNew <- DataNew[,-1]                           # remove column containg genes
-  DataNew[is.na(DataNew)] <- as.integer(0)          # set all "NA" to 0 (as integers, since DESeq2 require integer counts)  return(DataNew)
+  DataNew <- data.frame(row.names=DataNew[,1], DataNew[,-1]) # put first column (genes) as rownames  
+  DataNew[is.na(DataNew)] <- as.integer(0)                   # set all "NA" to 0 (as integers, since DESeq2 require integer counts)
+  DataNew <- DataNew[!rowSums(DataNew)==0,]                  # remove genes with count 0 for ALL samples
   
   return(DataNew) 
   }
