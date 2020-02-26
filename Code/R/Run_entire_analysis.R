@@ -186,7 +186,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
   }
   
   # Creating 3 extra designs
-  for (i in 1:extaL) {              # looping over extra designs with fixed m and d
+  for (i in 1:extraL) {              # looping over extra designs with fixed m and d
     m=extraGroups[i]
     d=extraSeqDepth[i]
     dD=extraSeqDepthName[i]
