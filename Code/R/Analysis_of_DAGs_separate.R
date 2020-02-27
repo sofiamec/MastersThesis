@@ -153,24 +153,3 @@ AUCs<- as.matrix(deseqROCAUC[[2]])
 meanROCs<-as.matrix(deseqROCAUC[[3]])
 BinTP=deseqROCAUC[[4]]
 
-
-
-#====================================== Put where it belong and remove it from here ====================
-# DESeq2-analysis for original data 
-# This function uses DESeq2 to estimate the mean count and dispersion for genes in a dataset (after normalising them based on sequencing depth) 
-# Input: Data = the data to analyse
-# Output: a dataframe containing the mean values and the estimated dispersion for each gene
-DESeq2_analysis_org_data=function(Data){
-  
-  DesignMatrix <- data.frame(group=factor(rep(1,(2*m))))                        # all samples belong to the same group 
-  CountsDataset<-DESeqDataSetFromMatrix(countData=Data,DesignMatrix, design=~1) # combine design matrix and data into a dataset
-  ResultDESeq<-suppressMessages(DESeq(CountsDataset))                           # Perform analysis (suppress messages from it) 
-  Res=results(ResultDESeq,independentFiltering=FALSE,cooksCutoff=FALSE)         # extract results
-  
-  Result <- data.frame(rownames(Data), Res$baseMean, dispersions(ResultDESeq))  # dataframe with genes, their mean values (after normalization) and dispersion estimates
-  Result <- data.frame(Result[,-1], row.names=Result[,1])                       # put first column (genes) as rowname
-  colnames(Result) <- c("baseMean", "estimated dispersion")                     # name the columns
-  
-  return(Result)
-}
-

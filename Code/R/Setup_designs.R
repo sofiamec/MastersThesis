@@ -22,6 +22,26 @@ remove_low_counts=function(Data){
   return(FilteredData)
 }
 
+## FUNCTION used for creating strata
+# DESeq2-analysis for original data 
+# This function uses DESeq2 to estimate the mean count and dispersion for genes in a dataset (after normalising them based on sequencing depth) 
+# Input: Data = the data to analyse
+# Output: a dataframe containing the mean values and the estimated dispersion for each gene
+DESeq2_analysis_org_data=function(Data){
+  
+  DesignMatrix <- data.frame(group=factor(rep(1,(2*m))))                        # all samples belong to the same group 
+  CountsDataset<-DESeqDataSetFromMatrix(countData=Data,DesignMatrix, design=~1) # combine design matrix and data into a dataset
+  ResultDESeq<-suppressMessages(DESeq(CountsDataset))                           # Perform analysis (suppress messages from it) 
+  Res=results(ResultDESeq,independentFiltering=FALSE,cooksCutoff=FALSE)         # extract results
+  
+  Result <- data.frame(rownames(Data), Res$baseMean, dispersions(ResultDESeq))  # dataframe with genes, their mean values (after normalization) and dispersion estimates
+  Result <- data.frame(Result[,-1], row.names=Result[,1])                       # put first column (genes) as rowname
+  colnames(Result) <- c("baseMean", "estimated dispersion")                     # name the columns
+  
+  return(Result)
+}
+
+
 ## FUNCTION that assigns factor levels for each gene in a dataset according to variability and abundance
 # The created strata will have approximately the same number of genes each  
 # Input:    Data = Gut2 or Marine
