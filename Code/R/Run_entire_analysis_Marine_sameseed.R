@@ -16,7 +16,7 @@ library(pracma)
 #                            (the rest of the code should adjust)
 #===================================================================================================================================
 ## Selecting parameters and data:
-onTerra = T                                                 # use T if running analysis on Terra (large scale settings applied)
+onTerra = F                                                 # use T if running analysis on Terra (large scale settings applied)
 saveName = "Marine"     # "Gut2" or "Marine"                  # this will in turn load the correct data
 f = 0.10                                                    # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
 numberOfStrata = 3                                          # sets the number of groups for dividing gene abundance and variability
@@ -24,13 +24,13 @@ extraDesigns=F                                              # use T if extra des
 
 # Test-settings (CHANGE HERE!)
 if (onTerra==F){
-  repeats = 2                                               # sets the number of runs for each case (experimental design and q)
-  savePlot = F                                              # use T when plots should be saved (for many repeats)
-  loadData = T                                              # use T if it is a rerun of existing results
-  effectsizes=3                                             # q = Fold-change for downsampling
-  groupSize<-c(3,5)#,10,30,50)                                            # m = Number of samples in each group (total nr samples = 2*m)
-  sequencingDepth<-c(10000,100000)#,500000,1000000,5000000,10000000)      # d = Desired sequencing depth per sample
-  sequencingDepthName<-c("10k","100k")#, "500k","1M","5M","10M")          # dD = Displayed names for sequensing depths
+  repeats = 4                                               # sets the number of runs for each case (experimental design and q)
+  savePlot = T                                              # use T when plots should be saved (for many repeats)
+  loadData = F                                              # use T if it is a rerun of existing results
+  effectsizes=c(1.5,3)                                             # q = Fold-change for downsampling
+  groupSize<-c(3,10)#,10,30,50)                                            # m = Number of samples in each group (total nr samples = 2*m)
+  sequencingDepth<-c(10000,1000000)#,500000,1000000,5000000,10000000)      # d = Desired sequencing depth per sample
+  sequencingDepthName<-c("10k","1M")#, "500k","1M","5M","10M")          # dD = Displayed names for sequensing depths
 }
 
 # Real settings
@@ -212,7 +212,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
 #===================================================================================================================================
 ## Run the entire analysis for all setups of q, m and d:
 
-
+set.seed(100)
 for (effect in 1:length(effectsizes)) {           # looping over q
   q=effectsizes[effect]
   
