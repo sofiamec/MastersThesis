@@ -8,10 +8,6 @@
 # q = 10        the fold change for downsampling
 # f = 0.1       the fraction of genes to be downsampled
 
-
-# In order to get the same results each time
-rep=run 
-
 #===================================================================================================================================
 #=========================================== Functions ==============================================================================
 #===================================================================================================================================
@@ -121,6 +117,7 @@ ResampData=resample(Data=Data, m=m, d=d)
 # check number of genes wiht low counts in the prduced datasets
 countsResampData=compute_low_counts(ResampData)
 
+write.csv(ResampData, file=sprintf("../../Intermediate/%s/%s/ResampData_run%d.csv", saveName, saveExpDesign, run))
 #################################################################################################################
 # to get same DAGs for each exp design but different ones for each run
 set.seed(run)
@@ -130,8 +127,8 @@ DownSampledData<-resultList[[1]]
 DAGs<-resultList[[2]]
 
 # Saving downsampled datasets and corresponding overview of DAGs
-write.csv(DownSampledData, file=sprintf("../../Intermediate/%s/%s/DownSampledData_run%d.csv", saveName, saveExpDesign, rep))
-write.csv(DAGs, file=sprintf("../../Intermediate/%s/%s/DAGs_run%d.csv", saveName, saveExpDesign, rep))
+write.csv(DownSampledData, file=sprintf("../../Intermediate/%s/%s/DownSampledData_run%d.csv", saveName, saveExpDesign, run))
+write.csv(DAGs, file=sprintf("../../Intermediate/%s/%s/DAGs_run%d.csv", saveName, saveExpDesign, run))
 
 # remove variables/datasets
 rm(ResampData, countsResampData, resultList)
