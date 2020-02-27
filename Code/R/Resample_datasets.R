@@ -8,10 +8,6 @@
 # q = 10        the fold change for downsampling
 # f = 0.1       the fraction of genes to be downsampled
 
-
-# In order to get the same results each time
-rep=run 
-
 #===================================================================================================================================
 #=========================================== Functions ==============================================================================
 #===================================================================================================================================
@@ -129,8 +125,8 @@ DownSampledData<-resultList[[1]]
 DAGs<-resultList[[2]]
 
 # Saving downsampled datasets and corresponding overview of DAGs
-write.csv(DownSampledData, file=sprintf("../../Intermediate/%s/%s/DownSampledData_run%d.csv", saveName, saveExpDesign, rep))
-write.csv(DAGs, file=sprintf("../../Intermediate/%s/%s/DAGs_run%d.csv", saveName, saveExpDesign, rep))
+write.csv(DownSampledData, file=sprintf("../../Intermediate/%s/%s/DownSampledData_run%d.csv", saveName, saveExpDesign, run))
+write.csv(DAGs, file=sprintf("../../Intermediate/%s/%s/DAGs_run%d.csv", saveName, saveExpDesign, run))
 
 # remove variables/datasets
 rm(ResampData, countsResampData, resultList)
