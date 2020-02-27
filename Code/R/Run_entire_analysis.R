@@ -61,151 +61,40 @@ if (extraDesigns==T){
 # FUNCTIONS SECTION
 #===================================================================================================================================
 
-## FUNCTION to Remove low counts 
-# For a given dataset, this function removes genes with low counts (>75 % or an average count <3).
-# input: Data = the data to remove genes from
-# output: 
-remove_low_counts=function(Data){
-  a=rowSums(Data)<3
-  b=vector()
-  r=vector()
-  for (i in 1:nrow(Data)) {
-    b[i]<-sum(Data[i,]==0)/ncol(Data)>0.75
-    r[i]<-a[i]+b[i]
-  }
-  FilteredData=Data[r==0,]
-  return(FilteredData)
-}
-
 ## FUNCTION for always rounding 0.5, 0.05 etc upwards
 round2 <- function(x, n) {
   z = trunc(abs(x)*10^n +0.5)/10^n *sign(x)
   return(z)
 }
 
-## FUNCTION that assigns factor levels for each gene in a dataset according to variability and abundance
-# The created strata will have approximately the same number of genes each  
-# Input:    Data = Gut2 or Marine
-#           n = the number of strata/levels used when dividing the data
-# Output:   DataStrata = a matrix/dataframe? of genes in the given dataset along with their respective stratas (as factors?)
-create_strata<-function(Data,numberOfStrata){
-  DataStrata<-data.frame(rownames(Data), rowSums(Data),rowVars(as.matrix(Data)))
-  n=numberOfStrata
-  # create a vector for assigning smalles to highest strata
-  repVector<-as.integer(cumsum(c(rep(nrow(Data)/n,n))))
-  repVector<-repVector-c(0,repVector)[-(length(repVector)+1)]
-  strataVector<-rep(1:n,repVector)
-  
-  # sort by abundance and assign abundance-strata
-  DataStrata<-DataStrata[order(DataStrata[,2]),] 
-  DataStrata<-cbind(DataStrata,strataVector)
-  
-  # sort by variability and assign variability-strata
-  DataStrata<-DataStrata[order(DataStrata[,3]),]
-  DataStrata<-cbind(DataStrata,strataVector)
-  
-  # rename columns, factorise strata and sort genes by original order
-  colnames(DataStrata)<-c("GeneName", "GeneAbundance", "GeneVariability", "AbundanceStrata", "VariabilityStrata")
-  DataStrata$AbundanceStrata<-as.factor(DataStrata$AbundanceStrata)
-  DataStrata$VariabilityStrata<-as.factor(DataStrata$VariabilityStrata)
-  DataStrata<-DataStrata[rownames(Data),]
-  
-  rm(n, numberOfStrata, repVector,strataVector)
-  return(DataStrata)
+## FUNCTION for plotting AUC- and TPR-heatmaps
+# Inputs:   variable = HeatmapData$AUCtot,HeatmapData$TPR1 etc
+#           variableName = "total AUC-values", "TPR-values at FPR 0.01" etc
+#           fillName = "AUC-values" or "TPR-values"
+#           variableSave = "AUCtot", "TPR1" etc
+# Outputs:  a plotted heatmap which is saved if savePlot==T
+plot_heatmaps<-function(variable,variableName, fillName, variableSave){
+  heatmap <- ggplot(HeatmapData, aes(x=m, y=d, fill=variable)) +
+    geom_tile(aes(fill = variable)) + geom_text(aes(label = round2(variable, 2), fontface=md)) +
+    scale_fill_viridis_c(begin = 0, end = 1, alpha = 0.5) +  
+    scale_y_discrete(limits = rev(levels(as.factor(HeatmapData$d)))) +
+    theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(), axis.line = element_blank(), panel.background=element_rect(fill = "white") ) +
+    labs(title=sprintf("Mean %s for %s with effect %g", variableName, plotName,q), 
+         x = "Group size", y = "Sequencing depth",  color = "sequensing depth", fill = fillName) 
+  print(heatmap)
+  if(savePlot == TRUE){
+    path_save <-  sprintf("../../Result/%s/heatmap_%s_10q%d.pdf", variableSave, saveName,q*10)
+    ggsave(filename = path_save, plot = heatmap, height = 5, width = 6)
+    dev.off()
+    print(heatmap)}
 }
 
 #===================================================================================================================================
 # SET-UP SECTION
 #===================================================================================================================================
-## Loading original data
-#  filtering out samples not meeting expDesign requirements
-#  filtering out genes with too low counts
 
-if(saveName == "Gut2"){
-  plotName = "Human Gut II"
-  Gut2Original <- read.table("../../Data/Raw_data/HumanGutII_COGcountsRaw.txt", header=T, row.names = 1)
-  Gut2Intermediate = Gut2Original[,colSums(Gut2Original)>=5000000]   # Filter out samples with sequencing depth below the maximum sequencing depth of the experimental design
-  Gut2 <- remove_low_counts(Gut2Intermediate)
-  Data = Gut2
-  
-  boldvalue2="0"
-  relations<-c(3000000)
-  if (onTerra==T){
-    sequencingDepth<-c(10000,100000,500000,1000000,5000000)
-    sequencingDepthName<-c("10k","100k","500k","1M", "5M")
-  }
-  
-  rm(Gut2, Gut2Original, Gut2Intermediate)        # remove original and intermediate datasets
-  
-} else if(saveName == "Marine"){
-  plotName = "Marine"
-  MarineOriginal <- read.table("../../Data/Raw_data/Marine_COGcountsRaw.txt", header=T, row.names = 1)
-  MarineIntermediate = MarineOriginal[,colSums(MarineOriginal)>=10000000]   # Filter out samples with sequencing depth below the maximum sequencing depth of the experimental design
-  Marine <- remove_low_counts(MarineIntermediate)
-  Data = Marine
-  
-  boldvalue2="5e+07"                                              
-  relations<-c(3000000,5000000)
-  if (onTerra==T){
-    sequencingDepth<-c(10000,100000,500000,1000000,5000000,10000000)
-    sequencingDepthName<-c("10k","100k","500k","1M", "5M", "10M")
-  }
-  
-  rm(Marine, MarineOriginal, MarineIntermediate)  # remove original and intermediate datasets
-}
-DataStrata<-create_strata(Data,numberOfStrata)
-
-#===================================================================================================================================
-## Setting upp the right environment and naming designs
-
-AllSaveDesigns=array(rep(NaN, length(effectsizes)*(length(groupSize)+extraL)*(length(sequencingDepth)+extraL)),c(length(effectsizes),(length(groupSize)+extraL),(length(sequencingDepth)+extraL))) 
-AllPlotDesigns=array(rep(NaN, length(effectsizes)*(length(groupSize)+extraL)*(length(sequencingDepth)+extraL)),c(length(effectsizes),(length(groupSize)+extraL),(length(sequencingDepth)+extraL))) 
-
-for (effect in 1:length(effectsizes)) {           # looping over q
-  q=effectsizes[effect]
-  
-  # Creating the standard designs
-  for (group in 1:length(groupSize)){             # looping over m
-    m=groupSize[group]
-    for (seq in 1:length(sequencingDepth)) {      # looping over d
-      d=sequencingDepth[seq]
-      dD=sequencingDepthName[seq]
-      
-      AllSaveDesigns[effect,group,seq] <- sprintf("m%d_d%s_10q%d_f%d", m, dD, q*10, f*100)
-      AllPlotDesigns[effect,group,seq] <- sprintf("m=%d, d=%s, q=%g, f=%d%%",m,dD,q,f*100)
-        
-      # Create folder for certain case if it doesn't exist
-      if (!dir.exists(sprintf("../../Intermediate/%s/%s", saveName, AllSaveDesigns[effect,group,seq]))){
-        dir.create(file.path("../../Intermediate", sprintf("%s", saveName), sprintf("%s", AllSaveDesigns[effect,group,seq])), recursive = T)
-      }
-        
-      if (!dir.exists(sprintf("../../Result/%s/IntermediatePlots", saveName))){
-        dir.create(file.path("../../Result", sprintf("%s", saveName), "/IntermediatePlots"), recursive = T)
-      }
-    }
-  }
-  
-  # Creating 3 extra designs                               
-  if (extraDesigns==T){
-  for (i in 1:extraL) {              # looping over extra designs with fixed m and d
-    m=extraGroups[i]
-    d=extraSeqDepth[i]
-    dD=extraSeqDepthName[i]
-    
-    AllSaveDesigns[effect,group+i,seq+i] <- sprintf("m%d_d%s_10q%d_f%d", m, dD, q*10, f*100)
-    AllPlotDesigns[effect,group+i,seq+i] <- sprintf("m=%d, d=%s, q=%g, f=%d%%",m,dD,q,f*100)
-    
-    # Create folder for certain case if it doesn't exist
-    if (!dir.exists(sprintf("../../Intermediate/%s/%s", saveName, AllSaveDesigns[effect,group+i,seq+i]))){
-      dir.create(file.path("../../Intermediate", sprintf("%s", saveName), sprintf("%s", AllSaveDesigns[effect,group+i,seq+i])), recursive = T)
-    }
-    
-    if (!dir.exists(sprintf("../../Result/%s/IntermediatePlots", saveName))){
-      dir.create(file.path("../../Result", sprintf("%s", saveName), "/IntermediatePlots"), recursive = T)
-    }
-  }}
-}
-
+source("Setup_designs.R")
 
 #===================================================================================================================================
 # ANALYSIS SECTION
@@ -434,85 +323,14 @@ for (effect in 1:length(effectsizes)) {           # looping over q
   # Save tables:
   write.csv(meanAUCfinal, file=sprintf("../../Result/%s/AUC_10q%d.csv", saveName,10*q))
   
-  # heatmaps for AUC and TPR at FPR 0.01, 0.05 and 1
-  heatmapAUCtot <- ggplot(HeatmapData, aes(x=HeatmapData$m, y=HeatmapData$d, fill=AUCtot)) +
-    geom_tile(aes(fill = AUCtot)) + geom_text(aes(label = round2(AUCtot, 2), fontface=md)) +
-    scale_fill_viridis_c(begin = 0, end = 1, alpha = 0.5) +  
-    scale_y_discrete(limits = rev(levels(as.factor(HeatmapData$d)))) +
-    theme(panel.border = element_blank(), panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(), axis.line = element_blank(), panel.background=element_rect(fill = "white") ) +
-    labs(title=sprintf("Mean total AUC-values for %s with effect %g", plotName,q), 
-         x = "Group size", y = "Sequencing depth",  color = "sequensing depth", fill = "AUC-values") 
-  print(heatmapAUCtot)
-  if(savePlot == TRUE){
-    path_save <-  sprintf("../../Result/%s/heatmap_AUCtot_10q%d.pdf", saveName,q*10)
-    ggsave(filename = path_save, plot = heatmapAUCtot, height = 5, width = 6)
-    dev.off()
-    print(heatmapAUCtot)}
-  
-  heatmapAUC5 <- ggplot(HeatmapData, aes(x=HeatmapData$m, y=HeatmapData$d, fill=AUC5)) +
-    geom_tile(aes(fill = AUC5)) + geom_text(aes(label = round2(AUC5, 2), fontface=md)) +
-    scale_fill_viridis_c(begin = 0, end = 1, alpha = 0.5) +  
-    scale_y_discrete(limits = rev(levels(as.factor(HeatmapData$d)))) +
-    theme(panel.border = element_blank(), panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(), axis.line = element_blank(), panel.background=element_rect(fill = "white") ) +
-    labs(title=sprintf("Mean AUC-values at FPR 0.05 for %s with effect %g", plotName,q), 
-         x = "Group size", y = "Sequencing depth",  color = "sequensing depth", fill = "AUC-values") 
-  print(heatmapAUC5)
-  if(savePlot == TRUE){
-    path_save <-  sprintf("../../Result/%s/heatmap_AUC5_10q%d.pdf", saveName,10*q)
-    ggsave(filename = path_save, plot = heatmapAUC5, height = 5, width = 6)
-    dev.off()
-    print(heatmapAUC5)}
-  
-  heatmapAUC1 <- ggplot(HeatmapData, aes(x=HeatmapData$m, y=HeatmapData$d, fill=AUC1)) +
-    geom_tile(aes(fill = AUC1)) + geom_text(aes(label = round2(AUC1, 2), fontface=md)) +
-    scale_fill_viridis_c(begin = 0, end = 1, alpha = 0.5) +  
-    scale_y_discrete(limits = rev(levels(as.factor(HeatmapData$d)))) +
-    theme(panel.border = element_blank(), panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(), axis.line = element_blank(), panel.background=element_rect(fill = "white") ) +
-    labs(title=sprintf("Mean AUC-values at FPR 0.01 for %s  with effect %g", plotName, q), 
-         x = "Group size", y = "Sequencing depth",  color = "sequensing depth", fill = "AUC-values") 
-  print(heatmapAUC1)
-  if(savePlot == TRUE){
-    path_save <-  sprintf("../../Result/%s/heatmap_AUC1_10q%d.pdf", saveName,q*10)
-    ggsave(filename = path_save, plot = heatmapAUC1, height = 5, width = 6)
-    dev.off()
-    print(heatmapAUC1)}
-  
-  heatmapTPR5 <- ggplot(HeatmapData, aes(x=HeatmapData$m, y=HeatmapData$d, fill=TPR5)) +
-    geom_tile(aes(fill = TPR5)) + geom_text(aes(label = round2(TPR5, 2), fontface=md)) +
-    scale_fill_viridis_c(begin = 0, end = 1, alpha = 0.5) +  
-    scale_y_discrete(limits = rev(levels(as.factor(HeatmapData$d)))) +
-    theme(panel.border = element_blank(), panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(), axis.line = element_blank(), panel.background=element_rect(fill = "white") ) +
-    labs(title=sprintf("Mean TPR-values at FPR 0.05 for %s with effect %g", plotName, q), 
-         x = "Group size", y = "Sequencing depth",  color = "sequensing depth", fill = "TPR-values") 
-  print(heatmapTPR5)
-  if(savePlot == TRUE){
-    path_save <-  sprintf("../../Result/%s/heatmap_TPR5_10q%d.pdf", saveName,q*10)
-    ggsave(filename = path_save, plot = heatmapTPR5, height = 5, width = 6)
-    dev.off()
-    print(heatmapTPR5)}
-  
-  heatmapTPR1 <- ggplot(HeatmapData, aes(x=HeatmapData$m, y=HeatmapData$d, fill=TPR1)) +
-    geom_tile(aes(fill = TPR1)) + geom_text(aes(label = round2(TPR1, 2), fontface=md)) +
-    scale_fill_viridis_c(begin = 0, end = 1, alpha = 0.5) +  
-    scale_y_discrete(limits = rev(levels(as.factor(HeatmapData$d)))) +
-    theme(panel.border = element_blank(), panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(), axis.line = element_blank(), panel.background=element_rect(fill = "white") ) +
-    labs(title=sprintf("Mean TPR-values at FPR 0.01 for %s with effect %g", plotName, q), 
-         x = "Group size", y = "Sequencing depth",  color = "sequensing depth", fill = "TPR-values") 
-  print(heatmapTPR1)
-  if(savePlot == TRUE){
-    path_save <-  sprintf("../../Result/%s/heatmap_TPR1_10q%d.pdf", saveName,q*10)
-    ggsave(filename = path_save, plot = heatmapTPR1, height = 5, width = 6)
-    dev.off()
-    print(heatmapTPR1)}
-  
+  # plotting heatmaps for AUC- and TPR-values
+  plot_heatmaps(HeatmapData$AUC1, "AUC-values at FPR 0.01", "AUC-values", "AUC1")
+  plot_heatmaps(HeatmapData$AUC5, "AUC-values at FPR 0.05", "AUC-values", "AUC5")
+  plot_heatmaps(HeatmapData$AUCtot, "total AUC-values", "AUC-values", "AUCtot")
+  plot_heatmaps(HeatmapData$TPR1, "TPR-values at FPR 0.01", "TPR-values", "TPR1")
+  plot_heatmaps(HeatmapData$TPR5, "TPR-values at FPR 0.05", "TPR-values", "TPR5")
   
   ### Plot mean RoC-curves for all experimental designs
-  
   # mean plots with set groupsize
   for (group in 1:length(groupSize)){
     M=groupSize[group]
