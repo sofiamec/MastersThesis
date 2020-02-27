@@ -88,7 +88,44 @@ plot_heatmaps<-function(variable,variableName, fillName, variableSave){
     ggsave(filename = path_save, plot = heatmap, height = 5, width = 6)
     dev.off()
     print(heatmap)}
+  rm(heatmap)
 }
+
+## FUNCTION for plotting combined mean ROC-plots
+# Inputs:   variable = meanROCfinal$m, meanROCfinal$d or meanROCfinal$md 
+#           parameterVector = groupSize,sequencingDepth or relations 
+#           parameterName = "group size", "sequencing depth" or "relation, trade-off, m*d"
+#           parameterSave = "groupsize", "depth", "relation"
+#           fillVariable = meanROCfinal$d, meanROCfinal$m or meanROCfinal$plotMD
+#           fillName = "Sequencing depth", "Group size" or "Experimental design"
+# Outputs:  several plots of combined meanROC-curves which are saved if savePlot==T
+plot_combined_meanROCs<-function(variable, parameterVector, parameterName, parameterSave, fillVariable, fillName){
+  for (i in 1:length(parameterVector)) {
+    X=parameterVector[i]
+    subtitle=sprintf("Experimental designs with %s %d     (%s repeats each)", parameterName, X, repeats)
+    path_save <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%d.pdf", saveName,10*q, parameterSave, X)
+    if (all(parameterVector==sequencingDepth)){
+      dD=sequencingDepthName[i]
+      subtitle=sprintf("Experimental designs with %s %s     (%s repeats each)", parameterName, dD, repeats)
+      path_save <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%s.pdf", saveName,10*q, parameterSave, dD)
+    }
+    combinedPlot<-ggplot(data=meanROCfinal[variable==X,], aes(x=FPR, y=meanTPR, fill=fillVariable[variable==X])) +  theme_minimal() + 
+      geom_ribbon(aes(ymin=(min), ymax=(max),fill = fillVariable[variable==X]), alpha=0.2) +
+      geom_line(aes(color = fillVariable[variable==X])) +
+      labs(title=sprintf("Mean ROC-curves for %s  with effect %g", plotName, q), 
+           subtitle = subtitle, x = "False Positive Rate", y = "True Positive Rate",  
+           color = fillName, fill = fillName) +
+      ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2))+
+      scale_fill_viridis_d(begin = 0, end = 0.85) + scale_colour_viridis_d(begin = 0, end = 0.85)
+    print(combinedPlot)
+    if(savePlot == TRUE){
+      ggsave(filename = path_save, plot = combinedPlot, height = 5, width = 6)
+      dev.off()
+      print(combinedPlot)}
+    rm(combinedPlot, X)
+  }
+}
+
 
 #===================================================================================================================================
 # SET-UP SECTION
@@ -144,6 +181,15 @@ for (effect in 1:length(effectsizes)) {           # looping over q
         AUC[run,] <- AUCs
         ROC <- rbind(ROC,ROCs)
         meanROC<-rbind(meanROC, meanROCs)
+        
+        # STRATA
+        #ROCsAbundance
+        #AUCsAbundance 
+        #meanROCsAbundance
+        
+        #ROCsVariability
+        #AUCsVariability
+        #meanROCsVariability 
         
         rm(AUCs,ROCs,meanROCs)
       }
@@ -254,9 +300,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
            subtitle = sprintf("Experimental design: %s", plotExpDesign),
            colour="repeats", x = "False Positive Rate", y = "True Positive Rate") +
       xlim(0, 1)+  ylim(0, 1)
-    
     print(ROCplot)
-      
     if(savePlot == TRUE){
       path_save <-  sprintf("../../Result/%s/IntermediatePlots/individualROCs_rep%s.pdf", saveName, saveExpDesign, rep)
       ggsave(filename = path_save, plot = ROCplot, height = 5, width = 6)
@@ -282,15 +326,14 @@ for (effect in 1:length(effectsizes)) {           # looping over q
       ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2))+
       scale_fill_viridis_d(begin = 0.2, end = 0.6) +
       scale_colour_viridis_d(begin = 0.2, end = 0.6)
-      
     print(meanROCplot)
-      
     if(savePlot == TRUE){
       path_save <-  sprintf("../../Result/%s/IntermediatePlots/meanROC_%s.pdf", saveName, saveExpDesign)
       ggsave(filename = path_save, plot = meanROCplot, height = 5, width = 6)
       dev.off()
       print(meanROCplot)
     }
+    
     meanAUCfinal<-rbind(meanAUCfinal,data.frame(t(colMeans(AUC)[1:5]),d,m,m*d,sprintf("m=%d d=%s",m,dD)))
     meanROCfinal<-rbind(meanROCfinal,data.frame(meanROC2,d,m,m*d,sprintf("m=%d d=%s",m,dD)))
       
@@ -323,7 +366,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
   # Save tables:
   write.csv(meanAUCfinal, file=sprintf("../../Result/%s/AUC_10q%d.csv", saveName,10*q))
   
-  # plotting heatmaps for AUC- and TPR-values
+  ### Plotting heatmaps for AUC- and TPR-values
   plot_heatmaps(HeatmapData$AUC1, "AUC-values at FPR 0.01", "AUC-values", "AUC1")
   plot_heatmaps(HeatmapData$AUC5, "AUC-values at FPR 0.05", "AUC-values", "AUC5")
   plot_heatmaps(HeatmapData$AUCtot, "total AUC-values", "AUC-values", "AUCtot")
@@ -331,81 +374,13 @@ for (effect in 1:length(effectsizes)) {           # looping over q
   plot_heatmaps(HeatmapData$TPR5, "TPR-values at FPR 0.05", "TPR-values", "TPR5")
   
   ### Plot mean RoC-curves for all experimental designs
+  
   # mean plots with set groupsize
-  for (group in 1:length(groupSize)){
-    M=groupSize[group]
-    
-    meanROCplotgroup <- ggplot(data=meanROCfinal[meanROCfinal$m==M,], aes(x=FPR, y=meanTPR, fill=d)) +  theme_minimal() + 
-      geom_ribbon(aes(ymin=(min), ymax=(max),fill = d), alpha=0.2) +
-      geom_line(aes(color = d)) +
-      labs(title=sprintf("Mean ROC-curves for %s  with effect %g", plotName, q), 
-           subtitle = sprintf("Experimental designs with group size %d     (%s repeats each)", M, repeats),
-           x = "False Positive Rate", y = "True Positive Rate",  color = "sequensing depth", fill = "sequensing depth") +
-      ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2))+
-      scale_fill_viridis_d(begin = 0, end = 0.85) +
-      scale_colour_viridis_d(begin = 0, end = 0.85)
-    
-    print(meanROCplotgroup)
-    
-    if(savePlot == TRUE){
-      path_save <-  sprintf("../../Result/%s/meanROC_10q%d_groupsize_%d.pdf", saveName,10*q, M)
-      ggsave(filename = path_save, plot = meanROCplotgroup, height = 5, width = 6)
-      dev.off()
-      print(meanROCplotgroup)}
-    
-    rm(meanROCplotgroup, M)
-  }
-  
+  plot_combined_meanROCs(meanROCfinal$m, groupSize, "group size", "groupsize", meanROCfinal$d, "Sequencing depth")
   # mean plots with set sequencing depth
-  for (seq in 1:length(sequencingDepth)) {
-    D=sequencingDepth[seq]
-    dD=sequencingDepthName[seq]
-    
-    meanROCplotdepth <- ggplot(data=meanROCfinal[meanROCfinal$d==D,], aes(x=FPR, y=meanTPR, fill=m)) +  theme_minimal() + 
-      geom_ribbon(aes(ymin=(min), ymax=(max),fill = m), alpha=0.2) +
-      geom_line(aes(color = m)) +
-      labs(title=sprintf("Mean ROC-curves for %s with effect %g", plotName, q), 
-           subtitle = sprintf("Experimental designs with sequencing depth %s     (%s repeats each)", dD, repeats),
-           x = "False Positive Rate", y = "True Positive Rate",  color = "group size", fill = "group size") +
-      ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2))+
-      scale_fill_viridis_d(begin = 0, end = 0.85) +
-      scale_colour_viridis_d(begin = 0, end = 0.85)
-    
-    print(meanROCplotdepth)
-    
-    if(savePlot == TRUE){
-      path_save <-  sprintf("../../Result/%s/meanROC_10q%d_depth_%d.pdf", saveName,10*q,D)
-      ggsave(filename = path_save, plot = meanROCplotdepth, height = 5, width = 6)
-      dev.off()
-      print(meanROCplotdepth)}
-    
-    rm(meanROCplotdepth, D,dD)
-  }
-  
+  plot_combined_meanROCs(meanROCfinal$d, sequencingDepth, "sequencing depth", "depth", meanROCfinal$m, "Group size")
   # mean plots with set groupsize and depth relation (m*d)
-  for (relation in 1:length(relations)){
-    MD=relations[relation]
-    
-    meanROCplotrelation <- ggplot(data=meanROCfinal[meanROCfinal$md==MD,], aes(x=FPR, y=meanTPR, fill=plotMD)) +  theme_minimal() + 
-      geom_ribbon(aes(ymin=(min), ymax=(max),fill = plotMD), alpha=0.2) +
-      geom_line(aes(color = plotMD)) +
-      labs(title=sprintf("Mean ROC-curves for %s  with effect %g", plotName, q), 
-           subtitle = sprintf("Experimental designs with relation/trade-off/m*d=%d     (%s repeats each)", MD, repeats),
-           x = "False Positive Rate", y = "True Positive Rate",  color = "Experimental design", fill = "Experimental design") +
-      ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2))+
-      scale_fill_viridis_d(begin = 0, end = 0.85) +
-      scale_colour_viridis_d(begin = 0, end = 0.85)
-    
-    print(meanROCplotrelation)
-    
-    if(savePlot == TRUE){
-      path_save <-  sprintf("../../Result/%s/meanROC_10q%d_relation_%d.pdf", saveName,10*q, MD)
-      ggsave(filename = path_save, plot = meanROCplotrelation, height = 5, width = 6)
-      dev.off()
-      print(meanROCplotrelation)}
-    
-    rm(meanROCplotrelation, MD)
-  }
+  plot_combined_meanROCs(meanROCfinal$md, relations, "relation/trade-off/m*d", "relation", meanROCfinal$plotMD, "Experimental design")
   
   rm(group,seq, relation)
 
