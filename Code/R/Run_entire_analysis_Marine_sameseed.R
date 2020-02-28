@@ -24,13 +24,13 @@ extraDesigns=F                                              # use T if extra des
 
 # Test-settings (CHANGE HERE!)
 if (onTerra==F){
-  repeats = 2                                               # sets the number of runs for each case (experimental design and q)
-  savePlot = T                                              # use T when plots should be saved (for many repeats)
+  repeats = 3                                               # sets the number of runs for each case (experimental design and q)
+  savePlot = F                                              # use T when plots should be saved (for many repeats)
   loadData = F                                              # use T if it is a rerun of existing results
   effectsizes=3#c(1.5,3)                                             # q = Fold-change for downsampling
-  groupSize<-3#c(3,10)#,10,30,50)                                            # m = Number of samples in each group (total nr samples = 2*m)
-  sequencingDepth<-c(10000)#,1000000)#,500000,1000000,5000000,10000000)      # d = Desired sequencing depth per sample
-  sequencingDepthName<-c("10k")#,"1M")#, "500k","1M","5M","10M")          # dD = Displayed names for sequensing depths
+  groupSize<-c(3,5)#c(3,10)#,10,30,50)                                            # m = Number of samples in each group (total nr samples = 2*m)
+  sequencingDepth<-c(10000, 100000)#,1000000)#,500000,1000000,5000000,10000000)      # d = Desired sequencing depth per sample
+  sequencingDepthName<-c("10k", "100k")#,"1M")#, "500k","1M","5M","10M")          # dD = Displayed names for sequensing depths
 }
 
 # Real settings

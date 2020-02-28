@@ -35,7 +35,7 @@ if (onTerra==F){
 
 # Real settings
 if (onTerra==T){
-  repeats = 10                                              # sets the number of runs for each case (experimental design and q)
+  repeats = 100                                             # sets the number of runs for each case (experimental design and q)
   savePlot = T                                              # use T when plots should be saved (for many repeats)
   loadData = F                                              # use T if it is a rerun of existing results
   effectsizes=c(1.5,3)                                      # q = Fold-change for downsampling
