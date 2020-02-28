@@ -23,6 +23,7 @@ resample = function(Data, m, d){
   DataNew=data.frame(row.names(Data), stringsAsFactors = F) # dataframe to put the resampled data in
   
   for (i in 1:(2*m)){
+    set.seed(run+i)       # draws as many counts as possible equally for different seq. depths
     readList <- rep(row.names(Data), times=Data[,sampleVector[i]])                # vector containing each read as one entry 
     sampledReads <- sample(readList, size=d)                                      # vector with d resampled reads from "readList"
     sampledVector <- as.data.frame(table(sampledReads), stringsAsFactors = FALSE) # assemble vector "sampledReads" into dataframe
@@ -110,7 +111,8 @@ introducing_DAGs = function(Data, q, f){
 #===================================================================================================================================
 
 #################################################################################################################
-
+# to get the same resampled data for each exp design but different ones for each run
+set.seed(run)
 # Resample data
 ResampData=resample(Data=Data, m=m, d=d)
 
