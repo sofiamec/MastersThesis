@@ -120,8 +120,15 @@ ResStrata<-data.frame(ResDESeq, ResStrata, c(rep(0,nrow(ResDESeq))))
 #ResStrata[rownames(ResStrata) %in% rownames(DAGs),7]=1 #Adding notation for which are TP
 
 
+ROCsAbundance <- data.frame()
+AUCsAbundance <- data.frame()
+meanROCsAbundance <- data.frame()
 
-for (k in 1:length(numberOfStrata)) {
+ROCsVariability <- data.frame()
+AUCsVariability <- data.frame()
+meanROCsVariability <- data.frame()
+
+for (k in 1:numberOfStrata) {
   DAGsStrataAbundance=DAGs[DAGs$AbundanceStrata==k,]
   DAGsStrataVariability=DAGs[DAGs$VariabilityStrata==k,]
   ResDESeqAbundance=ResStrata[ResStrata$AbundanceStrata==k,]
@@ -130,21 +137,21 @@ for (k in 1:length(numberOfStrata)) {
   deseqROCAUCAbundance<-Compute_ROC_AUC(ResDESeqAbundance, DAGsStrataAbundance, run)
   deseqROCAUCVariability<-Compute_ROC_AUC(ResDESeqVariability, DAGsStrataVariability, run)
   
-  ROCsAbundance <- data.frame(deseqROCAUCAbundance[[1]], k)
-  AUCsAbundance <- data.frame(deseqROCAUCAbundance[[2]],k) 
-  meanROCsAbundance <- data.frame(deseqROCAUCAbundance[[3]],k)
+  ROCsAbundance <- rbind(ROCsAbundance ,data.frame(deseqROCAUCAbundance[[1]], k))
+  AUCsAbundance <- rbind(AUCsAbundance ,data.frame(deseqROCAUCAbundance[[2]],k))
+  meanROCsAbundance <- rbind(meanROCsAbundance ,data.frame(deseqROCAUCAbundance[[3]],k))
   
-  ROCsVariability <- data.frame(deseqROCAUCVariability[[1]], k)
-  AUCsVariability <- data.frame(deseqROCAUCVariability[[2]],k) 
-  meanROCsVariability <- data.frame(deseqROCAUCVariability[[3]],k)  
+  ROCsVariability <- rbind(ROCsVariability ,data.frame(deseqROCAUCVariability[[1]], k))
+  AUCsVariability <- rbind(AUCsVariability ,data.frame(deseqROCAUCVariability[[2]],k))
+  meanROCsVariability <- rbind(meanROCsVariability ,data.frame(deseqROCAUCVariability[[3]],k))  
 }
 
-colnames(AUCsAbundance)<-c("AUC1", "AUC5" ,"AUCtot", "TPR1", "TPR5", "run","Strata")
-colnames(AUCsVariability)<-c("AUC1", "AUC5" ,"AUCtot", "TPR1", "TPR5", "run","Strata")
-colnames(meanROCsAbundance)<-c("FPR", "N", "meanTPR" ,"Strata")
-colnames(meanROCsVariability)<-c("FPR", "N", "meanTPR" ,"Strata")
-colnames(ROCsAbundance)<-c("TPR","FPR", "run","Strata")
-colnames(ROCsVariability)<-c("TPR","FPR", "run","Strata")
+colnames(AUCsAbundance)<-c("AUC1", "AUC5" ,"AUCtot", "TPR1", "TPR5", "run","strata")
+colnames(AUCsVariability)<-c("AUC1", "AUC5" ,"AUCtot", "TPR1", "TPR5", "run","strata")
+colnames(meanROCsAbundance)<-c("FPR", "N", "meanTPR" ,"strata")
+colnames(meanROCsVariability)<-c("FPR", "N", "meanTPR" ,"strata")
+colnames(ROCsAbundance)<-c("TPR","FPR", "run","strata")
+colnames(ROCsVariability)<-c("TPR","FPR", "run","strata")
 
 
 

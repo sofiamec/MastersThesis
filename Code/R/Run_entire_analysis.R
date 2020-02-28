@@ -1,6 +1,11 @@
 
 # Script for running all scripts, performing the entire analysis of datasets with different designs
 
+
+## Nu kallar denna på analysis_of_DAGs_strata och REsample_data_strata!
+## Koden funkar inte för extraDesigns!
+## Se över run vs rep
+
 #===================================================================================================================================
 ## Loading Libraries:
 
@@ -24,7 +29,7 @@ extraDesigns=F                                              # use T if extra des
 
 # Test-settings (CHANGE HERE!)
 if (onTerra==F){
-  repeats = 2                                               # sets the number of runs for each case (experimental design and q)
+  repeats = 5                                               # sets the number of runs for each case (experimental design and q)
   savePlot = F                                              # use T when plots should be saved (for many repeats)
   loadData = T                                              # use T if it is a rerun of existing results
   effectsizes=3                                             # q = Fold-change for downsampling
@@ -155,9 +160,15 @@ for (effect in 1:length(effectsizes)) {           # looping over q
       cat(sprintf("================================== d=%s =====================================\n", dD))
       
       # Creating empty initial result-matrices
-      AUC = data.frame(AUC1=numeric(0), AUC5 = numeric(0), AUCtot = numeric(0), TPR1=numeric(0), TPR5=numeric(0),rep = numeric(0))
-      ROC = data.frame(TPR=numeric(0), FPR=numeric(0),rep=numeric(0))
+      AUC = data.frame(AUC1=numeric(0), AUC5 = numeric(0), AUCtot = numeric(0), TPR1=numeric(0), TPR5=numeric(0),run = numeric(0))
+      AUCAbundance = data.frame(AUC1=numeric(0), AUC5 = numeric(0), AUCtot = numeric(0), TPR1=numeric(0), TPR5=numeric(0),run = numeric(0),strata = numeric(0))
+      AUCVariability = data.frame(AUC1=numeric(0), AUC5 = numeric(0), AUCtot = numeric(0), TPR1=numeric(0), TPR5=numeric(0),run = numeric(0),strata = numeric(0))
+      ROC = data.frame(TPR=numeric(0), FPR=numeric(0),run=numeric(0))
+      ROCAbundance = data.frame(TPR=numeric(0), FPR=numeric(0),run=numeric(0), strata=numeric(0))
+      ROCVariability = data.frame(TPR=numeric(0), FPR=numeric(0),run=numeric(0), strata=numeric(0))
       meanROC = data.frame(FPR=numeric(0),N=numeric(0),meanTPR=numeric(0))
+      meanROCAbundance = data.frame(FPR=numeric(0),N=numeric(0),meanTPR=numeric(0), strata=numeric(0))
+      meanROCVariability = data.frame(FPR=numeric(0),N=numeric(0),meanTPR=numeric(0), strata=numeric(0))
       
       saveExpDesign <- AllSaveDesigns[effect,group,seq]
       plotExpDesign <- AllPlotDesigns[effect,group,seq]
@@ -171,48 +182,54 @@ for (effect in 1:length(effectsizes)) {           # looping over q
           DAGs<-read.csv(file=sprintf("../../Intermediate/%s/%s/DAGs_run%d.csv", saveName, saveExpDesign, run),header = T,row.names = 1)
           
         } else {      
-          source("Resample_datasets.R")
+          source("Resample_datasets_strata.R")
         }
         
         # Run the code for analysing DAGs
-        source("Analysis_of_DAGs.R")
+        source("Analysis_of_DAGs_strata.R")
       
         # Save the results 
         AUC[run,] <- AUCs
+        
+        AUCAbundance<-rbind(AUCAbundance, AUCsAbundance)
+        AUCVariability<-rbind(AUCVariability, AUCsVariability)
+        
         ROC <- rbind(ROC,ROCs)
-        meanROC<-rbind(meanROC, meanROCs)
         
-        # STRATA
-        #ROCsAbundance
-        #AUCsAbundance 
-        #meanROCsAbundance
+        ROCAbundance <- rbind(ROCAbundance,ROCsAbundance)
+        ROCVariability <- rbind(ROCVariability,ROCsVariability)
         
-        #ROCsVariability
-        #AUCsVariability
-        #meanROCsVariability 
+        meanROC <- rbind(meanROC, meanROCs)
+        meanROCAbundance <- rbind(meanROCAbundance,meanROCsAbundance)
+        meanROCVariability <- rbind(meanROCVariability,meanROCsVariability)
         
-        rm(AUCs,ROCs,meanROCs)
+        rm(AUCs, ROCs, meanROCs, AUCsAbundance, AUCsVariability, ROCsAbundance, ROCsVariability, meanROCsAbundance, meanROCsVariability)
       }
       
-      ROC$rep<-as.factor(ROC$rep)
+      ROC$run<-as.factor(ROC$run)
+      ROCAbundance$run<-as.factor(ROCAbundance$run)
+      ROCVariability$run<-as.factor(ROCVariability$run)
+      ROCAbundance$strata<-as.factor(ROCAbundance$strata)
+      ROCVariability$strata<-as.factor(ROCVariability$strata)
       
       # Plot individual ROC-plots
-      ROCplot <- ggplot(data=ROC, aes(x=FPR, y=TPR, group=rep)) +  geom_line(aes(color=rep)) + 
+      ROCplot <- ggplot(data=ROC, aes(x=FPR, y=TPR, group=run)) +  geom_line(aes(color=run)) + 
         theme(plot.title = element_text(hjust = 0.5)) +  theme_minimal() + 
         scale_color_viridis(begin = 0, end = 0.85, discrete=TRUE) +
         labs(title=sprintf("ROC-curves for %s with effect %g", plotName, q), 
              subtitle = sprintf("Experimental design: %s", plotExpDesign),
-             colour="repeats", x = "False Positive Rate", y = "True Positive Rate") +
+             colour="run", x = "False Positive Rate", y = "True Positive Rate") +
         xlim(0, 1)+  ylim(0, 1)
       
       print(ROCplot)
       
       if(savePlot == TRUE){
-        path_save <-  sprintf("../../Result/%s/IntermediatePlots/individualROCs_rep%s.pdf", saveName, saveExpDesign, rep)
+        path_save <-  sprintf("../../Result/%s/IntermediatePlots/individualROCs_run%s.pdf", saveName, saveExpDesign, run)
         ggsave(filename = path_save, plot = ROCplot, height = 5, width = 6)
         dev.off()
         print(ROCplot)
       }
+
       
       colnames(meanROC)[3]<-"meanTPR"
       meanROC2<-ddply(meanROC, "FPR", summarise,
@@ -241,6 +258,55 @@ for (effect in 1:length(effectsizes)) {           # looping over q
         dev.off()
         print(meanROCplot)
       }
+      
+      ############ REMOVE NAs
+      meanROCAb2<-ddply(meanROCAbundance, c("FPR", "strata"), summarise,
+                        N    = length(meanTPR),
+                        mean = mean(meanTPR),
+                        min  = min(meanTPR),
+                        max  = max(meanTPR))
+      colnames(meanROCAb2)[4]<-"meanTPR"
+      
+      meanROCAb2$strata<-as.factor(meanROCAb2$strata)
+      
+      # Plot mean RoC-curves for certain experimental design
+      meanROCplotAb <- ggplot(data=meanROCAb2, aes(x=FPR, y=meanTPR, group=strata)) + 
+        geom_ribbon(aes(ymin=(min), ymax=(max), fill=strata), alpha = 0.2) + 
+        geom_line(aes(color=strata)) +
+        labs(title=sprintf("Mean ROC-curve for %s with effect %g", plotName,q), 
+             subtitle = sprintf("Experimental design: %s     (%s repeats)", plotExpDesign, repeats),
+             x = "False Positive Rate", y = "True Positive Rate")+
+        ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2))+
+        scale_fill_viridis_d(begin = 0.2, end = 0.6) +
+        scale_colour_viridis_d(begin = 0.2, end = 0.6)
+      
+      print(meanROCplotAb)
+      
+      #
+      meanROCV2<-ddply(meanROCVariability, c("FPR", "strata"), summarise,
+                        N    = length(meanTPR),
+                        mean = mean(meanTPR),
+                        min  = min(meanTPR),
+                        max  = max(meanTPR))
+      colnames(meanROCV2)[4]<-"meanTPR"
+      
+      meanROCV2$strata<-as.factor(meanROCV2$strata)
+      
+      # Plot mean RoC-curves for certain experimental design
+      meanROCplotV <- ggplot(data=meanROCV2, aes(x=FPR, y=meanTPR, group=strata)) + 
+        geom_ribbon(aes(ymin=(min), ymax=(max), fill=strata), alpha = 0.2) + 
+        geom_line(aes(color=strata)) +
+        labs(title=sprintf("Mean ROC-curve for %s with effect %g", plotName,q), 
+             subtitle = sprintf("Experimental design: %s     (%s repeats)", plotExpDesign, repeats),
+             x = "False Positive Rate", y = "True Positive Rate")+
+        ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2))+
+        scale_fill_viridis_d(begin = 0.2, end = 0.6) +
+        scale_colour_viridis_d(begin = 0.2, end = 0.6)
+      
+      print(meanROCplotV)
+      
+      ############
+      
       meanAUCfinal<-rbind(meanAUCfinal,data.frame(t(colMeans(AUC)[1:5]),d,m,m*d,sprintf("m=%d d=%s",m,dD)))
       meanROCfinal<-rbind(meanROCfinal,data.frame(meanROC2,d,m,m*d,sprintf("m=%d d=%s",m,dD)))
       
