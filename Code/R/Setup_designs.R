@@ -158,3 +158,4 @@ for (effect in 1:length(effectsizes)) {           # looping over q
     }}
 }
 
+rm(d,dD,effect, group, m, q, seq, remove_low_counts, DESeq2_for_strata)

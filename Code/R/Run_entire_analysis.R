@@ -4,7 +4,6 @@
 
 ## Nu kallar denna på analysis_of_DAGs_strata och REsample_data_strata!
 ## Koden funkar inte för extraDesigns!
-## Se över run vs rep
 
 #===================================================================================================================================
 ## Loading Libraries:
@@ -29,13 +28,13 @@ extraDesigns=F                                              # use T if extra des
 
 # Test-settings (CHANGE HERE!)
 if (onTerra==F){
-  repeats = 5                                               # sets the number of runs for each case (experimental design and q)
+  repeats = 2                                               # sets the number of runs for each case (experimental design and q)
   savePlot = F                                              # use T when plots should be saved (for many repeats)
   loadData = T                                              # use T if it is a rerun of existing results
   effectsizes=3                                             # q = Fold-change for downsampling
   groupSize<-c(3,5)#,10,30,50)                                            # m = Number of samples in each group (total nr samples = 2*m)
-  sequencingDepth<-c(10000,100000)#,500000,1000000,5000000,10000000)      # d = Desired sequencing depth per sample
-  sequencingDepthName<-c("10k","100k")#, "500k","1M","5M","10M")          # dD = Displayed names for sequensing depths
+  sequencingDepth<-c(10000,100000)#,500000,1000000,5000000)      # d = Desired sequencing depth per sample
+  sequencingDepthName<-c("10k","100k")#, "500k","1M","5M")          # dD = Displayed names for sequensing depths
 }
 
 # Real settings
@@ -104,7 +103,7 @@ plot_heatmaps<-function(variable,variableName, fillName, variableSave){
 #           fillVariable = meanROCfinal$d, meanROCfinal$m or meanROCfinal$plotMD
 #           fillName = "Sequencing depth", "Group size" or "Experimental design"
 # Outputs:  several plots of combined meanROC-curves which are saved if savePlot==T
-plot_combined_meanROCs<-function(variable, parameterVector, parameterName, parameterSave, fillVariable, fillName){
+plot_combined_meanROCs<-function(plotData, variable, parameterVector, parameterName, parameterSave, fillVariable, fillName, test){
   for (i in 1:length(parameterVector)) {
     X=parameterVector[i]
     subtitle=sprintf("Experimental designs with %s %d     (%s repeats each)", parameterName, X, repeats)
@@ -114,15 +113,32 @@ plot_combined_meanROCs<-function(variable, parameterVector, parameterName, param
       subtitle=sprintf("Experimental designs with %s %s     (%s repeats each)", parameterName, dD, repeats)
       path_save <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%s.pdf", saveName,10*q, parameterSave, dD)
     }
-    combinedPlot<-ggplot(data=meanROCfinal[variable==X,], aes(x=FPR, y=meanTPR, fill=fillVariable[variable==X])) +  theme_minimal() + 
-      geom_ribbon(aes(ymin=(min), ymax=(max),fill = fillVariable[variable==X]), alpha=0.2) +
-      geom_line(aes(color = fillVariable[variable==X])) +
-      labs(title=sprintf("Mean ROC-curves for %s  with effect %g", plotName, q), 
-           subtitle = subtitle, x = "False Positive Rate", y = "True Positive Rate",  
-           color = fillName, fill = fillName) +
-      ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2))+
-      scale_fill_viridis_d(begin = 0, end = 0.85) + scale_colour_viridis_d(begin = 0, end = 0.85)
-    print(combinedPlot)
+    if (test==0){
+      combinedPlot<-ggplot(data=plotData[variable==X,], 
+                           aes(x=FPR, y=meanTPR, fill=fillVariable[variable==X])) +  theme_minimal() + 
+        geom_ribbon(aes(ymin=(min), ymax=(max),fill = fillVariable[variable==X]), alpha=0.2) +
+        geom_line(aes(color = fillVariable[variable==X])) +
+        labs(title=sprintf("Mean ROC-curves for %s  with effect %g", plotName, q), 
+             subtitle = subtitle, x = "False Positive Rate", y = "True Positive Rate",  
+             color = fillName, fill = fillName) +
+        ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2))+
+        scale_fill_viridis_d(begin = 0, end = 0.85) + scale_colour_viridis_d(begin = 0, end = 0.85)
+      print(combinedPlot)
+    } else { # FOR strata
+      combinedPlot<-ggplot(data=plotData[variable==X,], 
+                           aes(x=FPR, y=meanTPR, group = interaction(fillVariable[variable==X], plotData$strata[variable==X]),
+                               fill=fillVariable[variable==X], linetype= plotData$strata[variable==X])) +  theme_minimal() + 
+        geom_ribbon(aes(ymin=(min), ymax=(max),fill = fillVariable[variable==X]), alpha=0.2) + 
+        geom_line(aes(color = fillVariable[variable==X], linetype=plotData$strata[variable==X])) +
+        scale_linetype_manual(values=c("solid", "dashed","dotted"))+
+        labs(title=sprintf("Mean ROC-curves for %s  with effect %g", plotName, q), 
+             subtitle = subtitle, x = "False Positive Rate", y = "True Positive Rate",  
+             color = fillName, fill = fillName, linetype = "Strata") +
+        ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2))+
+        scale_fill_viridis_d(begin = 0, end = 0.85) + scale_colour_viridis_d(begin = 0, end = 0.85)
+      print(combinedPlot)
+    }
+
     if(savePlot == TRUE){
       ggsave(filename = path_save, plot = combinedPlot, height = 5, width = 6)
       dev.off()
@@ -149,7 +165,11 @@ for (effect in 1:length(effectsizes)) {           # looping over q
   
   # Creating empty final results-matrices
   meanAUCfinal = data.frame()
-  meanROCfinal = data.frame()  
+  meanROCfinal = data.frame() 
+  meanAUCfinalAb = data.frame()
+  meanROCfinalAb = data.frame() 
+  meanAUCfinalV = data.frame()
+  meanROCfinalV = data.frame() 
   
   for (group in 1:length(groupSize)){             # looping over m
     m=groupSize[group]
@@ -178,8 +198,13 @@ for (effect in 1:length(effectsizes)) {           # looping over q
         
         # Run the code for resampling and downsampling, or load already resampled and downsampled dataset
         if (loadData==T){
-          DownSampledData<-read.csv(file=sprintf("../../Intermediate/%s/%s/DownSampledData_run%d.csv", saveName, saveExpDesign, run), header = T, row.names = 1)
-          DAGs<-read.csv(file=sprintf("../../Intermediate/%s/%s/DAGs_run%d.csv", saveName, saveExpDesign, run),header = T,row.names = 1)
+          
+          # Once this script has been run with correct resampling, use the muted code!!
+          
+          #DownSampledData<-read.csv(file=sprintf("../../Intermediate/%s/%s/DownSampledData_run%d.csv", saveName, saveExpDesign, run), header = T, row.names = 1)
+          #DAGs<-read.csv(file=sprintf("../../Intermediate/%s/%s/DAGs_run%d.csv", saveName, saveExpDesign, run),header = T,row.names = 1)
+          
+          source("Resample_datasets_strata.R")
           
         } else {      
           source("Resample_datasets_strata.R")
@@ -203,7 +228,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
         meanROCAbundance <- rbind(meanROCAbundance,meanROCsAbundance)
         meanROCVariability <- rbind(meanROCVariability,meanROCsVariability)
         
-        rm(AUCs, ROCs, meanROCs, AUCsAbundance, AUCsVariability, ROCsAbundance, ROCsVariability, meanROCsAbundance, meanROCsVariability)
+      rm(AUCs, ROCs, meanROCs, AUCsAbundance, AUCsVariability, ROCsAbundance, ROCsVariability, meanROCsAbundance, meanROCsVariability)
       }
       
       ROC$run<-as.factor(ROC$run)
@@ -310,6 +335,14 @@ for (effect in 1:length(effectsizes)) {           # looping over q
       meanAUCfinal<-rbind(meanAUCfinal,data.frame(t(colMeans(AUC)[1:5]),d,m,m*d,sprintf("m=%d d=%s",m,dD)))
       meanROCfinal<-rbind(meanROCfinal,data.frame(meanROC2,d,m,m*d,sprintf("m=%d d=%s",m,dD)))
       
+      for (k in 1:numberOfStrata) {
+        meanAUCfinalAb <-rbind(meanAUCfinalAb,data.frame(t(colMeans(AUCAbundance[AUCAbundance$strata==k,])[-6]),d,m,m*d,sprintf("m=%d d=%s",m,dD)))
+        meanAUCfinalV <- rbind(meanAUCfinalV,data.frame(t(colMeans(AUCVariability[AUCVariability$strata==k,])[-6]),d,m,m*d,sprintf("m=%d d=%s",m,dD)))
+      }
+
+      meanROCfinalAb<-rbind(meanROCfinalAb,data.frame(meanROCAb2,d,m,m*d,sprintf("m=%d d=%s",m,dD)))
+      meanROCfinalV<-rbind(meanROCfinalV,data.frame(meanROCV2,d,m,m*d,sprintf("m=%d d=%s",m,dD)))
+      
       rm(ROCplot, meanROC, meanROCplot, dD)
       rm(ROC, AUC,  meanROC2, run)
     }
@@ -356,10 +389,10 @@ for (effect in 1:length(effectsizes)) {           # looping over q
       rm(AUCs,ROCs,meanROCs)
     }
     
-    ROC$rep<-as.factor(ROC$rep)
+    ROC$run<-as.factor(ROC$run)
     
     # Plot individual ROC-plots
-    ROCplot <- ggplot(data=ROC, aes(x=FPR, y=TPR, group=rep)) +  geom_line(aes(color=rep)) + 
+    ROCplot <- ggplot(data=ROC, aes(x=FPR, y=TPR, group=run)) +  geom_line(aes(color=run)) + 
       theme(plot.title = element_text(hjust = 0.5)) +  theme_minimal() + 
       scale_color_viridis(begin = 0, end = 0.85, discrete=TRUE) +
       labs(title=sprintf("ROC-curves for %s with effect %g", plotName, q), 
@@ -368,7 +401,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
       xlim(0, 1)+  ylim(0, 1)
     print(ROCplot)
     if(savePlot == TRUE){
-      path_save <-  sprintf("../../Result/%s/IntermediatePlots/individualROCs_rep%s.pdf", saveName, saveExpDesign, rep)
+      path_save <-  sprintf("../../Result/%s/IntermediatePlots/individualROCs_rep%s.pdf", saveName, saveExpDesign, run)
       ggsave(filename = path_save, plot = ROCplot, height = 5, width = 6)
       dev.off()
       print(ROCplot)
@@ -429,6 +462,20 @@ for (effect in 1:length(effectsizes)) {           # looping over q
   meanROCfinal$m<-as.factor(meanROCfinal$m)
   meanROCfinal$plotMD = factor(meanROCfinal$plotMD, levels=unique(meanROCfinal$plotMD[order(meanROCfinal$m,meanROCfinal$d)]), ordered=TRUE)
   
+  ## for strata
+  colnames(meanAUCfinalAb)<-c("AUC1", "AUC5", "AUCtot", "TPR1", "TPR5", "strata", "d", "m" ,"md","plotMD")
+  colnames(meanROCfinalAb)<-c("FPR", "strata", "N", "meanTPR", "min", "max", "d", "m" ,"md","plotMD")
+  colnames(meanAUCfinalV)<-c("AUC1", "AUC5", "AUCtot", "TPR1", "TPR5", "strata", "d", "m" ,"md","plotMD")
+  colnames(meanROCfinalV)<-c("FPR", "strata", "N", "meanTPR", "min", "max", "d", "m" ,"md","plotMD")
+  
+  meanROCfinalAb$d<-as.factor(meanROCfinalAb$d)
+  meanROCfinalAb$m<-as.factor(meanROCfinalAb$m)
+  meanROCfinalAb$plotMD = factor(meanROCfinalAb$plotMD, levels=unique(meanROCfinal$plotMD[order(meanROCfinal$m,meanROCfinal$d)]), ordered=TRUE)
+  
+  meanROCfinalV$d<-as.factor(meanROCfinalV$d)
+  meanROCfinalV$m<-as.factor(meanROCfinalV$m)
+  meanROCfinalV$plotMD = factor(meanROCfinalV$plotMD, levels=unique(meanROCfinal$plotMD[order(meanROCfinal$m,meanROCfinal$d)]), ordered=TRUE)
+  
   # Save tables:
   write.csv(meanAUCfinal, file=sprintf("../../Result/%s/AUC_10q%d.csv", saveName,10*q))
   
@@ -442,14 +489,24 @@ for (effect in 1:length(effectsizes)) {           # looping over q
   ### Plot mean RoC-curves for all experimental designs
   
   # mean plots with set groupsize
-  plot_combined_meanROCs(meanROCfinal$m, groupSize, "group size", "groupsize", meanROCfinal$d, "Sequencing depth")
+  plot_combined_meanROCs(meanROCfinal, meanROCfinal$m, groupSize, "group size", "groupsize", meanROCfinal$d, "Sequencing depth", 0)
   # mean plots with set sequencing depth
-  plot_combined_meanROCs(meanROCfinal$d, sequencingDepth, "sequencing depth", "depth", meanROCfinal$m, "Group size")
+  plot_combined_meanROCs(meanROCfinal, meanROCfinal$d, sequencingDepth, "sequencing depth", "depth", meanROCfinal$m, "Group size", 0)
   # mean plots with set groupsize and depth relation (m*d)
-  plot_combined_meanROCs(meanROCfinal$md, relations, "relation/trade-off/m*d", "relation", meanROCfinal$plotMD, "Experimental design")
+  plot_combined_meanROCs(meanROCfinal, meanROCfinal$md, relations, "relation/trade-off/m*d", "relation", meanROCfinal$plotMD, "Experimental design", 0)
   
   rm(group,seq, relation)
+  
+  # mean plots with set groupsize
+  plot_combined_meanROCs(meanROCfinalAb, meanROCfinalAb$m, groupSize, "group size", "groupsize", meanROCfinalAb$d, "Sequencing depth", numberOfStrata)
+  # mean plots with set sequencing depth
+  plot_combined_meanROCs(meanROCfinalAb, meanROCfinalAb$d, sequencingDepth, "sequencing depth", "depth", meanROCfinalAb$m, "Group size", numberOfStrata)
+  # mean plots with set groupsize and depth relation (m*d)
+  plot_combined_meanROCs(meanROCfinalAb, meanROCfinalAb$md, relations, "relation/trade-off/m*d", "relation", meanROCfinalAb$plotMD, "Experimental design", numberOfStrata)
+  
 
 }
 
 rm(repeats)
+
+

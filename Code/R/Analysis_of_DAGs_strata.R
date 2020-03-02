@@ -83,7 +83,7 @@ Compute_ROC_AUC = function(ResultsData, trueTP, run){
   
   ROCs <- data.frame(TPR,FPR,run)
   ROCs2 <- ROCs
-  ROCs2[,2] <- round2(ROCs2[,2], 3) # 3 is the number of decimals here
+  ROCs2[,2] <- round2(ROCs2[,2], 2) # 3 is the number of decimals here
   
   meanROCs<-ddply(ROCs2, "FPR", summarise,
                  N    = length(TPR),
@@ -118,7 +118,6 @@ ResStrata<-DataStrata[rownames(DataStrata) %in% rownames(ResDESeq),]
 ResStrata<-ResStrata[rownames(ResDESeq),]
 ResStrata<-data.frame(ResDESeq, ResStrata, c(rep(0,nrow(ResDESeq))))
 #ResStrata[rownames(ResStrata) %in% rownames(DAGs),7]=1 #Adding notation for which are TP
-
 
 ROCsAbundance <- data.frame()
 AUCsAbundance <- data.frame()
