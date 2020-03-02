@@ -243,7 +243,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
         
         # Run the code for resampling and downsampling, or load already resampled and downsampled dataset
         if (loadData==T){
-          DownSampledData<-read.csv(file=sprintf("../../Intermediate/%s/%s/DownSampledData_run%d.csv", saveName, saveExpDesign, run), header = T, row.names = 1)
+          DownSampledData<-read.csv(file=sprintf("../../Intermediate/%s/%s/ResampData_run%d.csv", saveName, saveExpDesign, run), header = T, row.names = 1)
           DAGs<-read.csv(file=sprintf("../../Intermediate/%s/%s/DAGs_run%d.csv", saveName, saveExpDesign, run),header = T,row.names = 1)
           
         } else {      
@@ -595,6 +595,6 @@ for (effect in 1:length(effectsizes)) {           # looping over q
   rm(group,seq, relation)
 
 }
-write.csv(numberOfSign,file = sprintf("../../Result/%s/Number_of_significant_genes_downsampled.csv",saveName))
+write.csv(numberOfSign,file = sprintf("../../Result/%s/Number_of_significant_genes_without_effects.csv",saveName))
 
 rm(repeats)
