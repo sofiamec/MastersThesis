@@ -37,7 +37,7 @@ if (onTerra==F){
 if (onTerra==T){
   repeats = 10                                              # sets the number of runs for each case (experimental design and q)
   savePlot = T                                              # use T when plots should be saved (for many repeats)
-  loadData = F                                              # use T if it is a rerun of existing results
+  loadData = T                                              # use T if it is a rerun of existing results
   effectsizes=c(1.5,3)                                      # q = Fold-change for downsampling
   groupSize<-c(3,5,10,30,50)                                # m = Number of samples in each group (total nr samples = 2*m)
   # sequensing depths are set later depending on dataset    # d and dD = Desired sequencing depths and how it should be displayed
@@ -211,6 +211,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
 # ANALYSIS SECTION
 #===================================================================================================================================
 ## Run the entire analysis for all setups of q, m and d:
+numberOfSign<-data.frame()
 
 set.seed(100)
 for (effect in 1:length(effectsizes)) {           # looping over q
@@ -251,6 +252,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
         
         # Run the code for analysing DAGs
         source("Analysis_of_DAGs.R")
+        numberOfSign<-rbind(numberOfSign,numberOfSigns)
       
         # Save the results 
         AUC[run,] <- AUCs
@@ -593,5 +595,6 @@ for (effect in 1:length(effectsizes)) {           # looping over q
   rm(group,seq, relation)
 
 }
+write.csv(numberOfSign,file = sprintf("../../Result/%s/Number_of_significant_genes_downsampled.csv",saveName))
 
 rm(repeats)
