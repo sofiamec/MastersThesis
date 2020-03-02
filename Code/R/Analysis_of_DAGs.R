@@ -107,6 +107,9 @@ for (i in 1:nrow(DAGs)) {
 }
 cat(sprintf("TP genes for %s out of %d:  %d     (exp. design: %s)\n\n", saveName, nrow(DAGs), sum(matchDESeq), plotExpDesign))
 
+sign10<-sum(ResDESeq[,2]<0.1, na.rm = T)
+sign5<-sum(ResDESeq[,2]<0.05, na.rm = T)
+numberOfSigns<-data.frame(sign5,sign10,q,m,d,run)
 #===================================================================================================================================
 # Computing ROC and AUC
 # Plotting both deseq and edge (Lägg till detta i funktionen Compute_ROC_AUC när vi bestämt oss för edgeR eller DESeq!)
