@@ -24,17 +24,18 @@ onTerra = F                                                 # use T if running a
 saveName = "Gut2"     # "Gut2" or "Marine"                  # this will in turn load the correct data
 f = 0.10                                                    # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
 numberOfStrata = 3                                          # sets the number of groups for dividing gene abundance and variability
+strataClass<-c("low","medium", "high")                      # should correspond to the number of stratas
 extraDesigns=F                                              # use T if extra designs are added
 
 # Test-settings (CHANGE HERE!)
 if (onTerra==F){
   repeats = 2                                               # sets the number of runs for each case (experimental design and q)
   savePlot = F                                              # use T when plots should be saved (for many repeats)
-  loadData = T                                              # use T if it is a rerun of existing results
+  loadData = F                                              # use T if it is a rerun of existing results
   effectsizes=3                                             # q = Fold-change for downsampling
-  groupSize<-c(3,5)#,10,30,50)                                            # m = Number of samples in each group (total nr samples = 2*m)
-  sequencingDepth<-c(10000,100000)#,500000,1000000,5000000)      # d = Desired sequencing depth per sample
-  sequencingDepthName<-c("10k","100k")#, "500k","1M","5M")          # dD = Displayed names for sequensing depths
+  groupSize<-c(3,30)#,10,30,50)                                            # m = Number of samples in each group (total nr samples = 2*m)
+  sequencingDepth<-c(100000,1000000)#,500000,1000000,5000000)      # d = Desired sequencing depth per sample
+  sequencingDepthName<-c("100k","1M")#, "500k","1M","5M")          # dD = Displayed names for sequensing depths
 }
 
 # Real settings
@@ -103,41 +104,31 @@ plot_heatmaps<-function(variable,variableName, fillName, variableSave){
 #           fillVariable = meanROCfinal$d, meanROCfinal$m or meanROCfinal$plotMD
 #           fillName = "Sequencing depth", "Group size" or "Experimental design"
 # Outputs:  several plots of combined meanROC-curves which are saved if savePlot==T
-plot_combined_meanROCs<-function(plotData, variable, parameterVector, parameterName, parameterSave, fillVariable, fillName, test){
+plot_combined_meanROCs<-function(plotData, variable, parameterVector, parameterName, parameterSave, fillVariable, fillName, strata, strataText){
   for (i in 1:length(parameterVector)) {
     X=parameterVector[i]
-    subtitle=sprintf("Experimental designs with %s %d     (%s repeats each)", parameterName, X, repeats)
+    subtitle=sprintf("Experimental designs with %s %d    (%d repeats each)", parameterName, X, repeats)
     path_save <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%d.pdf", saveName,10*q, parameterSave, X)
     if (all(parameterVector==sequencingDepth)){
       dD=sequencingDepthName[i]
-      subtitle=sprintf("Experimental designs with %s %s     (%s repeats each)", parameterName, dD, repeats)
+      subtitle=sprintf("Experimental designs with %s %s     (%d repeats each)", parameterName, dD, repeats)
       path_save <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%s.pdf", saveName,10*q, parameterSave, dD)
+    } 
+    if (strata != 0){
+      subtitle=sprintf("Trade-off with fixed relation for %s, strata %d        (%d repeats each)",strataText, strata, repeats)
+      path_save <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%d_strata%d.pdf", saveName,10*q, parameterSave, X, strata)
     }
-    if (test==0){
-      combinedPlot<-ggplot(data=plotData[variable==X,], 
+    
+    combinedPlot<-ggplot(data=plotData[variable==X,], 
                            aes(x=FPR, y=meanTPR, fill=fillVariable[variable==X])) +  theme_minimal() + 
-        geom_ribbon(aes(ymin=(min), ymax=(max),fill = fillVariable[variable==X]), alpha=0.2) +
-        geom_line(aes(color = fillVariable[variable==X])) +
-        labs(title=sprintf("Mean ROC-curves for %s  with effect %g", plotName, q), 
-             subtitle = subtitle, x = "False Positive Rate", y = "True Positive Rate",  
-             color = fillName, fill = fillName) +
-        ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2))+
-        scale_fill_viridis_d(begin = 0, end = 0.85) + scale_colour_viridis_d(begin = 0, end = 0.85)
-      print(combinedPlot)
-    } else { # FOR strata
-      combinedPlot<-ggplot(data=plotData[variable==X,], 
-                           aes(x=FPR, y=meanTPR, group = interaction(fillVariable[variable==X], plotData$strata[variable==X]),
-                               fill=fillVariable[variable==X], linetype= plotData$strata[variable==X])) +  theme_minimal() + 
-        geom_ribbon(aes(ymin=(min), ymax=(max),fill = fillVariable[variable==X]), alpha=0.2) + 
-        geom_line(aes(color = fillVariable[variable==X], linetype=plotData$strata[variable==X])) +
-        scale_linetype_manual(values=c("solid", "dashed","dotted"))+
-        labs(title=sprintf("Mean ROC-curves for %s  with effect %g", plotName, q), 
-             subtitle = subtitle, x = "False Positive Rate", y = "True Positive Rate",  
-             color = fillName, fill = fillName, linetype = "Strata") +
-        ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2))+
-        scale_fill_viridis_d(begin = 0, end = 0.85) + scale_colour_viridis_d(begin = 0, end = 0.85)
-      print(combinedPlot)
-    }
+      geom_ribbon(aes(ymin=(min), ymax=(max),fill = fillVariable[variable==X]), alpha=0.2) +
+      geom_line(aes(color = fillVariable[variable==X])) +
+      labs(title=sprintf("Mean ROC-curves for %s  with effect %g", plotName, q), 
+           subtitle = subtitle, x = "False Positive Rate", y = "True Positive Rate",  
+           color = fillName, fill = fillName) +
+      ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2))+
+      scale_fill_viridis_d(begin = 0, end = 0.85) + scale_colour_viridis_d(begin = 0, end = 0.85)
+    print(combinedPlot)
 
     if(savePlot == TRUE){
       ggsave(filename = path_save, plot = combinedPlot, height = 5, width = 6)
@@ -487,7 +478,6 @@ for (effect in 1:length(effectsizes)) {           # looping over q
   plot_heatmaps(HeatmapData$TPR5, "TPR-values at FPR 0.05", "TPR-values", "TPR5")
   
   ### Plot mean RoC-curves for all experimental designs
-  
   # mean plots with set groupsize
   plot_combined_meanROCs(meanROCfinal, meanROCfinal$m, groupSize, "group size", "groupsize", meanROCfinal$d, "Sequencing depth", 0)
   # mean plots with set sequencing depth
@@ -495,15 +485,17 @@ for (effect in 1:length(effectsizes)) {           # looping over q
   # mean plots with set groupsize and depth relation (m*d)
   plot_combined_meanROCs(meanROCfinal, meanROCfinal$md, relations, "relation/trade-off/m*d", "relation", meanROCfinal$plotMD, "Experimental design", 0)
   
-  rm(group,seq, relation)
-  
-  # mean plots with set groupsize
-  plot_combined_meanROCs(meanROCfinalAb, meanROCfinalAb$m, groupSize, "group size", "groupsize", meanROCfinalAb$d, "Sequencing depth", numberOfStrata)
-  # mean plots with set sequencing depth
-  plot_combined_meanROCs(meanROCfinalAb, meanROCfinalAb$d, sequencingDepth, "sequencing depth", "depth", meanROCfinalAb$m, "Group size", numberOfStrata)
+  ### Plot mean ROC-curves for strata
   # mean plots with set groupsize and depth relation (m*d)
-  plot_combined_meanROCs(meanROCfinalAb, meanROCfinalAb$md, relations, "relation/trade-off/m*d", "relation", meanROCfinalAb$plotMD, "Experimental design", numberOfStrata)
-  
+  for (strata in 1:numberOfStrata){
+    class<-strataClass[strata]
+    plotData=meanROCfinalAb[meanROCfinalAb$strata==strata,]
+    plot_combined_meanROCs(plotData, plotData$md, relations, "relation/trade-off/m*d", "relation", plotData$plotMD, "Experimental design", strata, sprintf("genes with %s abundance", class))
+    plotData=meanROCfinalV[meanROCfinalV$strata==strata,]
+    plot_combined_meanROCs(plotData, plotData$md, relations, "relation/trade-off/m*d", "relation", plotData$plotMD, "Experimental design", strata, sprintf("genes with %s variability", class))
+  }
+
+  rm(group,seq, relation)
 
 }
 
