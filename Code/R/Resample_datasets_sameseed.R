@@ -33,8 +33,7 @@ resample = function(Data, m, d){
   
   DataNew <- data.frame(row.names=DataNew[,1], DataNew[,-1]) # put first column (genes) as rownames  
   DataNew[is.na(DataNew)] <- as.integer(0)                   # set all "NA" to 0 (as integers, since DESeq2 require integer counts)
-  #DataNew <- DataNew[!rowSums(DataNew)==0,]                  # remove genes with count 0 for ALL samples
-  
+
   return(DataNew) 
   }
 
