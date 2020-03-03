@@ -1,11 +1,10 @@
 # Troubleshooting high sequencing depths 
-library(reshape2)
 
 #=================================== Choose "good" dataset with low sequencing depth ========================
 saveName = "Marine" # Choose dataset. Ex: "Gut2" or "Marine"
-m = 10              # Number of samples in each group (total nr samples = 2*m)
-d = 10000           # Desired sequencing depth per sample. It will not be exct
-dD="10k"            # display name
+m = 3               # Number of samples in each group (total nr samples = 2*m)
+d = 500000          # Desired sequencing depth per sample. It will not be exct
+dD="500k"           # display name
 q = 1.5             # Fold-change for downsampling
 f = 0.10            # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
 run=1               # choose wich run to extract
@@ -27,8 +26,8 @@ run=1               # choose wich run to extract
 }
 
 # Read dataset 
-DownSampledData=read.csv(sprintf("../../Intermediate/%s/%s/DownSampledData_run%d.csv", saveName, saveExpDesign, run), header = T, row.names = 1)
-DAGs=read.csv(sprintf("../../Intermediate/%s/%s/DAGs_run%d.csv", saveName, saveExpDesign, run), header = T, row.names = 1)
+DownSampledData=read.csv(sprintf("../../Intermediate/%s_sameseed/%s/DownSampledData_run%d.csv", saveName, saveExpDesign, run), header = T, row.names = 1)
+DAGs=read.csv(sprintf("../../Intermediate/%s_sameseed/%s/DAGs_run%d.csv", saveName, saveExpDesign, run), header = T, row.names = 1)
 
 source("Analysis_of_DAGs_separate.R")
 
@@ -40,9 +39,9 @@ dDLow=dD
 
 #=================================== Choose "bad" dataset with high sequencing depth ========================
 saveName = "Marine" # Choose dataset. Ex: "Gut2" or "Marine"
-m = 10              # Number of samples in each group (total nr samples = 2*m)
-d = 1000000         # Desired sequencing depth per sample. It will not be exct
-dD="1M"             # display name
+m = 3               # Number of samples in each group (total nr samples = 2*m)
+d = 10000000        # Desired sequencing depth per sample. It will not be exct
+dD="10M"            # display name
 q = 1.5             # Fold-change for downsampling
 f = 0.10            # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
 run=1               # choose wich run to extract
@@ -64,8 +63,8 @@ run=1               # choose wich run to extract
 }
 
 # Read dataset 
-DownSampledData=read.csv(sprintf("../../Intermediate/%s/%s/DownSampledData_run%d.csv", saveName, saveExpDesign, run), header = T, row.names = 1)
-DAGs=read.csv(sprintf("../../Intermediate/%s/%s/DAGs_run%d.csv", saveName, saveExpDesign, run), header = T, row.names = 1)
+DownSampledData=read.csv(sprintf("../../Intermediate/%s_sameseed/%s/DownSampledData_run%d.csv", saveName, saveExpDesign, run), header = T, row.names = 1)
+DAGs=read.csv(sprintf("../../Intermediate/%s_sameseed/%s/DAGs_run%d.csv", saveName, saveExpDesign, run), header = T, row.names = 1)
 
 source("Analysis_of_DAGs_separate.R")
 
@@ -78,10 +77,15 @@ dDHigh=dD
 # Remove non used ouptus
 rm(DownSampledData, DAGs, ResDESeq, AUCs, deseqROCAUC, meanROCs, ROCs)
 
+
 #========================= Dispertion and log2 fold change plots ===========================================
 
 # check that the same DAGs have been introduced 
 all(rownames(DAGsLow)==rownames(DAGsHigh))
+
+# dataframe with log2 and disp for both datasets
+ResultLog2Disp=data.frame(ResDESeqLow[order(rownames(ResDESeqLow)),c(3,4)], ResDESeqHigh[order(rownames(ResDESeqHigh)),c(3,4)])
+colnames(ResultLog2Disp)<- c("log2Low", "DispLow", "log2High", "DispHigh")
 
 # vector inicating if each gene is a DAG or not (DAG-indicator)
 DAG=c()
@@ -91,9 +95,9 @@ for (i in 1:nrow(ResultLog2Disp)) {
   } else {DAG[i]=0}
 }
 
-# dataframe with log2 and disp for both datasets, and DAG-indicator
-ResultLog2Disp=data.frame(ResDESeqLow[order(rownames(ResDESeqLow)),c(3,4)], ResDESeqHigh[order(rownames(ResDESeqHigh)),c(3,4)], DAG)
-colnames(ResultLog2Disp)<- c("log2Low", "DispLow", "log2High", "DispHigh", "DAG")
+# add DAG-indicator to dataframe
+ResultLog2Disp=data.frame(ResultLog2Disp, DAG)
+
 
 # Dispertion plot
 ggplot(ResultLog2Disp, aes(x=DispHigh, y=DispLow)) + 
@@ -110,12 +114,90 @@ ggplot(ResultLog2Disp, aes(x=log2High, y=log2Low)) +
        x=sprintf("Sequencing depth %s", dDHigh), y=sprintf("Sequencing depth %s", dDLow))
 
 
+#================================= Investigate most significant genes =====================================
+
+##################################
+# Prepare "low" dataset:
+#DAG-indicator
+DAG=c()
+for (i in 1:nrow(ResDESeqLow)) {
+  if (rownames(ResDESeqLow[i,]) %in% rownames(DAGsLow)) {
+    DAG[i]=1
+  } else {DAG[i]=0}
+}
+# Dataframe with the names of the genes, p-values and DAG-indicator (ordered with increasing p-value)
+GenesLow=data.frame(row.names = rownames(ResDESeqLow), ResDESeqLow[,1] , DAG)
+colnames(GenesLow)<-c("p-value","DAG")
+
+# Prepare "high" dataset
+# DAG-indicator
+DAG=c()
+for (i in 1:nrow(ResDESeqHigh)) {
+  if (rownames(ResDESeqHigh[i,]) %in% rownames(DAGsHigh)) {
+    DAG[i]=1
+  } else {DAG[i]=0}
+}
+# Dataframe with the names of the genes, p-values and DAG-indicator (ordered with increasing p-value)
+GenesHigh=data.frame(row.names = rownames(ResDESeqHigh), ResDESeqHigh[,1] , DAG)
+colnames(GenesHigh)<-c("p-value","DAG")
+
+rm(DAG, ResDESeqHigh, ResDESeqLow)
+##################################
+
+
+# Extract top 100 genes 
+GenesLow100=head(GenesLow, 100)
+GenesHigh100=head(GenesHigh, 100)
+
+# Does "high" have less TP than "low"? 
+sum(GenesHigh100[,2])<sum(GenesLow100[,2])
+
+# vector with value 1 if TP in low is also found in high and value 0 if TP is not found in high 
+TPBoth=c()
+for (i in 1:sum(GenesLow100[,2])) {
+  if (rownames(GenesLow100[GenesLow100[,2]==1,])[i] %in% rownames(GenesHigh100[GenesHigh100[,2]==1,])) {
+    TPBoth[i]=1
+  } else {TPBoth[i]=0}
+}
+
+# How many TP are found in low but not in high:
+sum(TPBoth==0)
+
+# Names of these genes
+TPDiffNames=rownames(GenesLow100[GenesLow100[,2]==1,])[TPBoth==0]
+
+#  The downsampled data with only the TP genes that differ between high and low
+TPDiffHigh=DataHigh[TPDiffNames,]
+TPDiffLow=DataLow[TPDiffNames,]
 
 
 
 
 
-#
+
+
+
+
+
+
+
+# vector with value 1 if FP in high is also found in low and value 0 if FP is not found in low 
+FPBoth=c()
+for (i in 1:(100-sum(GenesHigh100[,2]))) {
+  if (rownames(GenesHigh100[GenesHigh100[,2]==0,])[i] %in% rownames(GenesLow100[GenesLow100[,2]==0,])) {
+    FPBoth[i]=1
+  } else {FPBoth[i]=0}
+}
+
+# How many FP are found in high but not in low:
+sum(FPBoth==0)
+
+# Names of these genes
+FPDiffNames=rownames(GenesHigh100[GenesHigh100[,2]==0,])[TPBoth==0]
+
+#  The downsampled data with only the FP genes that differ between high and low
+FPDiffHigh=DataHigh[FPDiffNames,]
+FPDiffLow=DataLow[FPDiffNames,]
 
 
 
@@ -124,46 +206,21 @@ ggplot(ResultLog2Disp, aes(x=log2High, y=log2Low)) +
 
 
 
+## Sanity check:
+sum(GenesHigh100[,2]==1) # TP
+sum(GenesHigh100[,2]==0) # FP
 
+sum(GenesLow100[,2]==1) # TP
+sum(GenesLow100[,2]==0) # FP
 
+# How many TP are found in low but not in high:
+sum(TPBoth==0)
 
+# How many TP are found in low and in high:
+sum(TPBoth==1)
 
+# How many FP are found in high but not in low:
+sum(FPBoth==0)
 
-
-
-
-
-
-
-
-
-# Fulplottar 
-#ResultLow=ResDESeqLow[order(rownames(ResDESeqLow)),]
-#ResultHigh=ResDESeqHigh[order(rownames(ResDESeqHigh)),]
-#plot(ResultHigh[,4], ResultLow[,4])
-#plot(ResultHigh[,3], ResultLow[,3])
-
-# NOT NEEDED 
-#=============================== Prepare datasets for gg-plot ==============================================
-
-# vector with rownames, ordered alphabetically/numerically
-#Genes=rownames(ResDESeqLow[order(rownames(ResDESeqLow)),])  
-
-# extract log2 for both low and high dataset
-#ResultLog2=data.frame(Genes, ResDESeqLow[order(rownames(ResDESeqLow)),3], ResDESeqHigh[order(rownames(ResDESeqHigh)),3])
-#colnames(ResultLog2)<- c("Gene", "Low", "High")
-
-# extract dispertion for both low and high dataset
-#ResultDisp=data.frame(Genes, ResDESeqLow[order(rownames(ResDESeqLow)),4], ResDESeqHigh[order(rownames(ResDESeqHigh)),4])
-#colnames(ResultDisp)<- c("Gene", "Low", "High")
-
-# melt both datasets and merge them 
-#ResultLog2Melt=melt(ResultLog2, id="Gene", value.name = "log2", variable.name = "Type")
-#ResultDispMelt=melt(ResultDisp, id="Gene", value.name = "Dispertion", variable.name = "Type")
-#ResultGGFormat=merge(ResultLog2Melt,ResultDispMelt)
-
-# remove intermediate datasets
-#rm(Genes, ResultLog2, ResultDisp, ResultLog2Melt, ResultDispMelt)
-
-
-
+# How many FP are found in high and in low:
+sum(FPBoth==1)
