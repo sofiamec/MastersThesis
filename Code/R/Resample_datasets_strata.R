@@ -80,7 +80,7 @@ introducing_DAGs = function(Data, q, f){
   # Selecting random genes
   randomGenes <- sample(nrow(Data),nDAGs) # Selects n random genes in the dataset which will be downsampled. 
   if (nDAGs==1|| nDAGs==0) {
-    print("Too few DAGs introduced")
+    cat(print("Too few DAGs introduced"))
     nDAGs=0
   }
   # if we don't allow unbalanced DAGs
@@ -123,11 +123,15 @@ resultList<- introducing_DAGs(Data = ResampData, q = q, f = f)
 DownSampledData<-resultList[[1]]
 DAGs<-resultList[[2]]
 
-## NEW PART!
-# Extract and sort gene-strata acording to DAGs
-runStrata<-DataStrata[rownames(DataStrata) %in% rownames(DAGs),]
-runStrata<-runStrata[rownames(DAGs),]
-DAGs<-data.frame(DAGs,runStrata)
+## Strata
+if (runStrata==T){
+  # Extract and sort gene-strata acording to DAGs
+  corrStrata<-DataStrata[rownames(DataStrata) %in% rownames(DAGs),]
+  corrStrata<-runStrata[rownames(DAGs),]
+  DAGs<-data.frame(DAGs,corrStrata)
+  rm(corrStrata)
+}
+
 
 
 # Saving downsampled datasets and corresponding overview of DAGs
@@ -135,4 +139,4 @@ write.csv(DownSampledData, file=sprintf("../../Intermediate/%s/%s/DownSampledDat
 write.csv(DAGs, file=sprintf("../../Intermediate/%s/%s/DAGs_run%d.csv", saveName, saveExpDesign, run))
 
 # remove variables/datasets
-rm(ResampData, countsResampData, resultList, runStrata)
+rm(ResampData, countsResampData, resultList)

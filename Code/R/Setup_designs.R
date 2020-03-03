@@ -105,8 +105,9 @@ if(saveName == "Gut2"){
   rm(Marine, MarineOriginal, MarineIntermediate)  # remove original and intermediate datasets
 }
 
-DataStrata<-DESeq2_for_strata(Data,numberOfStrata)
-
+if (runStrata==T){
+  DataStrata<-DESeq2_for_strata(Data,numberOfStrata)
+}
 #===================================================================================================================================
 ## Setting upp the right environment and naming designs
 
