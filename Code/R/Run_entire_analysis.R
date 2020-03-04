@@ -3,22 +3,13 @@
 
 ## Nu kallar denna på analysis_of_DAGs_strata och REsample_data_strata!
 
-#===================================================================================================================================
-## Loading Libraries:
-
-library(plyr)
-library(viridis)
-library(DESeq2)
-library(ggplot2)
-library(pracma)
-
 ####################################################################################################################################
 #===================================================================================================================================
 #                      Only change these parameters for different results! 
 #                            (the rest of the code should adjust)
 #===================================================================================================================================
 ## Selecting parameters and data:
-onTerra = F                                                 # use T if running analysis on Terra (large scale settings applied)
+onTerra = T                                                 # use T if running analysis on Terra (large scale settings applied)
 saveName = "Gut2"     # "Gut2" or "Marine"                  # this will in turn load the correct data
 f = 0.10                                                    # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
 runStrata = T
@@ -63,114 +54,11 @@ if (runStrata==T){
 #===================================================================================================================================
 ####################################################################################################################################
 
-
 #===================================================================================================================================
-# FUNCTIONS SECTION
+# FUNCTIONS and LIBRARIES SECTION
 #===================================================================================================================================
 
-## FUNCTION for always rounding 0.5, 0.05 etc upwards
-round2 <- function(x, n) {
-  z = trunc(abs(x)*10^n +0.5)/10^n *sign(x)
-  return(z)
-}
-
-## FUNCTION for plotting ROC-curves for all runs of an experimental design
-# Inputs: ROCData = a combined matrix for all runs with exact FPR- and TPR-values as well as corresponding run
-#         the function also needs other parameters, but it works as long as it is called on within the loop over d (after run-loop)
-# Output  a plot is always printed, and if savePlot=T it will be saved
-# Plot individual ROC-plots
-individual_ROC_plot <- function(ROCData){
-  ROCplot <- ggplot(data=ROCData, aes(x=FPR, y=TPR, group=run)) +  geom_line(aes(color=run)) + 
-    theme(plot.title = element_text(hjust = 0.5)) +  theme_minimal() + 
-    scale_color_viridis(begin = 0, end = 0.85, discrete=TRUE) +
-    labs(title=sprintf("ROC-curves for %s with effect %g", plotName, q), 
-         subtitle = sprintf("Experimental design: %s", plotExpDesign),
-         colour="run", x = "False Positive Rate", y = "True Positive Rate") +
-    ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2))
-  print(ROCplot)
-  if(savePlot == TRUE){
-    path_save <-  sprintf("../../Result/%s/IntermediatePlots/individualROCs_%s.pdf", saveName, saveExpDesign)
-    ggsave(filename = path_save, plot = ROCplot, height = 5, width = 6)
-    dev.off()
-    print(ROCplot)
-    rm(path_save)
-  }
-  rm(ROCplot)
-}
-
-## FUNCTION for plotting AUC- and TPR-heatmaps
-# Inputs:   variable = HeatmapData$AUCtot,HeatmapData$TPR1 etc
-#           variableName = "total AUC-values", "TPR-values at FPR 0.01" etc
-#           fillName = "AUC-values" or "TPR-values"
-#           variableSave = "AUCtot", "TPR1" etc
-# Outputs:  a plotted heatmap which is saved if savePlot==T
-plot_heatmaps<-function(variable,variableName, fillName, variableSave){
-  heatmap <- ggplot(HeatmapData, aes(x=m, y=d, fill=variable)) +
-    geom_tile(aes(fill = variable)) + geom_text(aes(label = round2(variable, 2), fontface=md)) +
-    scale_fill_viridis_c(begin = 0, end = 1, alpha = 0.5) +  
-    scale_y_discrete(limits = rev(levels(as.factor(HeatmapData$d)))) +
-    theme(panel.border = element_blank(), panel.grid.major = element_blank(),
-          panel.grid.minor = element_blank(), axis.line = element_blank(), panel.background=element_rect(fill = "white") ) +
-    labs(title=sprintf("Mean %s for %s with effect %g", variableName, plotName,q), 
-         x = "Group size", y = "Sequencing depth",  color = "sequensing depth", fill = fillName) 
-  print(heatmap)
-  if(savePlot == TRUE){
-    path_save <-  sprintf("../../Result/%s/heatmap_%s_10q%d.pdf", saveName,variableSave,q*10)
-    ggsave(filename = path_save, plot = heatmap, height = 5, width = 6)
-    dev.off()
-    print(heatmap)}
-  rm(heatmap)
-}
-
-## FUNCTION for plotting combined mean ROC-plots
-# Inputs:   variable = meanROCfinal$m, meanROCfinal$d or meanROCfinal$md 
-#           parameterVector = groupSize,sequencingDepth or relations 
-#           parameterName = "group size", "sequencing depth" or "relation, trade-off, m*d"
-#           parameterSave = "groupsize", "depth", "relation"
-#           fillVariable = meanROCfinal$d, meanROCfinal$m or meanROCfinal$plotMD
-#           fillName = "Sequencing depth", "Group size" or "Experimental design"
-# Outputs:  several plots of combined meanROC-curves which are saved if savePlot==T
-plot_combined_meanROCs<-function(plotData, variable, parameterVector, parameterName, parameterSave, fillVariable, fillName, yLim, xLim, strata, strataText){
-  for (i in 1:length(parameterVector)) {
-    X=parameterVector[i]
-    subtitle=sprintf("Experimental designs with %s %d    (%d repeats each)", parameterName, X, repeats)
-    path_save <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%d.pdf", saveName,10*q, parameterSave, X)
-    path_save2 <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%d_zoom.pdf", saveName,10*q, parameterSave, X)
-    
-    if (all(parameterVector==sequencingDepth)){
-      dD=sequencingDepthName[i]
-      subtitle=sprintf("Experimental designs with %s %s     (%d repeats each)", parameterName, dD, repeats)
-      path_save <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%s.pdf", saveName,10*q, parameterSave, dD)
-      path_save2 <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%s_zoom.pdf", saveName,10*q, parameterSave, dD)
-    } 
-    if (strata != 0){
-      subtitle=sprintf("Trade-off with fixed relation for %s, strata %d        (%d repeats each)",strataText, strata, repeats)
-      path_save <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%d_strata%d.pdf", saveName,10*q, parameterSave, X, strata)
-      path_save2 <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%d_strata%d_zoom.pdf", saveName,10*q, parameterSave, X, strata)
-    }
-    if (xLim!=1){
-      path_save <- path_save2
-    }
-    
-    combinedPlot<-ggplot(data=plotData[variable==X,], 
-                           aes(x=FPR, y=meanTPR, fill=fillVariable[variable==X])) +  theme_minimal() + 
-      geom_ribbon(aes(ymin=(min), ymax=(max),fill = fillVariable[variable==X]), alpha=0.2) +
-      geom_line(aes(color = fillVariable[variable==X])) +
-      labs(title=sprintf("Mean ROC-curves for %s  with effect %g", plotName, q), 
-           subtitle = subtitle, x = "False Positive Rate", y = "True Positive Rate",  
-           color = fillName, fill = fillName) +
-      ylim(0, yLim) + scale_x_continuous(limits = c(0,xLim), breaks = seq(0,1,0.2))+
-      scale_fill_viridis_d(begin = 0, end = 0.85) + scale_colour_viridis_d(begin = 0, end = 0.85)
-    print(combinedPlot)
-
-    if(savePlot == TRUE){
-      ggsave(filename = path_save, plot = combinedPlot, height = 5, width = 6)
-      dev.off()
-      print(combinedPlot)}
-    rm(combinedPlot, X)
-  }
-}
-
+source("Functions_and_libraries.R")
 
 #===================================================================================================================================
 # SET-UP SECTION
@@ -403,7 +291,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
         rm(ROCsAbundance, ROCsVariability, meanROCsAbundance, meanROCsVariability)
       }
       
-      rm(AUCs, ROCs, meanROCs)
+      rm(AUCs, ROCs, meanROCs, genesFDRs)
     }
     
     # plot individual ROCs
@@ -456,7 +344,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
       rm(ROCAbundance, ROCVariability, meanROCAbundance, meanROCVariability, meanROCAb2, meanROCV2)
     }
 
-    rm(ROC, AUC,  meanROC2, run, meanROC)
+    rm(ROC, AUC,  meanROC2, run, meanROC, genesFDR)
   }}
   
   #===================================================================================================================================
@@ -535,5 +423,5 @@ for (effect in 1:length(effectsizes)) {           # looping over q
 }
 
 rm(repeats, effect, q, extraL, f, relations, boldvalue2, AllPlotDesigns, AllSaveDesigns, plotExpDesign, saveExpDesign)
-
+rm(compute_low_counts, Compute_ROC_AUC, DESeq2_analysis, individual_ROC_plot,introducing_DAGs, plot_combined_meanROCs,plot_heatmaps, resample, round2)
 
