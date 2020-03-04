@@ -179,6 +179,20 @@ DESeq2_for_strata=function(Data,numberOfStrata){
   return(Result)
 }
 
+# strata_summary
+# This function calculates summary statistics for the different stratas of a stratified dataset
+# Input: Data=The stratified dataset to analyse, where the columns NEEDS to be in the following order:
+#             BaseMean, Estimated Dispersion, AbundanceStrata, VariabilityStrata
+strata_summary=function(Data){
+  StrataSummary <- format(rbind(summary(Data[Data[,3]==1,1]),summary(Data[Data[,3]==2,1]),
+                                summary(Data[Data[,3]==3,1]), summary(Data[Data[,4]==1,2]),
+                                summary(Data[Data[,4]==2,2]), summary(Data[Data[,4]==3,2])),
+                          scientific = F, digits = 2)
+  rownames(StrataSummary) <- c("Abundance Strata 1", "Abundance Strata 2", "Abundance Strata 3", 
+                               "Disperstion strata 1", "Disperstion strata 2", "Disperstion strata 3")
+  return(StrataSummary)
+}
+
 
 # ==================================== Loading Datasets ====================================#
 Gut2Original<-read.table("../../Data/Raw_data/HumanGutII_COGcountsRaw.txt",header = T,row.names = 1)
@@ -261,4 +275,6 @@ gene_histogram(MarineGGOriginal, bins=30, "Gene Abundance in Marine",
 Gut2Strata<- DESeq2_for_strata(Gut2,3)
 MarineStrata<-DESeq2_for_strata(Marine,3)
 
-
+# Table containing a summary for each strata
+Gut2StrataSummary=strata_summary(Gut2Strata)
+MarineStrataSummary=strata_summary(MarineStrata)
