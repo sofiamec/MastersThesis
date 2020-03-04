@@ -1,3 +1,7 @@
+#===================================================================================================================================
+# SET-UP SECTION
+#===================================================================================================================================
+
 # Setup script for assigning correct names for a given design as well as preprocessing of datasets
 # This script has to be run in combination with the "Run_entire_analysis"-script
 

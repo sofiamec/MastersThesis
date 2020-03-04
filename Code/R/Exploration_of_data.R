@@ -5,6 +5,11 @@ library(reshape2)
 library(RColorBrewer)
 library(xtable)
 library(tidyverse)
+#library(plyr)
+#library(viridis)
+library(DESeq2)
+#library(pracma)
+
 
 #======================================== Functions ======================================#
 
@@ -131,35 +136,47 @@ gene_histogram = function(DataGG, bins, title, fillcolor, bordercolor, savePlot,
   }
 }
 
-# This function assigns factor levels for each gene in a dataset according to variability and abundance
-# The created strata will have approximately the same number of genes each  
-# Input:    Data = Gut2 or Marine
-#           n = the number of strata/levels used when dividing the data
-# Output:   DataStrata = a matrix/dataframe? of genes in the given dataset along with their respective stratas (as factors?)
-create_strata<-function(Data,numberOfStrata){
-  DataStrata<-data.frame(rownames(Data), rowSums(Data),rowVars(as.matrix(Data)))
+## FUNCTION for creating strata
+# DESeq2-analysis for original data 
+# This function uses DESeq2 to estimate the mean count and dispersion for genes in a dataset 
+# (after normalising them based on sequencing depth). This is then used for creating strata.
+#
+# Input:  Data = the data to analyse (Gut2 or Marine)
+#         numberOfStrata = the number of strata/levels used when dividing the data
+# Output: Result = a dataframe containing the mean values and the estimated dispersion for each gene 
+#                  as well as the corresponding abundance- and variability-strata for each gene
+DESeq2_for_strata=function(Data,numberOfStrata){
+  
+  DesignMatrix <- data.frame(group=factor(rep(1,(ncol(Data)))))                        # all samples belong to the same group 
+  CountsDataset<-DESeqDataSetFromMatrix(countData=Data,DesignMatrix, design=~1) # combine design matrix and data into a dataset
+  ResultDESeq<-suppressMessages(DESeq(CountsDataset))                           # Perform analysis (suppress messages from it) 
+  Res=results(ResultDESeq,independentFiltering=FALSE,cooksCutoff=FALSE)         # extract results
+  
+  Result <- data.frame(rownames(Data), Res$baseMean, dispersions(ResultDESeq))  # dataframe with genes, their mean values (after normalization) and dispersion estimates
+  Result <- data.frame(Result[,-1], row.names=Result[,1])                       # put first column (genes) as rowname
+  
+  # create a vector for assigning smallest to highest strata
   n=numberOfStrata
-  # create a vector for assigning smalles to highest strata
   repVector<-as.integer(cumsum(c(rep(nrow(Data)/n,n))))
   repVector<-repVector-c(0,repVector)[-(length(repVector)+1)]
   strataVector<-rep(1:n,repVector)
   
   # sort by abundance and assign abundance-strata
-  DataStrata<-DataStrata[order(DataStrata[,2]),] 
-  DataStrata<-cbind(DataStrata,strataVector)
+  Result<-Result[order(Result[,1]),] 
+  Result<-cbind(Result,strataVector)
   
   # sort by variability and assign variability-strata
-  DataStrata<-DataStrata[order(DataStrata[,3]),]
-  DataStrata<-cbind(DataStrata,strataVector)
+  Result<-Result[order(Result[,2]),]
+  Result<-cbind(Result,strataVector)
   
   # rename columns, factorise strata and sort genes by original order
-  colnames(DataStrata)<-c("GeneName", "GeneAbundance", "GeneVariability", "AbundanceStrata", "VariabilityStrata")
-  DataStrata$AbundanceStrata<-as.factor(DataStrata$AbundanceStrata)
-  DataStrata$VariabilityStrata<-as.factor(DataStrata$VariabilityStrata)
-  DataStrata<-DataStrata[rownames(Data),]
+  colnames(Result)<-c("BaseMean", "Estimated dispersion", "AbundanceStrata", "VariabilityStrata")
+  Result$AbundanceStrata<-as.factor(Result$AbundanceStrata)
+  Result$VariabilityStrata<-as.factor(Result$VariabilityStrata)
+  Result<-Result[rownames(Data),]
   
   rm(n, numberOfStrata, repVector,strataVector)
-  return(DataStrata)
+  return(Result)
 }
 
 
@@ -241,7 +258,7 @@ gene_histogram(MarineGGOriginal, bins=30, "Gene Abundance in Marine",
 
 
 #==================================== Stratied Datasets ==================================#
-Gut2Strata<-create_strata(Gut2,3)
-MarineStrata<-create_strata(Marine,3)
+Gut2Strata<- DESeq2_for_strata(Gut2,3)
+MarineStrata<-DESeq2_for_strata(Marine,3)
 
 
