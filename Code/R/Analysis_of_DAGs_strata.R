@@ -49,7 +49,7 @@ DESeq2_analysis=function(Data){
 # Outputs:  ROC = a dataframe with the computed TPR- and FPR-values
 #           AUCs = The computed AUC for the entire ROC-curve and for FPR-cutoff 0.05 and 0.10.
 #           meanROC = the pieciwise mean
-Compute_ROC_AUC = function(ResultsData, trueTP, run){
+Compute_ROC_AUC = function(ResultsData, trueTP, run, computeStrata){
   
   TP<-rownames(trueTP)
   nT=vector(mode = 'numeric' ,length = nrow(ResultsData)+1)
@@ -67,7 +67,7 @@ Compute_ROC_AUC = function(ResultsData, trueTP, run){
   
   nT<-nT[-c(1)]
   nF<-nF[-c(1)]
-  
+              
   TPR<-nT/nrow(trueTP)
   FPR<-nF/(nrow(ResultsData)-nrow(trueTP))
   
@@ -79,17 +79,28 @@ Compute_ROC_AUC = function(ResultsData, trueTP, run){
   TPR1<-max(TPR[FPR<=0.01])
   AUCs <- data.frame(AUC1,AUC5,AUCtot,TPR1,TPR5,run)
   
+  # Compute nrTP nrFP at FDR 0.05
+  cutoffID<-sum(ResultsData[,2]<0.05, na.rm = T)
+  genesFDR<-data.frame(nT[cutoffID], nF[cutoffID])
+  colnames(genesFDR)<-c("NumberOfTP","NumberOfFP")
+  
   rm(AUC1,AUC5,AUCtot, TPR1,TPR5)
   
   ROCs <- data.frame(TPR,FPR,run)
   ROCs2 <- ROCs
-  ROCs2[,2] <- round2(ROCs2[,2], 2) # 3 is the number of decimals here
+  
+  if (computeStrata==F){
+    ROCs2[ROCs2[,2]<=0.05,2] <- round2(ROCs2[ROCs2[,2]<=0.05,2], 5) # 5 is the number of decimals here
+    ROCs2[ROCs2[,2]>0.05,2] <- round2(ROCs2[ROCs2[,2]>0.05,2], 3) # 2 is the number of decimals here
+  } else if (computeStrata==T){
+    ROCs2[,2] <- round2(ROCs2[,2], 2) # 2 is the number of decimals here
+  }
   
   meanROCs<-ddply(ROCs2, "FPR", summarise,
                  N    = length(TPR),
                  mean = mean(TPR))
   
-  return(list(ROCs, AUCs, meanROCs))
+  return(list(ROCs, AUCs, meanROCs, genesFDR))
 }
 
 #===================================================================================================================================
@@ -108,10 +119,11 @@ cat(sprintf("TP genes for %s out of %d:  %d     (exp. design: %s)\n\n", saveName
 #===================================================================================================================================
 # Computing ROC and AUC
 # Plotting both deseq and edge (Lägg till detta i funktionen Compute_ROC_AUC när vi bestämt oss för edgeR eller DESeq!)
-deseqROCAUC<-Compute_ROC_AUC(ResDESeq,DAGs, run)
+deseqROCAUC<-Compute_ROC_AUC(ResDESeq,DAGs, run, F)
 ROCs <- data.frame(deseqROCAUC[[1]])
 AUCs<- as.matrix(deseqROCAUC[[2]]) 
 meanROCs<-as.matrix(deseqROCAUC[[3]])
+genesFDRs<-as.matrix(deseqROCAUC[[4]])
 
 if (runStrata==T){
   # Add corresponding strata to each gene in the analysed results
@@ -133,8 +145,8 @@ if (runStrata==T){
     ResDESeqAbundance=ResStrata[ResStrata$AbundanceStrata==k,]
     ResDESeqVariability=ResStrata[ResStrata$VariabilityStrata==k,]
     
-    deseqROCAUCAbundance<-Compute_ROC_AUC(ResDESeqAbundance, DAGsStrataAbundance, run)
-    deseqROCAUCVariability<-Compute_ROC_AUC(ResDESeqVariability, DAGsStrataVariability, run)
+    deseqROCAUCAbundance<-Compute_ROC_AUC(ResDESeqAbundance, DAGsStrataAbundance, run, T)
+    deseqROCAUCVariability<-Compute_ROC_AUC(ResDESeqVariability, DAGsStrataVariability, run, T)
     
     ROCsAbundance <- rbind(ROCsAbundance ,data.frame(deseqROCAUCAbundance[[1]], k))
     #AUCsAbundance <- rbind(AUCsAbundance ,data.frame(deseqROCAUCAbundance[[2]],k))
@@ -154,7 +166,7 @@ if (runStrata==T){
   colnames(ROCsAbundance)<-c("TPR","FPR", "run","strata")
   colnames(ROCsVariability)<-c("TPR","FPR", "run","strata")
   
-  rm(k)
+  rm(k, ResStrata)
 }
 
 # remove variables/datasets

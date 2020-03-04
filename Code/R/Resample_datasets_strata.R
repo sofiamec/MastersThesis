@@ -127,7 +127,7 @@ DAGs<-resultList[[2]]
 if (runStrata==T){
   # Extract and sort gene-strata acording to DAGs
   corrStrata<-DataStrata[rownames(DataStrata) %in% rownames(DAGs),]
-  corrStrata<-runStrata[rownames(DAGs),]
+  corrStrata<-corrStrata[rownames(DAGs),]
   DAGs<-data.frame(DAGs,corrStrata)
   rm(corrStrata)
 }

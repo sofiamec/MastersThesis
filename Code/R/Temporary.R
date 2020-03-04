@@ -51,6 +51,27 @@ edgeROCAUC<-Compute_ROC_AUC(ResEdge,Dags)
 edgeROC <- data.frame(edgeROCAUC[[1]], "edgeR")
 colnames(edgeROC)[4]<-"Dataset"
 
+#===================================================================================================================================
+# Plot individual mean RoC-curves for certain experimental design
+meanROCplot <- ggplot(data=meanROC2, aes(x=FPR, y=meanTPR)) +  theme_minimal() + 
+  geom_ribbon(aes(ymin=(min), ymax=(max), fill="#22A88433"), alpha = 0.2) + 
+  geom_line(aes(color="#22A88433")) + theme(legend.position = "none") +
+  labs(title=sprintf("Mean ROC-curve for %s with effect %g", plotName,q), 
+       subtitle = sprintf("Experimental design: %s     (%s repeats)", plotExpDesign, repeats),
+       x = "False Positive Rate", y = "True Positive Rate")+
+  ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2))+
+  scale_fill_viridis_d(begin = 0.2, end = 0.6) +
+  scale_colour_viridis_d(begin = 0.2, end = 0.6)
 
+print(meanROCplot)
+
+if(savePlot == TRUE){
+  path_save <-  sprintf("../../Result/%s/IntermediatePlots/meanROC_%s.pdf", saveName, saveExpDesign)
+  ggsave(filename = path_save, plot = meanROCplot, height = 5, width = 6)
+  dev.off()
+  print(meanROCplot)
+  rm(path_save)
+}
+rm(meanROCplot)
 
 
