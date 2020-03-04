@@ -1,13 +1,14 @@
 # Troubleshooting high sequencing depths 
+TPFPSignificancePlot=F   # Set to T to plot TP and FP in order
 
 #=================================== Choose "good" dataset with low sequencing depth ========================
 saveName = "Marine" # Choose dataset. Ex: "Gut2" or "Marine"
-m = 3               # Number of samples in each group (total nr samples = 2*m)
-d = 500000          # Desired sequencing depth per sample. It will not be exct
-dD="500k"           # display name
+m = 50              # Number of samples in each group (total nr samples = 2*m)
+d = 1000000          # Desired sequencing depth per sample. It will not be exct
+dD="1M"           # display name
 q = 1.5             # Fold-change for downsampling
 f = 0.10            # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
-run=1               # choose wich run to extract
+run=3               # choose wich run to extract
 
 
 { # Quickly gives the case the correct name
@@ -30,6 +31,28 @@ DownSampledData=read.csv(sprintf("../../Intermediate/%s_sameseed/%s/DownSampledD
 DAGs=read.csv(sprintf("../../Intermediate/%s_sameseed/%s/DAGs_run%d.csv", saveName, saveExpDesign, run), header = T, row.names = 1)
 
 source("Analysis_of_DAGs_separate.R")
+
+#Plot TP and FP in significance-order
+if (TPFPSignificancePlot==T) {
+  PR=c()
+  for (i in 1:nrow(DownSampledData)) {
+    
+    if (BinTP[i]==0){
+      PR[i]="FP"
+    } else {
+      PR[i]="TP"
+    }
+  }
+  x=seq(1,nrow(DownSampledData), by=1)
+  y=c(rep(1, nrow(DownSampledData)))
+  HeatmapPR=data.frame(x,y, PR)
+
+  ggplot(HeatmapPR, aes(x=x, y=y, fill=PR)) +
+    geom_tile(aes(fill = PR)) +
+    #scale_fill_manual(values = c("red", "blue")) + 
+    scale_fill_viridis_d(begin = 0, end = 1, alpha = 0.5) +  
+    labs(title="TP and FP in significance order for low dataset", x = "Genes (from most to least significant)" , y = "  ")
+  }
 
 # Save output named after this dataset
 DataLow=DownSampledData
@@ -39,12 +62,12 @@ dDLow=dD
 
 #=================================== Choose "bad" dataset with high sequencing depth ========================
 saveName = "Marine" # Choose dataset. Ex: "Gut2" or "Marine"
-m = 3               # Number of samples in each group (total nr samples = 2*m)
+m = 50              # Number of samples in each group (total nr samples = 2*m)
 d = 10000000        # Desired sequencing depth per sample. It will not be exct
 dD="10M"            # display name
 q = 1.5             # Fold-change for downsampling
 f = 0.10            # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
-run=1               # choose wich run to extract
+run=3               # choose wich run to extract
 
 
 { # Quickly gives the case the correct name
@@ -68,6 +91,30 @@ DAGs=read.csv(sprintf("../../Intermediate/%s_sameseed/%s/DAGs_run%d.csv", saveNa
 
 source("Analysis_of_DAGs_separate.R")
 
+#Plot TP and FP in significance-order
+if (TPFPSignificancePlot==T) {
+  PR=c()
+  for (i in 1:nrow(DownSampledData)) {
+    
+    if (BinTP[i]==0){
+      PR[i]="FP"
+    } else {
+      PR[i]="TP"
+    }
+  }
+  x=seq(1,nrow(DownSampledData), by=1)
+  y=c(rep(1, nrow(DownSampledData)))
+  HeatmapPR=data.frame(x,y, PR)
+  
+  ggplot(HeatmapPR, aes(x=x, y=y, fill=PR)) +
+    geom_tile(aes(fill = PR)) +
+    #scale_fill_manual(values = c("red", "blue")) + 
+    scale_fill_viridis_d(begin = 0, end = 1, alpha = 0.5) +  
+    labs(title="TP and FP in significance order for high dataset", x = "Genes (from most to least significant)" , y = "  ")
+
+  rm(HeatmapPR,PR,x,y)  
+}
+
 # Save output named after this dataset
 DataHigh=DownSampledData
 DAGsHigh=DAGs
@@ -75,7 +122,7 @@ ResDESeqHigh=ResDESeq
 dDHigh=dD
 
 # Remove non used ouptus
-rm(DownSampledData, DAGs, ResDESeq, AUCs, deseqROCAUC, meanROCs, ROCs)
+rm(DownSampledData,DAGs,ResDESeq,AUCs,deseqROCAUC,meanROCs,ROCs,BinTP,dD,i,matchDESeq,TPFPSignificancePlot)
 
 
 #========================= Dispertion and log2 fold change plots ===========================================
@@ -104,7 +151,7 @@ ggplot(ResultLog2Disp, aes(x=DispHigh, y=DispLow)) +
   scale_color_viridis_d(begin = 0, end = 0.5, name=" ", labels=c("No DAG","DAG")) +
   geom_point(aes(color=factor(DAG)), size=1) +
   labs(title="Dispersion for same dataset with different seq. depths", 
-       x=sprintf("Sequencing depth %s", dDHigh), y=sprintf("Sequencing depth %s", dDLow))
+       x=sprintf("Sequencing depth %s", dDHigh), y=sprintf("Sequencing depth %s", dDLow)) 
 
 # log2 plot
 ggplot(ResultLog2Disp, aes(x=log2High, y=log2Low)) +
@@ -116,7 +163,7 @@ ggplot(ResultLog2Disp, aes(x=log2High, y=log2Low)) +
 
 #================================= Investigate most significant genes =====================================
 
-##################################
+#####################################################################
 # Prepare "low" dataset:
 #DAG-indicator
 DAG=c()
@@ -142,7 +189,7 @@ GenesHigh=data.frame(row.names = rownames(ResDESeqHigh), ResDESeqHigh[,1] , DAG)
 colnames(GenesHigh)<-c("p-value","DAG")
 
 rm(DAG, ResDESeqHigh, ResDESeqLow)
-##################################
+#####################################################################
 
 
 # Extract top 100 genes 
@@ -152,6 +199,8 @@ GenesHigh100=head(GenesHigh, 100)
 # Does "high" have less TP than "low"? 
 sum(GenesHigh100[,2])<sum(GenesLow100[,2])
 
+
+########################### TP #######################################
 # vector with value 1 if TP in low is also found in high and value 0 if TP is not found in high 
 TPBoth=c()
 for (i in 1:sum(GenesLow100[,2])) {
@@ -166,21 +215,24 @@ sum(TPBoth==0)
 # Names of these genes
 TPDiffNames=rownames(GenesLow100[GenesLow100[,2]==1,])[TPBoth==0]
 
-#  The downsampled data with only the TP genes that differ between high and low
+#  The downsampled data with only the TP genes that are in low but not in high
 TPDiffHigh=DataHigh[TPDiffNames,]
 TPDiffLow=DataLow[TPDiffNames,]
 
+# Dataframes with row means and medians for the different groups
+TPDiffMeansHigh=data.frame(row.names = TPDiffNames, Mean1=as.integer(rowMeans(TPDiffHigh[,c(1:m)])), 
+                           Median1=as.integer(apply(TPDiffHigh[,c(1:m)], 1, median)),
+                           Mean2=as.integer(rowMeans(TPDiffHigh[,c((m+1):(2*m))])), 
+                           Median2=as.integer(apply(TPDiffHigh[,c((m+1):(2*m))], 1, median)) )
+
+TPDiffMeansLow=data.frame(row.names = TPDiffNames, Mean1=as.integer(rowMeans(TPDiffLow[,c(1:m)])), 
+                           Median1=as.integer(apply(TPDiffLow[,c(1:m)], 1, median)),
+                           Mean2=as.integer(rowMeans(TPDiffLow[,c((m+1):(2*m))])), 
+                           Median2=as.integer(apply(TPDiffLow[,c((m+1):(2*m))], 1, median)) )
 
 
 
-
-
-
-
-
-
-
-
+########################### FP #######################################
 # vector with value 1 if FP in high is also found in low and value 0 if FP is not found in low 
 FPBoth=c()
 for (i in 1:(100-sum(GenesHigh100[,2]))) {
@@ -193,11 +245,23 @@ for (i in 1:(100-sum(GenesHigh100[,2]))) {
 sum(FPBoth==0)
 
 # Names of these genes
-FPDiffNames=rownames(GenesHigh100[GenesHigh100[,2]==0,])[TPBoth==0]
+FPDiffNames=rownames(GenesHigh100[GenesHigh100[,2]==0,])[FPBoth==0]
 
-#  The downsampled data with only the FP genes that differ between high and low
+#  The downsampled data with only the FP genes that are in high but not in low
 FPDiffHigh=DataHigh[FPDiffNames,]
 FPDiffLow=DataLow[FPDiffNames,]
+
+# Dataframes with row means and medians for the different groups
+FPDiffMeansHigh=data.frame(row.names = FPDiffNames, Mean1=as.integer(rowMeans(FPDiffHigh[,c(1:m)])), 
+                           Median1=as.integer(apply(FPDiffHigh[,c(1:m)], 1, median)),
+                           Mean2=as.integer(rowMeans(FPDiffHigh[,c((m+1):(2*m))])), 
+                           Median2=as.integer(apply(FPDiffHigh[,c((m+1):(2*m))], 1, median)) )
+
+FPDiffMeansLow=data.frame(row.names = FPDiffNames, Mean1=as.integer(rowMeans(FPDiffLow[,c(1:m)])), 
+                          Median1=as.integer(apply(FPDiffLow[,c(1:m)], 1, median)),
+                          Mean2=as.integer(rowMeans(FPDiffLow[,c((m+1):(2*m))])), 
+                          Median2=as.integer(apply(FPDiffLow[,c((m+1):(2*m))], 1, median)) )
+
 
 
 
@@ -207,20 +271,38 @@ FPDiffLow=DataLow[FPDiffNames,]
 
 
 ## Sanity check:
-sum(GenesHigh100[,2]==1) # TP
-sum(GenesHigh100[,2]==0) # FP
+#sum(GenesHigh100[,2]==1) # TP
+#sum(GenesHigh100[,2]==0) # FP
 
-sum(GenesLow100[,2]==1) # TP
-sum(GenesLow100[,2]==0) # FP
+#sum(GenesLow100[,2]==1) # TP
+#sum(GenesLow100[,2]==0) # FP
 
 # How many TP are found in low but not in high:
-sum(TPBoth==0)
+#sum(TPBoth==0)
 
 # How many TP are found in low and in high:
-sum(TPBoth==1)
+#sum(TPBoth==1)
 
 # How many FP are found in high but not in low:
-sum(FPBoth==0)
+#sum(FPBoth==0)
 
 # How many FP are found in high and in low:
-sum(FPBoth==1)
+#sum(FPBoth==1)
+
+# ============================================= Check for zeros ================================================= 
+# Total number of zeros in the dataset
+#sum(DownSampledData==0)
+
+# create vector containg the number of zeroes per gene
+#zerosPerGene=c()
+#for (i in 1:nrow(DownSampledData)) {
+#  zerosPerGene[i]=sum(DownSampledData[i,]==0)
+#}
+
+#summary(zerosPerGene)
+
+# See if the gene with maximum zeros is among the introduced DAGs (if yes, returns at what index)
+#match(row.names(DownSampledData[match(92, zerosPerGene),]), rownames(DAGs))
+
+
+
