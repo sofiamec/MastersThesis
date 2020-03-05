@@ -20,10 +20,10 @@ if (onTerra==F){
   repeats = 2                                               # sets the number of runs for each case (experimental design and q)
   savePlot = T                                              # use T when plots should be saved (for many repeats)
   loadData = F                                              # use T if it is a rerun of existing results
-  effectsizes=3                                             # q = Fold-change for downsampling
-  groupSize<-c(3,30)#,10,30,50)                                            # m = Number of samples in each group (total nr samples = 2*m)
-  sequencingDepth<-c(100000,1000000)#,500000,1000000,5000000)      # d = Desired sequencing depth per sample
-  sequencingDepthName<-c("100k","1M")#, "500k","1M","5M")          # dD = Displayed names for sequensing depths
+  effectsizes=1.5                                             # q = Fold-change for downsampling
+  groupSize<-c(3)#,30)#,10,30,50)                                            # m = Number of samples in each group (total nr samples = 2*m)
+  sequencingDepth<-c(10000,100000,500000)#,500000,1000000,5000000)      # d = Desired sequencing depth per sample
+  sequencingDepthName<-c("10k","100k","500k")#, "500k","1M","5M")          # dD = Displayed names for sequensing depths
 }
 
 # Real settings

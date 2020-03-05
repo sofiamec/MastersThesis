@@ -241,7 +241,11 @@ Compute_ROC_AUC = function(ResultsData, trueTP, run, computeStrata){
   
   # Compute nrTP nrFP at FDR 0.05
   cutoffID<-sum(ResultsData[,2]<0.05, na.rm = T)
-  genesFDR<-data.frame(nT[cutoffID], nF[cutoffID])
+  if (cutoffID==0){
+    genesFDR<-data.frame(0,0)
+  } else {
+    genesFDR<-data.frame(nT[cutoffID], nF[cutoffID]) 
+  }
   colnames(genesFDR)<-c("NumberOfTP","NumberOfFP")
   
   rm(AUC1,AUC5,AUCtot, TPR1,TPR5)
