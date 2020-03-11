@@ -326,7 +326,7 @@ plot_heatmaps<-function(variable,variableName, fillName, variableSave){
 #           fillVariable = meanROCfinal$d, meanROCfinal$m or meanROCfinal$plotMD
 #           fillName = "Sequencing depth", "Group size" or "Experimental design"
 # Outputs:  several plots of combined meanROC-curves which are saved if savePlot==T
-plot_combined_meanROCs<-function(plotData, variable, parameterVector, parameterName, parameterSave, fillVariable, fillName, yLim, xLim, strata, strataText){
+plot_combined_meanROCs<-function(plotData, variable, parameterVector, parameterName, parameterSave, fillVariable, fillName, yLim, xLim, strata, strataText, strataName){
   for (i in 1:length(parameterVector)) {
     X=parameterVector[i]
     subtitle=sprintf("Experimental designs with %s %d    (%d repeats each)", parameterName, X, repeats)
@@ -342,8 +342,8 @@ plot_combined_meanROCs<-function(plotData, variable, parameterVector, parameterN
     } 
     if (strata != 0){
       subtitle=sprintf("Trade-off with fixed relation for %s, strata %d        (%d repeats each)",strataText, strata, repeats)
-      path_save <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%d_strata%d.pdf", saveName,10*q, parameterSave, X, strata)
-      path_save2 <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%d_strata%d_zoom.pdf", saveName,10*q, parameterSave, X, strata)
+      path_save <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%d_%s_strata%d.pdf", saveName,10*q, parameterSave, X, strataName, strata)
+      path_save2 <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%d_%s_strata%d_zoom.pdf", saveName,10*q, parameterSave, X, strataName, strata)
     }
     if (xLim!=1){
       path_save <- path_save2

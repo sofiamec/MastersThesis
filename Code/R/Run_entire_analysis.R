@@ -412,9 +412,9 @@ for (effect in 1:length(effectsizes)) {           # looping over q
     for (strata in 1:numberOfStrata){
       class<-strataClass[strata]
       plotData=meanROCfinalAb[meanROCfinalAb$strata==strata,]
-      plot_combined_meanROCs(plotData, plotData$md, relations, "relation/trade-off/m*d", "relation", plotData$plotMD, "Experimental design", 1, 1, strata, sprintf("genes with %s abundance", class))
+      plot_combined_meanROCs(plotData, plotData$md, relations, "relation/trade-off/m*d", "relation", plotData$plotMD, "Experimental design", 1, 1, strata, sprintf("genes with %s abundance", class),"abundance")
       plotData=meanROCfinalV[meanROCfinalV$strata==strata,]
-      plot_combined_meanROCs(plotData, plotData$md, relations, "relation/trade-off/m*d", "relation", plotData$plotMD, "Experimental design", 1, 1, strata, sprintf("genes with %s variability", class))
+      plot_combined_meanROCs(plotData, plotData$md, relations, "relation/trade-off/m*d", "relation", plotData$plotMD, "Experimental design", 1, 1, strata, sprintf("genes with %s variability", class),"variability")
     }
     rm(strata, plotData, class)
   }
