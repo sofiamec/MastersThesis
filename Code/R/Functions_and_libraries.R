@@ -12,6 +12,7 @@ library(viridis)
 library(DESeq2)
 library(ggplot2)
 library(pracma)
+library(readxl)
 
 #===========================================================================================================================================
 #=========================================== Global Functions ==============================================================================
@@ -143,35 +144,43 @@ compute_low_counts=function(Data){
 introducing_DAGs = function(Data, q, f){
   
   downSampledData = Data
-  nDAGs = 2 * round(f*nrow(Data)/2) # the total number of genes to be downsampled if we don't allow unbalanced DAGs
-  #nDAGs = trunc(f*nrow(Data)+0.5) # the total number of genes to be downsampled if we allow unbalanced DAGs
+  if (saveName=="Resistance"){
+    downSampledData = downSampledData[!rownames(downSampledData) %in% "Non-resistance",]
+  }
+  nDAGs = 2 * round(f*nrow(downSampledData)/2) # the total number of genes to be downsampled if we don't allow unbalanced DAGs
+  #nDAGs = trunc(f*nrow(downSampledData)+0.5) # the total number of genes to be downsampled if we allow unbalanced DAGs
   
   # Creating empty matrix for overview of DAGs
   DAGs = matrix(ncol = 2, nrow = nrow(Data)) 
   colnames(DAGs) = c(sprintf("Sample 1 to %d", ncol(Data)/2),sprintf("Sample %d to %d", ncol(Data)/2+1, ncol(Data)))
   rownames(DAGs) <- rownames(Data)
   # Selecting random genes
-  randomGenes <- sample(nrow(Data),nDAGs) # Selects n random genes in the dataset which will be downsampled. 
+  randomGenes <- sample(nrow(downSampledData),nDAGs) # Selects n random genes in the dataset which will be downsampled. 
   if (nDAGs==1|| nDAGs==0) {
     cat(print("Too few DAGs introduced"))
-    nDAGs=0
+    nDAGs=2
   }
   # if we don't allow unbalanced DAGs
   rG1 <- randomGenes[1:(nDAGs/2)] # will be downsampled in dataset 1 
   rG2 <- randomGenes[(nDAGs/2+1):nDAGs] # will be downsampled in dataset 2
   
   for (gene in rG1) {
-    for (sample in 1:(ncol(Data)/2)) {
-      downSampledData[gene,sample] <- rbinom(n = 1 ,size = Data[gene,sample] ,prob = 1/q)
+    for (sample in 1:(ncol(downSampledData)/2)) {
+      downSampledData[gene,sample] <- rbinom(n = 1 ,size = downSampledData[gene,sample] ,prob = 1/q)
     }
     DAGs[gene, 1] <- -q
   }
   
   for (gene in rG2) {
-    for (sample in (ncol(Data)/2+1):(ncol(Data))) {
-      downSampledData[gene,sample] <- rbinom(n = 1 ,size = Data[gene,sample] ,prob = 1/q) 
+    for (sample in (ncol(downSampledData)/2+1):(ncol(downSampledData))) {
+      downSampledData[gene,sample] <- rbinom(n = 1 ,size = downSampledData[gene,sample] ,prob = 1/q) 
       DAGs[gene, 2] <- -q
     }
+  }
+  
+  if (saveName=="Resistance"){
+    downSampledData = rbind(Data[rownames(Data) %in% "Non-resistance",], downSampledData)
+    downSampledData <- downSampledData[order(rownames(downSampledData)),]
   }
   
   DAGs<-DAGs[rowSums(DAGs, na.rm=T)!=0,]

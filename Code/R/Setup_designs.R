@@ -40,6 +40,27 @@ if(saveName == "Gut2"){
   }
   
   rm(Marine, MarineOriginal, MarineIntermediate)  # remove original and intermediate datasets
+  
+} else if(saveName == "Resistance"){
+  plotName = "Antibiotic Resistance Genes"
+  
+  ResistanceOriginal=t(read_excel("../../Data/Raw_data/GENE_QUANTIFICATIONS.raw.xlsx")[,-c(2:4)])
+  colnames(ResistanceOriginal) <- ResistanceOriginal[1,]
+  ResistanceOriginal=data.frame(row.names = row.names(ResistanceOriginal)[-1], apply(ResistanceOriginal[-1,],2,as.integer))
+  ResistanceIntermediate=ResistanceOriginal[,colSums(ResistanceOriginal)>=10000000] # Filter out samples with sequencing depth below the maximum sequencing depth of the experimental design
+  Resistance <- remove_low_counts(ResistanceIntermediate) # This is the dataset used in analysis where samples and genes with low counts are removed
+  
+  Data = Resistance
+    
+  runStrata=F
+  boldvalue2="5e+07"                                              
+  relations<-c(3000000,5000000)
+  if (onTerra==T){
+    sequencingDepth<-c(10000,100000,500000,1000000,5000000,10000000)
+    sequencingDepthName<-c("10k","100k","500k","1M", "5M", "10M")
+  }
+  
+  rm(Resistance, ResistanceOriginal, ResistanceIntermediate)  # remove original and intermediate datasets
 }
 
 if (runStrata==T){
