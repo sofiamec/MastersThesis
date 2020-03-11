@@ -203,9 +203,11 @@ MarineOriginalPreGG<-read.table("../../Data/Raw_data/Marine_COGcountsRaw.txt",he
 
 { ResistanceOriginal=t(read_excel("../../Data/Raw_data/GENE_QUANTIFICATIONS.raw.xlsx")[,-c(2:4)])
   colnames(ResistanceOriginal) <- ResistanceOriginal[1,]
-  ResistanceOriginal=data.frame(row.names = row.names(ResistanceOriginal)[-1], apply(ResistanceOriginal[-1,],2,as.numeric))
+  ResistanceOriginal=data.frame(row.names = row.names(ResistanceOriginal)[-1], apply(ResistanceOriginal[-1,],2,as.integer))
 }
 
+ResistanceIntermediate=ResistanceOriginal[,colSums(ResistanceOriginal)>=10000000] # Filter out samples with sequencing depth below the maximum sequencing depth of the experimental design
+Resistance <- remove_low_counts(ResistanceIntermediate) # This is the dataset used in analysis where samples and genes with low counts are removed
 
 Gut2Intermediate = Gut2Original[,colSums(Gut2Original)>=5000000]   # Filter out samples with sequencing depth below the maximum sequencing depth of the experimental design
 Gut2 <- remove_low_counts(Gut2Intermediate) # This is the dataset used in analysis where samples and genes with low counts are removed
@@ -236,18 +238,18 @@ rResistance <- compute_low_counts(ResistanceOriginal)
 
 ### For all datasets
 # General info
-numberOfSamples <- c(ncol(Gut2Original),ncol(MarineOriginal))
-numberOfGenes <- c(nrow(Gut2Original),nrow(MarineOriginal))
-lowCountGenes <- c(sum(rGut2!=0),sum(rMarine!=0))
+numberOfSamples <- c(ncol(Gut2Original),ncol(MarineOriginal),ncol(ResistanceOriginal))
+numberOfGenes <- c(nrow(Gut2Original),nrow(MarineOriginal), nrow(ResistanceOriginal))
+lowCountGenes <- c(sum(rGut2!=0),sum(rMarine!=0), sum(rResistance!=0))
 
 Dimensions <- cbind(numberOfSamples, numberOfGenes, lowCountGenes)
 colnames(Dimensions)<-c("Total number of samples", "Total number of genes", "Genes with low counts")
-rownames(Dimensions)<-c("Gut II", "Marine")
+rownames(Dimensions)<-c("Gut II", "Marine", "Resistance")
 print(xtable(Dimensions))
 
 # Summary of Sequensing depths (reads per sample)
-SeqSummary<-rbind(summary(colSums(Gut2Original)),summary(colSums(MarineOriginal)))
-rownames(SeqSummary)<-c("Human Gut II", "Marine")
+SeqSummary<-rbind(summary(colSums(Gut2Original)),summary(colSums(MarineOriginal)), summary(colSums(ResistanceOriginal)))
+rownames(SeqSummary)<-c("Human Gut II", "Marine", "Resistance")
 print(xtable(SeqSummary))
 
 SeqSummary2<-rbind(summary(colSums(Gut2Original)),summary(colSums(MarineOriginal)),summary(colSums(Gut2)),summary(colSums(Marine)))
