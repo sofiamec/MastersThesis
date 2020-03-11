@@ -23,3 +23,6 @@ BiocManager::install("DESeq2")
 
 # For computing AUCs with trapeziodal rule
 install.packages("pracma")
+
+# for loading excel-files
+install.packages("readxl")

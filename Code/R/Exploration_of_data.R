@@ -9,6 +9,7 @@ library(tidyverse)
 #library(viridis)
 library(DESeq2)
 #library(pracma)
+library("readxl")
 
 
 #======================================== Functions ======================================#
@@ -200,6 +201,12 @@ MarineOriginal<-read.table("../../Data/Raw_data/Marine_COGcountsRaw.txt",header 
 Gut2OriginalPreGG<-read.table("../../Data/Raw_data/HumanGutII_COGcountsRaw.txt",header = T)
 MarineOriginalPreGG<-read.table("../../Data/Raw_data/Marine_COGcountsRaw.txt",header = T)
 
+{ ResistanceOriginal=t(read_excel("../../Data/Raw_data/GENE_QUANTIFICATIONS.raw.xlsx")[,-c(2:4)])
+  colnames(ResistanceOriginal) <- ResistanceOriginal[1,]
+  ResistanceOriginal=data.frame(row.names = row.names(ResistanceOriginal)[-1], apply(ResistanceOriginal[-1,],2,as.numeric))
+}
+
+
 Gut2Intermediate = Gut2Original[,colSums(Gut2Original)>=5000000]   # Filter out samples with sequencing depth below the maximum sequencing depth of the experimental design
 Gut2 <- remove_low_counts(Gut2Intermediate) # This is the dataset used in analysis where samples and genes with low counts are removed
 
@@ -225,6 +232,7 @@ MarineGGOriginal<-reshaping_dataset(MarineOriginalPreGG)
 # Computing low counts
 rGut2<-compute_low_counts(Gut2Original)
 rMarine<-compute_low_counts(MarineOriginal)
+rResistance <- compute_low_counts(ResistanceOriginal)
 
 ### For all datasets
 # General info
@@ -278,3 +286,8 @@ MarineStrata<-DESeq2_for_strata(Marine,3)
 # Table containing a summary for each strata
 Gut2StrataSummary=strata_summary(Gut2Strata)
 MarineStrataSummary=strata_summary(MarineStrata)
+
+
+
+
+
