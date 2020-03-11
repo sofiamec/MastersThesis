@@ -9,21 +9,21 @@
 #                            (the rest of the code should adjust)
 #===================================================================================================================================
 ## Selecting parameters and data:
-onTerra = T                                                 # use T if running analysis on Terra (large scale settings applied)
-saveName = "Gut2"     # "Gut2" or "Marine"                  # this will in turn load the correct data
+onTerra = F                                                 # use T if running analysis on Terra (large scale settings applied)
+saveName = "Resistance"     # "Gut2", "Marine" or "Resistance     # this will in turn load the correct data
 f = 0.10                                                    # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
-runStrata = T
-extraDesigns=T                                              # use T if extra designs are added
+runStrata = F
+extraDesigns=F                                              # use T if extra designs are added
 
 # Test-settings (CHANGE HERE!)
 if (onTerra==F){
-  repeats = 2                                               # sets the number of runs for each case (experimental design and q)
-  savePlot = T                                              # use T when plots should be saved (for many repeats)
+  repeats = 1                                               # sets the number of runs for each case (experimental design and q)
+  savePlot = F                                              # use T when plots should be saved (for many repeats)
   loadData = F                                              # use T if it is a rerun of existing results
   effectsizes=1.5                                             # q = Fold-change for downsampling
-  groupSize<-c(3)#,30)#,10,30,50)                                            # m = Number of samples in each group (total nr samples = 2*m)
-  sequencingDepth<-c(10000,100000,500000)#,500000,1000000,5000000)      # d = Desired sequencing depth per sample
-  sequencingDepthName<-c("10k","100k","500k")#, "500k","1M","5M")          # dD = Displayed names for sequensing depths
+  groupSize<-c(30)#,10,30,50)                                            # m = Number of samples in each group (total nr samples = 2*m)
+  sequencingDepth<-c(1000000)#,100000)#,500000)#,500000,1000000,5000000)      # d = Desired sequencing depth per sample
+  sequencingDepthName<-c("1M")#,"100k")#,"500k")#, "500k","1M","5M")          # dD = Displayed names for sequensing depths
 }
 
 # Real settings
