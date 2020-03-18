@@ -1,3 +1,4 @@
+library(xtable)
 # Troubleshooting high sequencing depths 
 TPFPSignificancePlot=F   # Set to T to plot TP and FP in order
 
@@ -8,7 +9,7 @@ d = 1000000          # Desired sequencing depth per sample. It will not be exct
 dD="1M"           # display name
 q = 1.5             # Fold-change for downsampling
 f = 0.10            # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
-run=3               # choose wich run to extract
+run=3              # choose wich run to extract
 
 
 { # Quickly gives the case the correct name
@@ -262,10 +263,8 @@ FPDiffMeansLow=data.frame(row.names = FPDiffNames, Mean1=as.integer(rowMeans(FPD
                           Mean2=as.integer(rowMeans(FPDiffLow[,c((m+1):(2*m))])), 
                           Median2=as.integer(apply(FPDiffLow[,c((m+1):(2*m))], 1, median)) )
 
-
-
-
-
+#print(xtable(cbind(FPDiffMeansHigh, FPDiffMeansLow)))
+#print(xtable(cbind(TPDiffMeansHigh, TPDiffMeansLow)))
 
 
 
