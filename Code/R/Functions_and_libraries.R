@@ -251,11 +251,11 @@ Compute_ROC_AUC = function(ResultsData, trueTP, run, computeStrata){
   # Compute nrTP nrFP at FDR 0.05
   cutoffID<-sum(ResultsData[,2]<0.05, na.rm = T)
   if (cutoffID==0){
-    genesFDR<-data.frame(0,0)
+    genesFDR<-data.frame(0,0,NA)
   } else {
-    genesFDR<-data.frame(nT[cutoffID], nF[cutoffID]) 
+    genesFDR<-data.frame(nT[cutoffID], nF[cutoffID],(nF[cutoffID]/(nF[cutoffID]+nT[cutoffID]))) 
   }
-  colnames(genesFDR)<-c("NumberOfTP","NumberOfFP")
+  colnames(genesFDR)<-c("NumberOfTP","NumberOfFP","TrueFDR")
   
   rm(AUC1,AUC5,AUCtot, TPR1,TPR5)
   
@@ -317,7 +317,7 @@ plot_heatmaps<-function(variable,variableName, fillName, variableSave){
     theme(panel.border = element_blank(), panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(), axis.line = element_blank(), panel.background=element_rect(fill = "white") ) +
     labs(title=sprintf("Mean %s for %s with effect %g", variableName, plotName,q), 
-         x = "Group size", y = "Sequencing depth",  color = "sequensing depth", fill = fillName) 
+         x = "Group size", y = "Sequencing depth",  color = "sequencing depth", fill = fillName) 
   print(heatmap)
   if(savePlot == TRUE){
     path_save <-  sprintf("../../Result/%s/heatmap_%s_10q%d.pdf", saveName,variableSave,q*10)
