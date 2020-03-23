@@ -62,13 +62,13 @@ ResDESeqLow=ResDESeq
 dDLow=dD
 
 #=================================== Choose "bad" dataset with high sequencing depth ========================
-saveName = "Marine" # Choose dataset. Ex: "Gut2" or "Marine"
-m = 50              # Number of samples in each group (total nr samples = 2*m)
-d = 10000000        # Desired sequencing depth per sample. It will not be exct
-dD="10M"            # display name
-q = 1.5             # Fold-change for downsampling
-f = 0.10            # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
-run=3               # choose wich run to extract
+#saveName = "Marine" # Choose dataset. Ex: "Gut2" or "Marine"
+#m = 10              # Number of samples in each group (total nr samples = 2*m)
+d = 10000000         # Desired sequencing depth per sample. It will not be exct
+dD="10M"             # display name
+#q = 1.5             # Fold-change for downsampling
+#f = 0.10            # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
+#run=                # choose wich run to extract
 
 
 { # Quickly gives the case the correct name
@@ -123,7 +123,7 @@ ResDESeqHigh=ResDESeq
 dDHigh=dD
 
 # Remove non used ouptus
-rm(DownSampledData,DAGs,ResDESeq,AUCs,deseqROCAUC,meanROCs,ROCs,BinTP,dD,i,matchDESeq,TPFPSignificancePlot)
+rm(DownSampledData,DAGs,ResDESeq,AUCs,deseqROCAUC,meanROCs,ROCs,BinTP,dD,i,matchDESeq,TPFPSignificancePlot,d,plotExpDesign,saveExpDesign)
 
 
 #========================= Dispertion and log2 fold change plots ===========================================
@@ -135,7 +135,7 @@ all(rownames(DAGsLow)==rownames(DAGsHigh))
 ResultLog2Disp=data.frame(ResDESeqLow[order(rownames(ResDESeqLow)),c(3,4)], ResDESeqHigh[order(rownames(ResDESeqHigh)),c(3,4)])
 colnames(ResultLog2Disp)<- c("log2Low", "DispLow", "log2High", "DispHigh")
 
-# vector inicating if each gene is a DAG or not (DAG-indicator)
+# vector indicating if each gene is a DAG or not (DAG-indicator)
 DAG=c()
 for (i in 1:nrow(ResultLog2Disp)) {
   if (rownames(ResultLog2Disp[i,]) %in% rownames(DAGsLow)) {
@@ -189,7 +189,7 @@ for (i in 1:nrow(ResDESeqHigh)) {
 GenesHigh=data.frame(row.names = rownames(ResDESeqHigh), ResDESeqHigh[,1] , DAG)
 colnames(GenesHigh)<-c("p-value","DAG")
 
-rm(DAG, ResDESeqHigh, ResDESeqLow)
+rm(DAG)
 #####################################################################
 
 
@@ -220,17 +220,22 @@ TPDiffNames=rownames(GenesLow100[GenesLow100[,2]==1,])[TPBoth==0]
 TPDiffHigh=DataHigh[TPDiffNames,]
 TPDiffLow=DataLow[TPDiffNames,]
 
-# Dataframes with row means and medians for the different groups
+# The position of these genes in the ordered result for the high dataset
+TPPosHigh=c()
+for (i in 1:length(TPDiffNames)) {
+  TPPosHigh[i]=which(rownames(ResDESeqHigh)==TPDiffNames[i])
+}
+
+# Dataframes with row means for the different groups and dispersion, adjusted p-values and position for the 
+# TP-genes that appear in low but not in high
 TPDiffMeansHigh=data.frame(row.names = TPDiffNames, Mean1=as.integer(rowMeans(TPDiffHigh[,c(1:m)])), 
-                           Median1=as.integer(apply(TPDiffHigh[,c(1:m)], 1, median)),
-                           Mean2=as.integer(rowMeans(TPDiffHigh[,c((m+1):(2*m))])), 
-                           Median2=as.integer(apply(TPDiffHigh[,c((m+1):(2*m))], 1, median)) )
+                           Mean2=as.integer(rowMeans(TPDiffHigh[,c((m+1):(2*m))])),
+                           Dispersion=ResDESeqHigh[TPDiffNames,4], adjusted.p.value=ResDESeqHigh[TPDiffNames,2],
+                           position=TPPosHigh)
 
 TPDiffMeansLow=data.frame(row.names = TPDiffNames, Mean1=as.integer(rowMeans(TPDiffLow[,c(1:m)])), 
-                           Median1=as.integer(apply(TPDiffLow[,c(1:m)], 1, median)),
-                           Mean2=as.integer(rowMeans(TPDiffLow[,c((m+1):(2*m))])), 
-                           Median2=as.integer(apply(TPDiffLow[,c((m+1):(2*m))], 1, median)) )
-
+                          Mean2=as.integer(rowMeans(TPDiffLow[,c((m+1):(2*m))])),
+                          Dispersion=ResDESeqLow[TPDiffNames,4], adjusted.p.value=ResDESeqLow[TPDiffNames,2])
 
 
 ########################### FP #######################################
@@ -252,19 +257,25 @@ FPDiffNames=rownames(GenesHigh100[GenesHigh100[,2]==0,])[FPBoth==0]
 FPDiffHigh=DataHigh[FPDiffNames,]
 FPDiffLow=DataLow[FPDiffNames,]
 
-# Dataframes with row means and medians for the different groups
+# The position of these genes in the ordered result for the high dataset
+FPPosHigh=c()
+for (i in 1:length(FPDiffNames)) {
+  FPPosHigh[i]=which(rownames(ResDESeqHigh)==FPDiffNames[i])
+}
+
+# Dataframes with row means for the different groups and dispersion, adjusted p-values and position for the 
+# FP-genes that appear in high but not in low
 FPDiffMeansHigh=data.frame(row.names = FPDiffNames, Mean1=as.integer(rowMeans(FPDiffHigh[,c(1:m)])), 
-                           Median1=as.integer(apply(FPDiffHigh[,c(1:m)], 1, median)),
-                           Mean2=as.integer(rowMeans(FPDiffHigh[,c((m+1):(2*m))])), 
-                           Median2=as.integer(apply(FPDiffHigh[,c((m+1):(2*m))], 1, median)) )
+                           Mean2=as.integer(rowMeans(FPDiffHigh[,c((m+1):(2*m))])),
+                           Dispersion=ResDESeqHigh[FPDiffNames,4], adjusted.p.value=ResDESeqHigh[FPDiffNames,2],
+                           Position=FPPosHigh)
 
 FPDiffMeansLow=data.frame(row.names = FPDiffNames, Mean1=as.integer(rowMeans(FPDiffLow[,c(1:m)])), 
-                          Median1=as.integer(apply(FPDiffLow[,c(1:m)], 1, median)),
-                          Mean2=as.integer(rowMeans(FPDiffLow[,c((m+1):(2*m))])), 
-                          Median2=as.integer(apply(FPDiffLow[,c((m+1):(2*m))], 1, median)) )
+                          Mean2=as.integer(rowMeans(FPDiffLow[,c((m+1):(2*m))])),
+                          Dispersion=ResDESeqLow[FPDiffNames,4], adjusted.p.value=ResDESeqLow[FPDiffNames,2])
 
 #print(xtable(cbind(FPDiffMeansHigh, FPDiffMeansLow)))
-#print(xtable(cbind(TPDiffMeansHigh, TPDiffMeansLow)))
+print(xtable(cbind(TPDiffMeansHigh, TPDiffMeansLow)))
 
 
 
@@ -287,21 +298,3 @@ FPDiffMeansLow=data.frame(row.names = FPDiffNames, Mean1=as.integer(rowMeans(FPD
 
 # How many FP are found in high and in low:
 #sum(FPBoth==1)
-
-# ============================================= Check for zeros ================================================= 
-# Total number of zeros in the dataset
-#sum(DownSampledData==0)
-
-# create vector containg the number of zeroes per gene
-#zerosPerGene=c()
-#for (i in 1:nrow(DownSampledData)) {
-#  zerosPerGene[i]=sum(DownSampledData[i,]==0)
-#}
-
-#summary(zerosPerGene)
-
-# See if the gene with maximum zeros is among the introduced DAGs (if yes, returns at what index)
-#match(row.names(DownSampledData[match(92, zerosPerGene),]), rownames(DAGs))
-
-
-
