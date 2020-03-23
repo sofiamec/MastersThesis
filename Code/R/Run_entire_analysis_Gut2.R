@@ -9,10 +9,10 @@
 #                            (the rest of the code should adjust)
 #===================================================================================================================================
 ## Selecting parameters and data:
-onTerra = F                                                 # use T if running analysis on Terra (large scale settings applied)
-saveName = "Resistance"  # "Gut2", "Marine" or "Resistance     # this will in turn load the correct data
+onTerra = T                                                 # use T if running analysis on Terra (large scale settings applied)
+saveName = "Gut2"  # "Gut2", "Marine" or "Resistance     # this will in turn load the correct data
 f = 0.10                                                    # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
-runStrata = F
+runStrata = T
 extraDesigns=T                                              # use T if extra designs are added
 
 # Test-settings (CHANGE HERE!)
