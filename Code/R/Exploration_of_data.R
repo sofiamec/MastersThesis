@@ -17,16 +17,23 @@ library("readxl")
 ## Remove low counts 
 # For a given dataset, this function removes genes with low counts (>75 % or an average count <3).
 # input: Data = the data to remove genes from
+#        filterAll = if T, both kriteria are checked (75%, <3). If F, only kriteria <3 is checked
 # output: 
-remove_low_counts=function(Data){
+remove_low_counts=function(Data, filterAll){
   a=rowSums(Data)<3
-  b=vector()
-  r=vector()
-  for (i in 1:nrow(Data)) {
-    b[i]<-sum(Data[i,]==0)/ncol(Data)>0.75
-    r[i]<-a[i]+b[i]
+  
+  if (filterAll==T){
+    b=vector()
+    r=vector()
+    for (i in 1:nrow(Data)) {
+      b[i]<-sum(Data[i,]==0)/ncol(Data)>0.75
+      r[i]<-a[i]+b[i]
+    }
+    FilteredData=Data[r==0,]
+    
+  } else {
+    FilteredData=Data[a==F,]
   }
-  FilteredData=Data[r==0,]
   return(FilteredData)
 }
 
@@ -201,22 +208,26 @@ MarineOriginal<-read.table("../../Data/Raw_data/Marine_COGcountsRaw.txt",header 
 Gut2OriginalPreGG<-read.table("../../Data/Raw_data/HumanGutII_COGcountsRaw.txt",header = T)
 MarineOriginalPreGG<-read.table("../../Data/Raw_data/Marine_COGcountsRaw.txt",header = T)
 
-{ ResistanceOriginal=t(read_excel("../../Data/Raw_data/GENE_QUANTIFICATIONS.raw.xlsx")[,-c(2:4)])
+{ ResistanceOriginal=t(read_excel("../../Data/Raw_data/GENE_QUANTIFICATIONS.raw.xlsx")[,-c(2,4)])
   colnames(ResistanceOriginal) <- ResistanceOriginal[1,]
+  # Extracting Human samples:
+  ResistanceOriginal<-ResistanceOriginal[,ResistanceOriginal[2,]=="Airways" | ResistanceOriginal[2,]=="Gastrointestinal" | ResistanceOriginal[2,]=="Oral" | ResistanceOriginal[2,]=="Skin" | ResistanceOriginal[2,]=="Urogenital"]
+  ResistanceOriginal<-ResistanceOriginal[-2,]
   ResistanceOriginal=data.frame(row.names = row.names(ResistanceOriginal)[-1], apply(ResistanceOriginal[-1,],2,as.integer))
+  ResistanceOriginalPreGG=data.frame(row.names(ResistanceOriginal),apply(ResistanceOriginal,2,as.integer))
 }
 
 ResistanceIntermediate=ResistanceOriginal[,colSums(ResistanceOriginal)>=10000000] # Filter out samples with sequencing depth below the maximum sequencing depth of the experimental design
-Resistance <- remove_low_counts(ResistanceIntermediate) # This is the dataset used in analysis where samples and genes with low counts are removed
+Resistance <- remove_low_counts(ResistanceIntermediate, filterAll=F) # This is the dataset used in analysis where samples and genes with low counts are removed
 
 Gut2Intermediate = Gut2Original[,colSums(Gut2Original)>=5000000]   # Filter out samples with sequencing depth below the maximum sequencing depth of the experimental design
-Gut2 <- remove_low_counts(Gut2Intermediate) # This is the dataset used in analysis where samples and genes with low counts are removed
+Gut2 <- remove_low_counts(Gut2Intermediate, filterAll=T) # This is the dataset used in analysis where samples and genes with low counts are removed
 
 MarineIntermediate = MarineOriginal[,colSums(MarineOriginal)>=10000000]   # Filter out samples with sequencing depth below the maximum sequencing depth of the experimental design
-Marine <- remove_low_counts(MarineIntermediate) # This is the dataset used in analysis where samples and genes with low counts are removed
+Marine <- remove_low_counts(MarineIntermediate, filterAll=T) # This is the dataset used in analysis where samples and genes with low counts are removed
 
 ## MAYBE REPEAT THE EXPLORATION BELOW FOR Gut2 and Marine??
-rm(Gut2Intermediate,MarineIntermediate)
+rm(Gut2Intermediate, MarineIntermediate, ResistanceIntermediate)
 # ===================================== Colour selection ===================================#
 # Default colors
 colorScale9<-c("#FFFFD9", "#EDF8B1", "#C7E9B4", "#7FCDBB", "#41B6C4", "#1D91C0", "#225EA8", "#253494", "#081D58")
@@ -230,6 +241,7 @@ colorScale500<-colorRampPalette(brewer.pal(9, "YlGnBu"))(500)
 # Reshaping datasets for ggplot
 Gut2GGOriginal<-reshaping_dataset(Gut2OriginalPreGG)
 MarineGGOriginal<-reshaping_dataset(MarineOriginalPreGG)
+ResistanceGGOriginal<-reshaping_dataset(ResistanceOriginalPreGG[-1,]) # The non-resistance gene is removed to better compare the other genes in the dataset
 
 # Computing low counts
 rGut2<-compute_low_counts(Gut2Original)
@@ -252,11 +264,11 @@ SeqSummary<-rbind(summary(colSums(Gut2Original)),summary(colSums(MarineOriginal)
 rownames(SeqSummary)<-c("Human Gut II", "Marine", "Resistance")
 print(xtable(SeqSummary))
 
-SeqSummary2<-rbind(summary(colSums(Gut2Original)),summary(colSums(MarineOriginal)),summary(colSums(Gut2)),summary(colSums(Marine)))
-rownames(SeqSummary2)<-c("Human Gut II", "Marine","Filtered Human Gut II", "Filtered Marine")
+SeqSummary2<-rbind(summary(colSums(Gut2Original)),summary(colSums(MarineOriginal)),summary(colSums(ResistanceOriginal)),summary(colSums(Gut2)),summary(colSums(Marine)),summary(colSums(Resistance)))
+rownames(SeqSummary2)<-c("Human Gut II", "Marine", "Antibiotic Resistance Genes", "Filtered Human Gut II", "Filtered Marine", "Filtered Antibiotic Resistance Genes")
 
 # Summary of reads per gene
-GeneSummary<-rbind(summary(rowSums(Gut2Original)),summary(rowSums(MarineOriginal)))
+GeneSummary<-rbind(summary(rowSums(Gut2Original)), summary(rowSums(MarineOriginal)))
 rownames(GeneSummary)<-c("Human Gut II", "Marine")
 print(xtable(GeneSummary))
 
@@ -272,6 +284,8 @@ sequencing_depth_histogram(Gut2GGOriginal, bins=30, "Sequencing Depth in Human G
                            color1, "black", savePlot=F, saveName="Gut2")
 sequencing_depth_histogram(MarineGGOriginal, bins=30, "Sequencing Depth in Marine", 
                            color1, "black", savePlot=F, saveName="Marine")
+sequencing_depth_histogram(ResistanceGGOriginal, bins=30, "Sequencing Depth in Antibiotic Resistance Genes", 
+                           color1, "black", savePlot=F, saveName="Resistance")
 
 
 # Histogram of Sequensing depth in each dataset
@@ -279,9 +293,11 @@ gene_histogram(Gut2GGOriginal, bins=30, "Gene Abundance in Human Gut II",
                            color1, "black", savePlot=F, saveName="Gut2")
 gene_histogram(MarineGGOriginal, bins=30, "Gene Abundance in Marine", 
                            color1, "black", savePlot=F, saveName="Marine")
+gene_histogram(ResistanceGGOriginal, bins=30, "Gene Abundance in Antibiotic Resistance Genes", 
+                           color1, "black", savePlot=F, saveName="Resistance")
 
 
-#==================================== Stratied Datasets ==================================#
+#==================================== Stratified Datasets ==================================#
 Gut2Strata<- DESeq2_for_strata(Gut2,3)
 MarineStrata<-DESeq2_for_strata(Marine,3)
 

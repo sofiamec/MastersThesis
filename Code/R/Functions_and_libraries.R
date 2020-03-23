@@ -32,13 +32,19 @@ round2 <- function(x, n) {
 # output: 
 remove_low_counts=function(Data){
   a=rowSums(Data)<3
-  b=vector()
-  r=vector()
-  for (i in 1:nrow(Data)) {
-    b[i]<-sum(Data[i,]==0)/ncol(Data)>0.75
-    r[i]<-a[i]+b[i]
+  
+  if (saveName!="Resistance"){
+    b=vector()
+    r=vector()
+    for (i in 1:nrow(Data)) {
+      b[i]<-sum(Data[i,]==0)/ncol(Data)>0.75
+      r[i]<-a[i]+b[i]
+    }
+    FilteredData=Data[r==0,]
+    
+  } else {
+    FilteredData=Data[a==F,]
   }
-  FilteredData=Data[r==0,]
   return(FilteredData)
 }
 
@@ -151,9 +157,9 @@ introducing_DAGs = function(Data, q, f){
   #nDAGs = trunc(f*nrow(downSampledData)+0.5) # the total number of genes to be downsampled if we allow unbalanced DAGs
   
   # Creating empty matrix for overview of DAGs
-  DAGs = matrix(ncol = 2, nrow = nrow(Data)) 
+  DAGs = matrix(ncol = 2, nrow = nrow(downSampledData)) 
   colnames(DAGs) = c(sprintf("Sample 1 to %d", ncol(Data)/2),sprintf("Sample %d to %d", ncol(Data)/2+1, ncol(Data)))
-  rownames(DAGs) <- rownames(Data)
+  rownames(DAGs) <- rownames(downSampledData)
   # Selecting random genes
   randomGenes <- sample(nrow(downSampledData),nDAGs) # Selects n random genes in the dataset which will be downsampled. 
   if (nDAGs==1|| nDAGs==0) {
@@ -219,6 +225,10 @@ DESeq2_analysis=function(Data){
 #           AUCs = The computed AUC for the entire ROC-curve and for FPR-cutoff 0.05 and 0.10.
 #           meanROC = the pieciwise mean
 Compute_ROC_AUC = function(ResultsData, trueTP, run, computeStrata){
+  
+  if (saveName=="Resistance"){
+    ResultsData<-ResultsData[!rownames(ResultsData) %in% "Non-resistance",]
+  }
   
   TP<-rownames(trueTP)
   nT=vector(mode = 'numeric' ,length = nrow(ResultsData)+1)
