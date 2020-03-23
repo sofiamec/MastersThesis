@@ -27,7 +27,6 @@ cat(sprintf("TP genes for %s out of %d:  %d     (exp. design: %s)\n\n", saveName
 
 #===================================================================================================================================
 # Computing ROC and AUC
-# Plotting both deseq and edge (Lägg till detta i funktionen Compute_ROC_AUC när vi bestämt oss för edgeR eller DESeq!)
 deseqROCAUC<-Compute_ROC_AUC(ResDESeq,DAGs, run, F)
 ROCs <- data.frame(deseqROCAUC[[1]])
 AUCs<- as.matrix(deseqROCAUC[[2]]) 
