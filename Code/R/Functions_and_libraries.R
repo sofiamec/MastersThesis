@@ -216,6 +216,37 @@ DESeq2_analysis=function(Data){
   return(ResultSorted)
 }
 
+## FUNCTION for OGLM-analysis
+# This function uses OGLM and ANOVA to identfy DAGs in a dataset containing two groups
+# Input:  Data = the data to analyse (DownsampledData)
+# Output: ResOGLM = a dataframe containing the p-value and the adjusted p-value for each gene, ordered with increading p-values
+OGLM_analysis<-function(Data){
+  
+  # Transposing and adding Sample group 
+  ModData<-data.frame(c(rep(1,m),rep(0,m)),t(Data)) # DO NOT OPEN/VIEW TestA !!
+  colnames(ModData)[1]<-"SampleGroup"
+  
+  logTotSeq<-log(colSums(Data))
+  GeneNames<-colnames(ModData)
+  Results <- data.frame(Gene=numeric(0), pValue=numeric(0))
+  
+  # Loopin over all genes and comparing models with and without group-covariate
+  for (gene in 2:ncol(ModData)) {
+    
+    Model_Group<-glm(ModData[,gene] ~ SampleGroup + offset(logTotSeq), family = quasipoisson(link = "log"), data = ModData)
+    Model_NoGroup<-glm(ModData[,gene] ~ offset(logTotSeq), family = quasipoisson(link = "log"), data = ModData)
+    
+    ANOVAres<-anova(Model_Group, Model_NoGroup, test = "F")
+    Results<-rbind(Results,data.frame(GeneNames[gene],ANOVAres$`Pr(>F)`[[2]]))
+  }
+  
+  Results<-data.frame(row.names = Results[,1], Results[,2],p.adjust(Results[,2], method = "BH"))
+  colnames(Results)<-c("p-value", "adjusted p-value")
+  ResOGLM<-Results[order(Results[,1]),]
+  
+  return(ResOGLM)
+}
+
 ## FUNCTION for computing ROC-curves and AUC-values
 # For the results from analysing DAGs in a dataset and the corresponding known DAGs,
 # this function computes AUC-values and plots the ROC-curve.
