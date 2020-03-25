@@ -63,6 +63,37 @@ DESeq2_analysis=function(Data){
   return(ResultSorted)
 }
 
+## FUNCTION for OGLM-analysis
+# This function uses OGLM and ANOVA to identfy DAGs in a dataset containing two groups
+# Input:  Data = the data to analyse (DownsampledData)
+# Output: ResOGLM = a dataframe containing the p-value and the adjusted p-value for each gene, ordered with increading p-values
+OGLM_analysis<-function(Data){
+  
+  # Transposing and adding Sample group 
+  ModData<-data.frame(c(rep(1,m),rep(0,m)),t(Data)) # DO NOT OPEN/VIEW TestA !!
+  colnames(ModData)[1]<-"SampleGroup"
+  
+  logTotSeq<-log(colSums(Data))
+  GeneNames<-colnames(ModData)
+  Results <- data.frame(Gene=numeric(0), pValue=numeric(0))
+  
+  # Loopin over all genes and comparing models with and without group-covariate
+  for (gene in 2:ncol(ModData)) {
+    
+    Model_Group<-glm(ModData[,gene] ~ SampleGroup + offset(logTotSeq), family = quasipoisson(link = "log"), data = ModData)
+    Model_NoGroup<-glm(ModData[,gene] ~ offset(logTotSeq), family = quasipoisson(link = "log"), data = ModData)
+    
+    ANOVAres<-anova(Model_Group, Model_NoGroup, test = "F")
+    Results<-rbind(Results,data.frame(GeneNames[gene],ANOVAres$`Pr(>F)`[[2]]))
+  }
+  
+  Results<-data.frame(row.names = Results[,1], Results[,2],p.adjust(Results[,2], method = "BH"))
+  colnames(Results)<-c("p-value", "adjusted p-value")
+  ResOGLM<-Results[order(Results[,1]),]
+  
+  return(ResOGLM)
+}
+
 #===================================================================================================================================
 # Computing ROC-curves and AUC-values
 # For the results from analysing DAGs in a dataset and the corresponding known DAGs,
@@ -134,20 +165,33 @@ Compute_ROC_AUC = function(ResultsData, DAGs, run, plotExpDesign, plotName, save
 
 #===================================================================================================================================
 
-######## DESeq2 ##########
-ResDESeq=DESeq2_analysis(Data = DownSampledData)
-cat(sprintf("Significant genes with DESeq2 for %s: %d     (exp. design: %s)\n", saveName, sum(ResDESeq[,2]<0.05, na.rm = T),plotExpDesign))
+if (analysisDESeq2==T){
+  
+  ######## DESeq2 ##########
+  ResDESeq=DESeq2_analysis(Data = DownSampledData)
+  ResDAGsAnalysis<-ResDESeq
+  rm(ResDESeq)
+  
+} else {
+  
+  ######## OGLM ##########
+  ResOGLM=OGLM_analysis(Data = DownSampledData)
+  ResDAGsAnalysis<-ResOGLM
+  rm(ResOGLM)
+}
+
+cat(sprintf("Significant genes with DESeq2 for %s: %d     (exp. design: %s)\n", saveName, sum(ResDAGsAnalysis[,2]<0.05, na.rm = T),plotExpDesign))
 
 # how many of the artificially introduced DAGs are among the significant genes
 matchDESeq=c()
 for (i in 1:nrow(DAGs)) {
-  matchDESeq[i]=sum(grepl(rownames(DAGs)[i], rownames(ResDESeq[which(ResDESeq[,2]<0.05),,drop=F])))
+  matchDESeq[i]=sum(grepl(rownames(DAGs)[i], rownames(ResDAGsAnalysis[which(ResDAGsAnalysis[,2]<0.05),,drop=F])))
 }
 cat(sprintf("TP genes with DESeq2 for %s: %d out of %d   (exp. design: %s)\n", saveName, sum(matchDESeq), nrow(DAGs), plotExpDesign))
 
 #===================================================================================================================================
 # Computing ROC and AUC
-deseqROCAUC<-Compute_ROC_AUC(ResDESeq, DAGs, run, plotExpDesign, plotName, saveName, SaveExpDesign, savePlot)
+deseqROCAUC<-Compute_ROC_AUC(ResDAGsAnalysis, DAGs, run, plotExpDesign, plotName, saveName, SaveExpDesign, savePlot)
 ROCs <- data.frame(deseqROCAUC[[1]])
 AUCs<- as.matrix(deseqROCAUC[[2]]) 
 meanROCs<-as.matrix(deseqROCAUC[[3]])

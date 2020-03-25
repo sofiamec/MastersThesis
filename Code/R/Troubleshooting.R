@@ -1,15 +1,16 @@
+# Troubleshooting high sequencing depths
 library(xtable)
-# Troubleshooting high sequencing depths 
-TPFPSignificancePlot=F   # Set to T to plot TP and FP in order
+
+analysisDESeq2=F        # Set to T if the analysis should be done with DESeq2, F is it should be done with OGLM
 
 #=================================== Choose "good" dataset with low sequencing depth ========================
 saveName = "Marine" # Choose dataset. Ex: "Gut2" or "Marine"
-m = 50              # Number of samples in each group (total nr samples = 2*m)
-d = 1000000          # Desired sequencing depth per sample. It will not be exct
-dD="1M"           # display name
+m = 10              # Number of samples in each group (total nr samples = 2*m)
+d = 500000          # Desired sequencing depth per sample. It will not be exct
+dD="500k"           # display name
 q = 1.5             # Fold-change for downsampling
 f = 0.10            # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
-run=3              # choose wich run to extract
+run=10              # choose wich run to extract
 
 
 { # Quickly gives the case the correct name
@@ -33,32 +34,10 @@ DAGs=read.csv(sprintf("../../Intermediate/%s_sameseed/%s/DAGs_run%d.csv", saveNa
 
 source("Analysis_of_DAGs_separate.R")
 
-#Plot TP and FP in significance-order
-if (TPFPSignificancePlot==T) {
-  PR=c()
-  for (i in 1:nrow(DownSampledData)) {
-    
-    if (BinTP[i]==0){
-      PR[i]="FP"
-    } else {
-      PR[i]="TP"
-    }
-  }
-  x=seq(1,nrow(DownSampledData), by=1)
-  y=c(rep(1, nrow(DownSampledData)))
-  HeatmapPR=data.frame(x,y, PR)
-
-  ggplot(HeatmapPR, aes(x=x, y=y, fill=PR)) +
-    geom_tile(aes(fill = PR)) +
-    #scale_fill_manual(values = c("red", "blue")) + 
-    scale_fill_viridis_d(begin = 0, end = 1, alpha = 0.5) +  
-    labs(title="TP and FP in significance order for low dataset", x = "Genes (from most to least significant)" , y = "  ")
-  }
-
 # Save output named after this dataset
 DataLow=DownSampledData
 DAGsLow=DAGs
-ResDESeqLow=ResDESeq
+ResDAGsAnalysisLow=ResDAGsAnalysis
 dDLow=dD
 
 #=================================== Choose "bad" dataset with high sequencing depth ========================
@@ -92,38 +71,14 @@ DAGs=read.csv(sprintf("../../Intermediate/%s_sameseed/%s/DAGs_run%d.csv", saveNa
 
 source("Analysis_of_DAGs_separate.R")
 
-#Plot TP and FP in significance-order
-if (TPFPSignificancePlot==T) {
-  PR=c()
-  for (i in 1:nrow(DownSampledData)) {
-    
-    if (BinTP[i]==0){
-      PR[i]="FP"
-    } else {
-      PR[i]="TP"
-    }
-  }
-  x=seq(1,nrow(DownSampledData), by=1)
-  y=c(rep(1, nrow(DownSampledData)))
-  HeatmapPR=data.frame(x,y, PR)
-  
-  ggplot(HeatmapPR, aes(x=x, y=y, fill=PR)) +
-    geom_tile(aes(fill = PR)) +
-    #scale_fill_manual(values = c("red", "blue")) + 
-    scale_fill_viridis_d(begin = 0, end = 1, alpha = 0.5) +  
-    labs(title="TP and FP in significance order for high dataset", x = "Genes (from most to least significant)" , y = "  ")
-
-  rm(HeatmapPR,PR,x,y)  
-}
-
 # Save output named after this dataset
 DataHigh=DownSampledData
 DAGsHigh=DAGs
-ResDESeqHigh=ResDESeq
+ResDAGsAnalysisHigh=ResDAGsAnalysis
 dDHigh=dD
 
 # Remove non used ouptus
-rm(DownSampledData,DAGs,ResDESeq,AUCs,deseqROCAUC,meanROCs,ROCs,BinTP,dD,i,matchDESeq,TPFPSignificancePlot,d,plotExpDesign,saveExpDesign)
+rm(DownSampledData,DAGs,ResDAGsAnalysis,AUCs,deseqROCAUC,meanROCs,ROCs,BinTP,dD,i,matchDESeq,d,plotExpDesign,saveExpDesign)
 
 
 #========================= Dispertion and log2 fold change plots ===========================================
@@ -131,36 +86,37 @@ rm(DownSampledData,DAGs,ResDESeq,AUCs,deseqROCAUC,meanROCs,ROCs,BinTP,dD,i,match
 # check that the same DAGs have been introduced 
 all(rownames(DAGsLow)==rownames(DAGsHigh))
 
-# dataframe with log2 and disp for both datasets
-ResultLog2Disp=data.frame(ResDESeqLow[order(rownames(ResDESeqLow)),c(3,4)], ResDESeqHigh[order(rownames(ResDESeqHigh)),c(3,4)])
-colnames(ResultLog2Disp)<- c("log2Low", "DispLow", "log2High", "DispHigh")
-
-# vector indicating if each gene is a DAG or not (DAG-indicator)
-DAG=c()
-for (i in 1:nrow(ResultLog2Disp)) {
-  if (rownames(ResultLog2Disp[i,]) %in% rownames(DAGsLow)) {
-    DAG[i]=1
-  } else {DAG[i]=0}
+if(analysisDESeq2==T){
+  # dataframe with log2 and disp for both datasets
+  ResultLog2Disp=data.frame( ResDAGsAnalysisLow[order(rownames( ResDAGsAnalysisLow)),c(3,4)],  ResDAGsAnalysisHigh[order(rownames( ResDAGsAnalysisHigh)),c(3,4)])
+  colnames(ResultLog2Disp)<- c("log2Low", "DispLow", "log2High", "DispHigh")
+  
+  # vector indicating if each gene is a DAG or not (DAG-indicator)
+  DAG=c()
+  for (i in 1:nrow(ResultLog2Disp)) {
+    if (rownames(ResultLog2Disp[i,]) %in% rownames(DAGsLow)) {
+      DAG[i]=1
+    } else {DAG[i]=0}
+  }
+  
+  # add DAG-indicator to dataframe
+  ResultLog2Disp=data.frame(ResultLog2Disp, DAG)
+  
+  
+  # Dispertion plot
+  ggplot(ResultLog2Disp, aes(x=DispHigh, y=DispLow)) + 
+    scale_color_viridis_d(begin = 0, end = 0.5, name=" ", labels=c("No DAG","DAG")) +
+    geom_point(aes(color=factor(DAG)), size=1) +
+    labs(title="Dispersion for same dataset with different seq. depths", 
+         x=sprintf("Sequencing depth %s", dDHigh), y=sprintf("Sequencing depth %s", dDLow)) 
+  
+  # log2 plot
+  ggplot(ResultLog2Disp, aes(x=log2High, y=log2Low)) +
+    scale_color_viridis_d(begin = 0, end = 0.5, name=" ", labels=c("No DAG","DAG")) +
+    geom_point(aes(color=factor(DAG)), size=1) +
+    labs(title="log2 fold change for same dataset with different seq. depths", 
+         x=sprintf("Sequencing depth %s", dDHigh), y=sprintf("Sequencing depth %s", dDLow))
 }
-
-# add DAG-indicator to dataframe
-ResultLog2Disp=data.frame(ResultLog2Disp, DAG)
-
-
-# Dispertion plot
-ggplot(ResultLog2Disp, aes(x=DispHigh, y=DispLow)) + 
-  scale_color_viridis_d(begin = 0, end = 0.5, name=" ", labels=c("No DAG","DAG")) +
-  geom_point(aes(color=factor(DAG)), size=1) +
-  labs(title="Dispersion for same dataset with different seq. depths", 
-       x=sprintf("Sequencing depth %s", dDHigh), y=sprintf("Sequencing depth %s", dDLow)) 
-
-# log2 plot
-ggplot(ResultLog2Disp, aes(x=log2High, y=log2Low)) +
-  scale_color_viridis_d(begin = 0, end = 0.5, name=" ", labels=c("No DAG","DAG")) +
-  geom_point(aes(color=factor(DAG)), size=1) +
-  labs(title="log2 fold change for same dataset with different seq. depths", 
-       x=sprintf("Sequencing depth %s", dDHigh), y=sprintf("Sequencing depth %s", dDLow))
-
 
 #================================= Investigate most significant genes =====================================
 
@@ -168,25 +124,25 @@ ggplot(ResultLog2Disp, aes(x=log2High, y=log2Low)) +
 # Prepare "low" dataset:
 #DAG-indicator
 DAG=c()
-for (i in 1:nrow(ResDESeqLow)) {
-  if (rownames(ResDESeqLow[i,]) %in% rownames(DAGsLow)) {
+for (i in 1:nrow( ResDAGsAnalysisLow)) {
+  if (rownames( ResDAGsAnalysisLow[i,]) %in% rownames(DAGsLow)) {
     DAG[i]=1
   } else {DAG[i]=0}
 }
 # Dataframe with the names of the genes, p-values and DAG-indicator (ordered with increasing p-value)
-GenesLow=data.frame(row.names = rownames(ResDESeqLow), ResDESeqLow[,1] , DAG)
+GenesLow=data.frame(row.names = rownames( ResDAGsAnalysisLow),  ResDAGsAnalysisLow[,1] , DAG)
 colnames(GenesLow)<-c("p-value","DAG")
 
 # Prepare "high" dataset
 # DAG-indicator
 DAG=c()
-for (i in 1:nrow(ResDESeqHigh)) {
-  if (rownames(ResDESeqHigh[i,]) %in% rownames(DAGsHigh)) {
+for (i in 1:nrow( ResDAGsAnalysisHigh)) {
+  if (rownames( ResDAGsAnalysisHigh[i,]) %in% rownames(DAGsHigh)) {
     DAG[i]=1
   } else {DAG[i]=0}
 }
 # Dataframe with the names of the genes, p-values and DAG-indicator (ordered with increasing p-value)
-GenesHigh=data.frame(row.names = rownames(ResDESeqHigh), ResDESeqHigh[,1] , DAG)
+GenesHigh=data.frame(row.names = rownames( ResDAGsAnalysisHigh),  ResDAGsAnalysisHigh[,1] , DAG)
 colnames(GenesHigh)<-c("p-value","DAG")
 
 rm(DAG)
@@ -223,19 +179,19 @@ TPDiffLow=DataLow[TPDiffNames,]
 # The position of these genes in the ordered result for the high dataset
 TPPosHigh=c()
 for (i in 1:length(TPDiffNames)) {
-  TPPosHigh[i]=which(rownames(ResDESeqHigh)==TPDiffNames[i])
+  TPPosHigh[i]=which(rownames( ResDAGsAnalysisHigh)==TPDiffNames[i])
 }
 
 # Dataframes with row means for the different groups and dispersion, adjusted p-values and position for the 
 # TP-genes that appear in low but not in high
 TPDiffMeansHigh=data.frame(row.names = TPDiffNames, Mean1=as.integer(rowMeans(TPDiffHigh[,c(1:m)])), 
                            Mean2=as.integer(rowMeans(TPDiffHigh[,c((m+1):(2*m))])),
-                           Dispersion=ResDESeqHigh[TPDiffNames,4], adjusted.p.value=ResDESeqHigh[TPDiffNames,2],
+                           Dispersion= ResDAGsAnalysisHigh[TPDiffNames,4], adjusted.p.value= ResDAGsAnalysisHigh[TPDiffNames,2],
                            position=TPPosHigh)
 
 TPDiffMeansLow=data.frame(row.names = TPDiffNames, Mean1=as.integer(rowMeans(TPDiffLow[,c(1:m)])), 
                           Mean2=as.integer(rowMeans(TPDiffLow[,c((m+1):(2*m))])),
-                          Dispersion=ResDESeqLow[TPDiffNames,4], adjusted.p.value=ResDESeqLow[TPDiffNames,2])
+                          Dispersion= ResDAGsAnalysisLow[TPDiffNames,4], adjusted.p.value= ResDAGsAnalysisLow[TPDiffNames,2])
 
 
 ########################### FP #######################################
@@ -260,22 +216,22 @@ FPDiffLow=DataLow[FPDiffNames,]
 # The position of these genes in the ordered result for the high dataset
 FPPosHigh=c()
 for (i in 1:length(FPDiffNames)) {
-  FPPosHigh[i]=which(rownames(ResDESeqHigh)==FPDiffNames[i])
+  FPPosHigh[i]=which(rownames( ResDAGsAnalysisHigh)==FPDiffNames[i])
 }
 
 # Dataframes with row means for the different groups and dispersion, adjusted p-values and position for the 
 # FP-genes that appear in high but not in low
 FPDiffMeansHigh=data.frame(row.names = FPDiffNames, Mean1=as.integer(rowMeans(FPDiffHigh[,c(1:m)])), 
                            Mean2=as.integer(rowMeans(FPDiffHigh[,c((m+1):(2*m))])),
-                           Dispersion=ResDESeqHigh[FPDiffNames,4], adjusted.p.value=ResDESeqHigh[FPDiffNames,2],
+                           Dispersion= ResDAGsAnalysisHigh[FPDiffNames,4], adjusted.p.value= ResDAGsAnalysisHigh[FPDiffNames,2],
                            Position=FPPosHigh)
 
 FPDiffMeansLow=data.frame(row.names = FPDiffNames, Mean1=as.integer(rowMeans(FPDiffLow[,c(1:m)])), 
                           Mean2=as.integer(rowMeans(FPDiffLow[,c((m+1):(2*m))])),
-                          Dispersion=ResDESeqLow[FPDiffNames,4], adjusted.p.value=ResDESeqLow[FPDiffNames,2])
+                          Dispersion= ResDAGsAnalysisLow[FPDiffNames,4], adjusted.p.value= ResDAGsAnalysisLow[FPDiffNames,2])
 
 #print(xtable(cbind(FPDiffMeansHigh, FPDiffMeansLow)))
-print(xtable(cbind(TPDiffMeansHigh, TPDiffMeansLow)))
+#print(xtable(cbind(TPDiffMeansHigh, TPDiffMeansLow)))
 
 
 
