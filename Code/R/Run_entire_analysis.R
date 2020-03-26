@@ -10,11 +10,11 @@
 #===================================================================================================================================
 ## Selecting parameters and data:
 onTerra = T                                                 # use T if running analysis on Terra (large scale settings applied)
-saveName = "Marine"  # "Gut2", "Marine" or "Resistance      # this will in turn load the correct data
+saveName = "Gut2"  # "Gut2", "Marine" or "Resistance      # this will in turn load the correct data
 f = 0.10                                                    # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
 runStrata = T
 extraDesigns=T                                              # use T if the analysis of DAGs should be performed with DESeq2. Use F to choose OGLM instead
-analysisDESeq2=F
+analysisDESeq2=T
 
 # Test-settings (CHANGE HERE!)
 if (onTerra==F){
@@ -48,8 +48,8 @@ if (extraDesigns==T){
 }
  # Strata-settings
 if (runStrata==T){
-  numberOfStrata = 3                                          # sets the number of groups for dividing gene abundance and variability
-  strataClass<-factor(c("low","medium","high"), levels=c("low","medium","high")) #strataClass<-c("low","medium", "high")                      # should correspond to the number of stratas
+  numberOfStrata = 5                                          # sets the number of groups for dividing gene abundance and variability
+  strataClass<-factor(c("lowest","low","medium","high", "highest"), levels=c("lowest","low","medium","high", "highest")) #strataClass<-c("low","medium", "high")                      # should correspond to the number of stratas
 }
 #===================================================================================================================================
 #===================================================================================================================================

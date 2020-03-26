@@ -192,13 +192,25 @@ DESeq2_for_strata=function(Data,numberOfStrata){
 # This function calculates summary statistics for the different stratas of a stratified dataset
 # Input: Data=The stratified dataset to analyse, where the columns NEEDS to be in the following order:
 #             BaseMean, Estimated Dispersion, AbundanceStrata, VariabilityStrata
-strata_summary=function(Data){
-  StrataSummary <- format(rbind(summary(Data[Data[,3]==1,1]),summary(Data[Data[,3]==2,1]),
-                                summary(Data[Data[,3]==3,1]), summary(Data[Data[,4]==1,2]),
-                                summary(Data[Data[,4]==2,2]), summary(Data[Data[,4]==3,2])),
-                          scientific = F, digits = 2)
-  rownames(StrataSummary) <- c("Abundance Strata 1", "Abundance Strata 2", "Abundance Strata 3", 
-                               "Disperstion strata 1", "Disperstion strata 2", "Disperstion strata 3")
+strata_summary=function(Data, numberOfStrata){
+  if (numberOfStrata==3){
+    StrataSummary <- format(rbind(summary(Data[Data[,3]==1,1]),summary(Data[Data[,3]==2,1]),
+                                  summary(Data[Data[,3]==3,1]), summary(Data[Data[,4]==1,2]),
+                                  summary(Data[Data[,4]==2,2]), summary(Data[Data[,4]==3,2])),
+                            scientific = F, digits = 2)
+    rownames(StrataSummary) <- c("Abundance Strata 1", "Abundance Strata 2", "Abundance Strata 3", 
+                                 "Disperstion strata 1", "Disperstion strata 2", "Disperstion strata 3")
+  } else if (numberOfStrata==5){
+    StrataSummary <- format(rbind(summary(Data[Data[,3]==1,1]),summary(Data[Data[,3]==2,1]),
+                                  summary(Data[Data[,3]==3,1]), summary(Data[Data[,3]==4,1]),
+                                  summary(Data[Data[,3]==5,1]), summary(Data[Data[,4]==1,2]),
+                                  summary(Data[Data[,4]==2,2]), summary(Data[Data[,4]==3,2]),
+                                  summary(Data[Data[,4]==4,2]), summary(Data[Data[,4]==5,2])),
+                            scientific = F, digits = 2)
+    rownames(StrataSummary) <- c("Abundance Strata 1", "Abundance Strata 2", "Abundance Strata 3", "Abundance Strata 4", "Abundance Strata 5", 
+                                 "Disperstion strata 1", "Disperstion strata 2", "Disperstion strata 3", "Disperstion strata 4", "Disperstion strata 5")
+  }
+
   return(StrataSummary)
 }
 
@@ -307,9 +319,15 @@ Gut2Strata<- DESeq2_for_strata(Gut2,3)
 MarineStrata<-DESeq2_for_strata(Marine,3)
 
 # Table containing a summary for each strata
-Gut2StrataSummary=strata_summary(Gut2Strata)
-MarineStrataSummary=strata_summary(MarineStrata)
+Gut2StrataSummary=strata_summary(Gut2Strata,3)
+MarineStrataSummary=strata_summary(MarineStrata,3)
 
+Gut2Strata5<- DESeq2_for_strata(Gut2,5)
+MarineStrata5<-DESeq2_for_strata(Marine,5)
+
+# Table containing a summary for each strata
+Gut2StrataSummary5=strata_summary(Gut2Strata5,5)
+MarineStrataSummary5=strata_summary(MarineStrata5,5)
 
 #=============================================================================================================================#
 #====================================== Example plots for the report ==================================================================#
