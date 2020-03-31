@@ -1,16 +1,16 @@
 # Troubleshooting high sequencing depths
 library(xtable)
 
-analysisDESeq2=F        # Set to T if the analysis should be done with DESeq2, F is it should be done with OGLM
+analysis="t-test"   # "DESeq", "OGLM", or "t-test"
 
 #=================================== Choose "good" dataset with low sequencing depth ========================
 saveName = "Marine" # Choose dataset. Ex: "Gut2" or "Marine"
-m = 10              # Number of samples in each group (total nr samples = 2*m)
-d = 500000          # Desired sequencing depth per sample. It will not be exct
-dD="500k"           # display name
+m = 50              # Number of samples in each group (total nr samples = 2*m)
+d = 1000000          # Desired sequencing depth per sample. It will not be exct
+dD="1M"           # display name
 q = 1.5             # Fold-change for downsampling
 f = 0.10            # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
-run=10              # choose wich run to extract
+run=3              # choose wich run to extract
 
 
 { # Quickly gives the case the correct name
@@ -86,7 +86,7 @@ rm(DownSampledData,DAGs,ResDAGsAnalysis,AUCs,deseqROCAUC,meanROCs,ROCs,BinTP,dD,
 # check that the same DAGs have been introduced 
 all(rownames(DAGsLow)==rownames(DAGsHigh))
 
-if(analysisDESeq2==T){
+if(analysis=="DESeq"){
   # dataframe with log2 and disp for both datasets
   ResultLog2Disp=data.frame( ResDAGsAnalysisLow[order(rownames( ResDAGsAnalysisLow)),c(3,4)],  ResDAGsAnalysisHigh[order(rownames( ResDAGsAnalysisHigh)),c(3,4)])
   colnames(ResultLog2Disp)<- c("log2Low", "DispLow", "log2High", "DispHigh")
