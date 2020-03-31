@@ -19,8 +19,8 @@ library(readxl)
 
 ## FUNCTION for always rounding 0.5, 0.05 etc upwards
 round2 <- function(x, n) {
-  z = trunc(abs(x)*10^n +0.5)/10^n *sign(x)
-  return(z)
+    z = trunc(abs(x)*10^n +0.5)/10^n *sign(x)
+    return(z)
 }
 
 #===========================================================================================================================================
@@ -329,7 +329,7 @@ individual_ROC_plot <- function(ROCData){
   ROCplot <- ggplot(data=ROCData, aes(x=FPR, y=TPR, group=run)) +  geom_line(aes(color=run)) + 
     theme(plot.title = element_text(hjust = 0.5)) +  theme_minimal() + 
     scale_color_viridis(begin = 0, end = 0.85, discrete=TRUE) +
-    labs(title=sprintf("ROC-curves for %s with effect %g", plotName, q), 
+    labs(title=sprintf("ROC curves for %s with effect %g", plotName, q), 
          subtitle = sprintf("Experimental design: %s", plotExpDesign),
          colour="run", x = "False Positive Rate", y = "True Positive Rate") +
     ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2))
@@ -404,7 +404,7 @@ plot_combined_meanROCs<-function(plotData, variable, parameterVector, parameterN
                          aes(x=FPR, y=meanTPR, fill=fillVariable[variable==X])) +  theme_minimal() + 
       geom_ribbon(aes(ymin=(min), ymax=(max),fill = fillVariable[variable==X]), alpha=0.2) +
       geom_line(aes(color = fillVariable[variable==X])) +
-      labs(title=sprintf("Mean ROC-curves for %s  with effect %g", plotName, q), 
+      labs(title=sprintf("Mean ROC curves for %s  with effect %g", plotName, q), 
            subtitle = subtitle, x = "False Positive Rate", y = "True Positive Rate",  
            color = fillName, fill = fillName) +
       ylim(0, yLim) + 
