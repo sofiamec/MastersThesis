@@ -31,7 +31,7 @@ round2 <- function(x, n) {
 # input: Data = the data to remove genes from
 # output: 
 remove_low_counts=function(Data){
-  a=rowSums(Data)<3
+  a=rowMeans(Data)<3
   
   if (saveName!="Resistance"){
     b=vector()
@@ -127,7 +127,7 @@ resample = function(Data, m, d){
 # output: r = a logical vector with 1 if a gene should be removed, and 0 if it should be kept. 
 compute_low_counts=function(Data){
   
-  a=rowSums(Data)<3
+  a=rowMeans(Data)<3
   b=vector()
   r=vector()
   for (i in 1:nrow(Data)) {
