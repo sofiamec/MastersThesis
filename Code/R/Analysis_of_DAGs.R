@@ -14,19 +14,26 @@
 
 #===================================================================================================================================
 
-if (analysisDESeq2==T){
+if (analysis=="DESeq"){
   
   ######## DESeq2 ##########
   ResDESeq=DESeq2_analysis(Data = DownSampledData)
   ResDAGsAnalysis<-ResDESeq
   rm(ResDESeq)
   
-} else {
+} else if (analysis=="OGLM") {
   
   ######## OGLM ##########
   ResOGLM=OGLM_analysis(Data = DownSampledData)
   ResDAGsAnalysis<-ResOGLM
   rm(ResOGLM)
+  
+} else if (analysis=="t-test") {
+  
+  ######## t-test ##########
+  ResTtest= ## SÄTT IN FUNCTION HÄR funktion(Data = DownSampledData)
+  ResDAGsAnalysis<-ResTtest
+  rm(ResTtest)
 }
 
 cat(sprintf("Significant genes for %s:    %d     (exp. design: %s)\n", saveName, sum(ResDAGsAnalysis[,2]<0.05, na.rm = T),plotExpDesign))
