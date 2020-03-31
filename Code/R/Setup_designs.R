@@ -12,7 +12,7 @@
 if(saveName == "Gut2"){
   plotName = "Human Gut II"
   Gut2Original <- read.table("../../Data/Raw_data/HumanGutII_COGcountsRaw.txt", header=T, row.names = 1)
-  Gut2Intermediate = Gut2Original[,colSums(Gut2Original)>=5000000]   # Filter out samples with sequencing depth below the maximum sequencing depth of the experimental design
+  Gut2Intermediate = Gut2Original[,colSums(Gut2Original)>=5900000]   # Filter out samples with sequencing depth below the maximum sequencing depth of the experimental design
   Gut2 <- remove_low_counts(Gut2Intermediate)
   Data = Gut2
   
@@ -28,7 +28,7 @@ if(saveName == "Gut2"){
 } else if(saveName == "Marine"){
   plotName = "Marine"
   MarineOriginal <- read.table("../../Data/Raw_data/Marine_COGcountsRaw.txt", header=T, row.names = 1)
-  MarineIntermediate = MarineOriginal[,colSums(MarineOriginal)>=10000000]   # Filter out samples with sequencing depth below the maximum sequencing depth of the experimental design
+  MarineIntermediate = MarineOriginal[,colSums(MarineOriginal)>=40000000]   # Filter out samples with sequencing depth below the maximum sequencing depth of the experimental design
   Marine <- remove_low_counts(MarineIntermediate)
   Data = Marine
   
