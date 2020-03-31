@@ -254,21 +254,29 @@ OGLM_analysis<-function(Data){
 # Output: ResTTest = a dataframe containing the p-value and the adjusted p-value for each gene, ordered with increading p-values
 
 ttest_analysis=function(Data){
-  GeneNames<-rownames(Data)
-  Results <- data.frame(Gene=numeric(0), pValue=numeric(0))
+  GeneNames<-rownames(Data)                                          
+  Results <- data.frame(Gene=numeric(0), pValue=numeric(0))     # Dataframe to put results in
   
-  for (i in 1:nrow(Data)) {
-    Res=t.test(sqrt(Data[i,1:m]),sqrt(Data[i,(m+1):(2*m)]))
-    Results=rbind(Results, data.frame(GeneNames[i],Res$p.value))
+  for (i in 1:nrow(Data)) {                                     # loop over all genes, make one t-test for each gene
+    
+    # If both groups have variance=0 the p-value is set to NA
+    if(var(as.numeric(sqrt(Data[i,1:m])))==0 & var(as.numeric(sqrt(Data[i,(m+1):(2*m)])))==0){
+      Results=rbind(Results, data.frame(Gene=GeneNames[i],pValue=NA))
+    }
+    # If not, calculate p-values with t-test
+    else {
+      Res=t.test(sqrt(Data[i,1:m]),sqrt(Data[i,(m+1):(2*m)]))
+      Results=rbind(Results, data.frame(Gene=GeneNames[i],pValue=Res$p.value)) 
+    }
   }
   
-  Results<-data.frame(row.names = Results[,1], Results[,2],p.adjust(Results[,2], method = "BH"))
-  colnames(Results)<-c("p-value", "adjusted p-value")
-  ResTTest<-Results[order(Results[,1]),]
+  Results<-data.frame(row.names = Results[,1], Results[,2], 
+                      p.adjust(Results[,2], method = "BH"))       # calculate adjusted p-values
+  colnames(Results)<-c("p-value", "adjusted p-value")             # structure results
+  ResTTest<-Results[order(Results[,1]),]                          # order results by increasing p-values
   
   return(ResTTest)
 }
-
 
 ## FUNCTION for computing ROC-curves and AUC-values
 # For the results from analysing DAGs in a dataset and the corresponding known DAGs,
