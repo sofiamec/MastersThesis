@@ -374,9 +374,30 @@ individual_ROC_plot <- function(ROCData){
 #           variableSave = "AUCtot", "TPR1" etc
 # Outputs:  a plotted heatmap which is saved if savePlot==T
 plot_heatmaps<-function(variable,variableName, fillName, variableSave){
-  heatmap <- ggplot(HeatmapData, aes(x=m, y=d, fill=variable)) +
-    geom_tile(aes(fill = variable)) + geom_text(aes(label = round2(variable, 2), fontface=md)) +
-    scale_fill_viridis_c(begin = 0, end = 1, alpha = 0.5) +  
+  
+  # Kladd, ska bort
+  #variableName="True FDR values at estimated FDR 0.05"
+  #fillName="true FDR values"
+  #variableSave="FDR"
+  
+  # IF Vanligt test
+  TEST1=variable 
+  TEST2=scale_fill_viridis_c(begin = 0, end = 1, alpha = 0.5) 
+
+  
+  # IF FDR 
+  #cut <- cut(variable, 
+         #breaks=c(0, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0),
+         #labels=as.character(c(0, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)),
+         #include.lowest=TRUE)
+  #TEST1 <- cut
+  #perf_cols <- c(brewer.pal(11, "Spectral")[9:11]) #colorRampPalette(c("blue", "red"))( 9 ))
+  #colorRampPalette(brewer.pal(9, "YlGnBu"))(150)
+  #TEST2 <- scale_fill_manual(values=perf_cols)
+  
+  heatmap <- ggplot(HeatmapData, aes(x=m, y=d, fill=TEST1)) +
+    geom_tile(aes(fill = TEST1)) + geom_text(aes(label = round2(variable, 2), fontface=md)) +
+    TEST2 +  
     scale_y_discrete(limits = rev(levels(as.factor(HeatmapData$d)))) +
     theme(panel.border = element_blank(), panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(), axis.line = element_blank(), panel.background=element_rect(fill = "white") ) +
