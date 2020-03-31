@@ -31,9 +31,9 @@ if (analysis=="DESeq"){
 } else if (analysis=="t-test") {
   
   ######## t-test ##########
-  ResTtest= ## SÄTT IN FUNCTION HÄR funktion(Data = DownSampledData)
-  ResDAGsAnalysis<-ResTtest
-  rm(ResTtest)
+  ResTTest=ttest_analysis(Data = DownSampledData)
+  ResDAGsAnalysis<-ResTTest
+  rm(ResTTest)
 }
 
 cat(sprintf("Significant genes for %s:    %d     (exp. design: %s)\n", saveName, sum(ResDAGsAnalysis[,2]<0.05, na.rm = T),plotExpDesign))

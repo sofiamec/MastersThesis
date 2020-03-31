@@ -247,6 +247,29 @@ OGLM_analysis<-function(Data){
   return(ResOGLM)
 }
 
+
+## FUNCTION for t-test-analysis
+# This function uses t-test to identfy DAGs in a dataset containing two groups
+# Input:  Data = the data to analyse (DownsampledData)
+# Output: ResTTest = a dataframe containing the p-value and the adjusted p-value for each gene, ordered with increading p-values
+
+ttest_analysis=function(Data){
+  GeneNames<-rownames(Data)
+  Results <- data.frame(Gene=numeric(0), pValue=numeric(0))
+  
+  for (i in 1:nrow(Data)) {
+    Res=t.test(sqrt(Data[i,1:m]),sqrt(Data[i,(m+1):(2*m)]))
+    Results=rbind(Results, data.frame(GeneNames[i],Res$p.value))
+  }
+  
+  Results<-data.frame(row.names = Results[,1], Results[,2],p.adjust(Results[,2], method = "BH"))
+  colnames(Results)<-c("p-value", "adjusted p-value")
+  ResTTest<-Results[order(Results[,1]),]
+  
+  return(ResTTest)
+}
+
+
 ## FUNCTION for computing ROC-curves and AUC-values
 # For the results from analysing DAGs in a dataset and the corresponding known DAGs,
 # this function computes AUC-values and plots the ROC-curve.
