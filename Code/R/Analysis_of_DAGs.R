@@ -47,11 +47,11 @@ cat(sprintf("TP genes for %s out of %d:  %d     (exp. design: %s)\n\n", saveName
 
 #===================================================================================================================================
 # Computing ROC and AUC
-deseqROCAUC<-Compute_ROC_AUC(ResDAGsAnalysis,DAGs, run, F)
-ROCs <- data.frame(deseqROCAUC[[1]])
-AUCs<- as.matrix(deseqROCAUC[[2]]) 
-meanROCs<-as.matrix(deseqROCAUC[[3]])
-genesFDRs<-as.matrix(deseqROCAUC[[4]])
+ROCAUC<-Compute_ROC_AUC(ResDAGsAnalysis,DAGs, run, F)
+ROCs <- data.frame(ROCAUC[[1]])
+AUCs<- as.matrix(ROCAUC[[2]]) 
+meanROCs<-as.matrix(ROCAUC[[3]])
+genesFDRs<-as.matrix(ROCAUC[[4]])
 
 if (runStrata==T){
   # Add corresponding strata to each gene in the analysed results
@@ -98,4 +98,4 @@ if (runStrata==T){
 }
 
 # remove variables/datasets
-rm(DownSampledData, matchDAGs, deseqROCAUC, ResDAGsAnalysis, DAGs, i)
+rm(DownSampledData, matchDAGs, ROCAUC, ResDAGsAnalysis, DAGs, i)

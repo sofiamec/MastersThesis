@@ -13,6 +13,7 @@ library(DESeq2)
 library(ggplot2)
 library(pracma)
 library(readxl)
+library(RColorBrewer)
 
 #===========================================================================================================================================
 #=========================================== Global Functions ==============================================================================
@@ -31,9 +32,9 @@ round2 <- function(x, n) {
 # input: Data = the data to remove genes from
 # output: 
 remove_low_counts=function(Data){
-  a=rowMeans(Data)<3
   
   if (saveName!="Resistance"){
+    a=rowMeans(Data)<3
     b=vector()
     r=vector()
     for (i in 1:nrow(Data)) {
@@ -42,7 +43,9 @@ remove_low_counts=function(Data){
     }
     FilteredData=Data[r==0,]
     
-  } else {
+  } else if (saveName=="Resistance") {
+    # Ändra eventuellt senare!
+    a=rowMeans(Data)<20
     FilteredData=Data[a==F,]
   }
   return(FilteredData)
@@ -306,8 +309,9 @@ Compute_ROC_AUC = function(ResultsData, trueTP, run, computeStrata){
     }
   }
   
-  nT<-nT[-c(1)]
-  nF<-nF[-c(1)]
+  # with this muted (0,0) is included
+  #nT<-nT[-c(1)]
+  #nF<-nF[-c(1)]
   
   TPR<-nT/nrow(trueTP)
   FPR<-nF/(nrow(ResultsData)-nrow(trueTP))
@@ -344,6 +348,7 @@ Compute_ROC_AUC = function(ResultsData, trueTP, run, computeStrata){
   meanROCs<-ddply(ROCs2, "FPR", summarise,
                   N    = length(TPR),
                   mean = mean(TPR))
+  
   
   return(list(ROCs, AUCs, meanROCs, genesFDR))
 }
@@ -382,34 +387,27 @@ individual_ROC_plot <- function(ROCData){
 #           variableSave = "AUCtot", "TPR1" etc
 # Outputs:  a plotted heatmap which is saved if savePlot==T
 plot_heatmaps<-function(variable,variableName, fillName, variableSave){
-  
-  # Kladd, ska bort
-  #variableName="True FDR values at estimated FDR 0.05"
-  #fillName="true FDR values"
-  #variableSave="FDR"
-  
-  # IF Vanligt test
-  TEST1=variable 
-  TEST2=scale_fill_viridis_c(begin = 0, end = 1, alpha = 0.5) 
 
-  
-  # IF FDR 
-  #cut <- cut(variable, 
-         #breaks=c(0, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1.0),
-         #labels=as.character(c(0, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)),
-         #include.lowest=TRUE)
-  #TEST1 <- cut
-  #perf_cols <- c(brewer.pal(11, "Spectral")[9:11]) #colorRampPalette(c("blue", "red"))( 9 ))
-  #colorRampPalette(brewer.pal(9, "YlGnBu"))(150)
-  #TEST2 <- scale_fill_manual(values=perf_cols)
-  
-  heatmap <- ggplot(HeatmapData, aes(x=m, y=d, fill=TEST1)) +
-    geom_tile(aes(fill = TEST1)) + geom_text(aes(label = round2(variable, 2), fontface=md)) +
-    TEST2 +  
-    scale_y_discrete(limits = rev(levels(as.factor(HeatmapData$d)))) +
+  if (variableSave!="FDR"){
+    fillCondition=variable 
+    fillScale=scale_fill_viridis_c(begin = 0, end = 1, alpha = 0.5) 
+    
+  } else if (variableSave=="FDR"){
+    fillCondition <- cut(variable, 
+               breaks=c(0, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9,1),
+               #labels=as.character(c(0, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)),
+               labels=c("< 0.05","0.05 - 0.1", "0.1 - 0.2","0.2 - 0.3", "0.3 - 0.4", "0.4 - 0.5", "0.5 - 0.6", "0.6 - 0.7", "0.7 - 0.8", "0.8 - 0.9", "0.9 - 1"),
+               include.lowest=T)
+    perf_cols <- c("66c2A5", c(colorRampPalette(brewer.pal(11, "Spectral")[c(10:11,1)])(10)))
+    fillScale <- scale_fill_manual(values=perf_cols, na.value="grey50")
+  }
+
+  heatmap <- ggplot(HeatmapData, aes(x=m, y=d, fill=fillCondition)) +
+    geom_tile(aes(fill = fillCondition)) + geom_text(aes(label = round2(variable, 2), fontface=md)) +
+    fillScale + scale_y_discrete(limits = rev(levels(as.factor(HeatmapData$d)))) +
     theme(panel.border = element_blank(), panel.grid.major = element_blank(),
           panel.grid.minor = element_blank(), axis.line = element_blank(), panel.background=element_rect(fill = "white") ) +
-    labs(title=sprintf("Mean %s for %s with effect %g", variableName, plotName,q), 
+    labs(title=sprintf("%s for %s with effect %g", variableName, plotName,q), 
          x = "Group size", y = "Sequencing depth",  color = "sequencing depth", fill = fillName) 
   print(heatmap)
   if(savePlot == TRUE){

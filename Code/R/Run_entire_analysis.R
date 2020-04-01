@@ -10,9 +10,9 @@
 #===================================================================================================================================
 ## Selecting parameters and data:
 onTerra = F                                                 # use T if running analysis on Terra (large scale settings applied)
-saveName = "Gut2"  # "Gut2", "Marine" or "Resistance      # this will in turn load the correct data
+saveName = "Resistance"  # "Gut2", "Marine" or "Resistance      # this will in turn load the correct data
 f = 0.10                                                    # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
-runStrata = T
+runStrata = F
 extraDesigns = F                                              # use T if the analysis of DAGs should be performed with DESeq2. Use F to choose OGLM instead
 analysis = "DESeq"   # "DESeq", "OGLM", or "t-test"
 limitNA = 2                                                   # the lowest amount of observaitons needed to produce a results other than NA
@@ -447,11 +447,11 @@ for (effect in 1:length(effectsizes)) {           # looping over q
   write.csv(medianGenesFDR, file=sprintf("../../Result/%s/GenesFDR_10q%d.csv", saveName,10*q))
   
   ### Plotting heatmaps for AUC- and TPR-values
-  plot_heatmaps(HeatmapData$AUC1, "AUC values at FPR 0.01", "AUC values", "AUC1")
-  plot_heatmaps(HeatmapData$AUC5, "AUC values at FPR 0.05", "AUC values", "AUC5")
-  plot_heatmaps(HeatmapData$AUCtot, "total AUC values", "AUC values", "AUCtot")
-  plot_heatmaps(HeatmapData$TPR1, "TPR values at FPR 0.01", "TPR values", "TPR1")
-  plot_heatmaps(HeatmapData$TPR5, "TPR values at FPR 0.05", "TPR values", "TPR5")
+  plot_heatmaps(HeatmapData$AUC1, "Mean AUC values at FPR 0.01", "AUC values", "AUC1")
+  plot_heatmaps(HeatmapData$AUC5, "Mean AUC values at FPR 0.05", "AUC values", "AUC5")
+  plot_heatmaps(HeatmapData$AUCtot, "Mean total AUC values", "AUC values", "AUCtot")
+  plot_heatmaps(HeatmapData$TPR1, "Mean TPR values at FPR 0.01", "TPR values", "TPR1")
+  plot_heatmaps(HeatmapData$TPR5, "Mean TPR values at FPR 0.05", "TPR values", "TPR5")
   plot_heatmaps(HeatmapData$Median.true.FDR, "True FDR values at estimated FDR 0.05", "true FDR values", "FDR")
   
   ### Plot mean RoC-curves for all experimental designs
