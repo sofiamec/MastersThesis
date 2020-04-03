@@ -14,7 +14,7 @@ saveName = "Marine"  # "Gut2", "Marine" or "Resistance      # this will in turn 
 f = 0.10                                                    # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
 runStrata = T
 extraDesigns = T                                              # use T if the analysis of DAGs should be performed with DESeq2. Use F to choose OGLM instead
-analysis = "t-test"   # "DESeq", "OGLM", or "t-test"
+analysis = "DESeq"   # "DESeq", "OGLM", or "t-test"
 limitNA = 2                                                   # the lowest amount of observaitons needed to produce a results other than NA
 
 # Test-settings (CHANGE HERE!)
@@ -66,7 +66,7 @@ source("Functions_and_libraries.R")
 # SET-UP SECTION
 #===================================================================================================================================
 
-suppressWarnings(source("Setup_designs.R"))
+suppressWarnings(source("Setup_designs_hardfiltering.R"))
 
 #===================================================================================================================================
 # ANALYSIS SECTION
