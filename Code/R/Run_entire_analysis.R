@@ -1,7 +1,7 @@
 
 # Script for running all scripts, performing the entire analysis of datasets with different designs
 
-## Nu kallar denna på analysis_of_DAGs_strata och REsample_data_strata!
+## Nu kallar denna p? analysis_of_DAGs_strata och REsample_data_strata!
 
 ####################################################################################################################################
 #===================================================================================================================================
@@ -10,20 +10,20 @@
 #===================================================================================================================================
 ## Selecting parameters and data:
 onTerra = F                                                 # use T if running analysis on Terra (large scale settings applied)
-saveName = "Resistance"  # "Gut2", "Marine" or "Resistance      # this will in turn load the correct data
+saveName = "Gut2"  # "Gut2", "Marine" or "Resistance      # this will in turn load the correct data
 f = 0.10                                                    # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
-runStrata = F
-extraDesigns = F                                              # use T if the analysis of DAGs should be performed with DESeq2. Use F to choose OGLM instead
+runStrata = T
+extraDesigns = T                                              # use T if the analysis of DAGs should be performed with DESeq2. Use F to choose OGLM instead
 analysis = "DESeq"   # "DESeq", "OGLM", or "t-test"
-limitNA = 2                                                   # the lowest amount of observaitons needed to produce a results other than NA
+limitNA = 0                                                   # the lowest amount of observaitons needed to produce a results other than NA
 
 # Test-settings (CHANGE HERE!)
 if (onTerra==F){
-  repeats = 4                                               # sets the number of runs for each case (experimental design and q)
+  repeats = 2                                               # sets the number of runs for each case (experimental design and q)
   savePlot = F                                              # use T when plots should be saved (for many repeats)
   loadData = F                                              # use T if it is a rerun of existing results
   effectsizes=c(1.5)#,3)                                             # q = Fold-change for downsampling
-  groupSize<-c(3,10)#,30,50)                                            # m = Number of samples in each group (total nr samples = 2*m)
+  groupSize<-c(5,10)#,30,50)                                            # m = Number of samples in each group (total nr samples = 2*m)
   sequencingDepth<-c(100000, 5000000)#,10000,1000000,5000000,10000000)      # d = Desired sequencing depth per sample
   sequencingDepthName<-c("100k", "500k")# "10K","500k","1M", "5M", "10M")         # dD = Displayed names for sequencing depths
 }
@@ -78,7 +78,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
   q=effectsizes[effect]
   
   # Creating empty final results-matrices
-  meanAUCfinal = data.frame()
+  medianAUCfinal = data.frame()
   meanROCfinal = data.frame() 
   medianGenesFDR = data.frame()
   if (runStrata==T){
@@ -159,7 +159,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
       colnames(meanROC2)[3]<-"meanTPR"
       
       # Save results for this experimental design
-      meanAUCfinal<-rbind(meanAUCfinal,data.frame(t(colMeans(AUC)[1:5]),t(colSums(!is.na(AUC[1:5]))),d,m,m*d,sprintf("m=%d d=%s",m,dD)))
+      medianAUCfinal<-rbind(medianAUCfinal,data.frame(t(colMedians(as.matrix(AUC)[,1:5],na.rm = T)),t(colSums(!is.na(AUC[1:5]))),d,m,m*d,sprintf("m=%d d=%s",m,dD)))
       meanROCfinal<-rbind(meanROCfinal,data.frame(meanROC2,d,m,m*d,sprintf("m=%d d=%s",m,dD)))
       medianGenesFDR<-rbind(medianGenesFDR,data.frame(t(colMedians(as.matrix(genesFDR),na.rm = T)), t(colSums(!is.na(genesFDR))),sprintf("m=%d d=%s",m,dD)))
       
@@ -313,7 +313,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
     colnames(meanROC2)[3]<-"meanTPR"
     
     # Save results for this experimental design
-    meanAUCfinal<-rbind(meanAUCfinal,data.frame(t(colMeans(AUC)[1:5]), t(colSums(!is.na(AUC[1:5]))), d,m,m*d,sprintf("m=%d d=%s",m,dD)))
+    medianAUCfinal<-rbind(medianAUCfinal,data.frame(t(colMedians(as.matrix(AUC)[,1:5],na.rm = T)), t(colSums(!is.na(AUC[1:5]))), d,m,m*d,sprintf("m=%d d=%s",m,dD)))
     meanROCfinal<-rbind(meanROCfinal,data.frame(meanROC2,d,m,m*d,sprintf("m=%d d=%s",m,dD)))
     medianGenesFDR<-rbind(medianGenesFDR,data.frame(t(colMedians(as.matrix(genesFDR),na.rm = T)), t(colSums(!is.na(genesFDR))), sprintf("m=%d d=%s",m,dD)))
     
@@ -360,7 +360,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
   #===================================================================================================================================
   ### Summarising results:
   
-  colnames(meanAUCfinal)<-c("AUC1", "AUC5", "AUCtot", "TPR1", "TPR5", "AUC1 Non-NA", "AUC5 Non-NA", "AUCtot Non-NA", "TPR1 Non-NA", "TPR5 Non-NA", "d", "m" ,"md","plotMD")
+  colnames(medianAUCfinal)<-c("AUC1", "AUC5", "AUCtot", "TPR1", "TPR5", "AUC1 Non-NA", "AUC5 Non-NA", "AUCtot Non-NA", "TPR1 Non-NA", "TPR5 Non-NA", "d", "m" ,"md","plotMD")
   colnames(meanROCfinal)<-c("FPR", "N", "meanTPR", "min", "max", "d", "m" ,"md","plotMD")
   colnames(medianGenesFDR)<-c("Median TP count",  "Median FP count",  "Median true FDR", "TP Non-NA", "FP Non-NA", "FDR Non-NA","plotMD")
   
@@ -370,21 +370,21 @@ for (effect in 1:length(effectsizes)) {           # looping over q
   medianGenesFDR[(medianGenesFDR[,4]<=limitNA|is.na(medianGenesFDR[,4])),1]<-NA
   medianGenesFDR<-medianGenesFDR[,-c(4,5,6)]
   
-  meanAUCfinal[(meanAUCfinal[,6]<=limitNA|is.na(meanAUCfinal[,6])),1]<-NA 
-  meanAUCfinal[(meanAUCfinal[,7]<=limitNA|is.na(meanAUCfinal[,7])),2]<-NA 
-  meanAUCfinal[(meanAUCfinal[,8]<=limitNA|is.na(meanAUCfinal[,8])),3]<-NA 
-  meanAUCfinal[(meanAUCfinal[,9]<=limitNA|is.na(meanAUCfinal[,9])),4]<-NA 
-  meanAUCfinal[(meanAUCfinal[,10]<=limitNA|is.na(meanAUCfinal[,10])),5]<-NA 
-  meanAUCfinal<-meanAUCfinal[,-c(6:10)]
+  medianAUCfinal[(medianAUCfinal[,6]<=limitNA|is.na(medianAUCfinal[,6])),1]<-NA 
+  medianAUCfinal[(medianAUCfinal[,7]<=limitNA|is.na(medianAUCfinal[,7])),2]<-NA 
+  medianAUCfinal[(medianAUCfinal[,8]<=limitNA|is.na(medianAUCfinal[,8])),3]<-NA 
+  medianAUCfinal[(medianAUCfinal[,9]<=limitNA|is.na(medianAUCfinal[,9])),4]<-NA 
+  medianAUCfinal[(medianAUCfinal[,10]<=limitNA|is.na(medianAUCfinal[,10])),5]<-NA 
+  medianAUCfinal<-medianAUCfinal[,-c(6:10)]
   
-  meanAUCfinal$md[meanAUCfinal$md=="5e+06"]<-"bold"
-  meanAUCfinal$md[meanAUCfinal$md==boldvalue2]<-"bold"
-  meanAUCfinal$md[meanAUCfinal$md!="bold"]<-"plain"
+  medianAUCfinal$md[medianAUCfinal$md=="5e+06"]<-"bold"
+  medianAUCfinal$md[medianAUCfinal$md==boldvalue2]<-"bold"
+  medianAUCfinal$md[medianAUCfinal$md!="bold"]<-"plain"
   
   if (extraDesigns==T){
-    HeatmapData<-data.frame(head(meanAUCfinal,-extraL), head(medianGenesFDR[1:3],-extraL)) 
+    HeatmapData<-data.frame(head(medianAUCfinal,-extraL), head(medianGenesFDR[1:3],-extraL)) 
   } else if (extraDesigns==F){
-    HeatmapData<-data.frame(meanAUCfinal, medianGenesFDR[1:3]) 
+    HeatmapData<-data.frame(medianAUCfinal, medianGenesFDR[1:3]) 
   }
   HeatmapData$d<-as.factor(HeatmapData$d)
   HeatmapData$m<-as.factor(HeatmapData$m)
@@ -443,16 +443,16 @@ for (effect in 1:length(effectsizes)) {           # looping over q
     }
 
   # Save tables:
-  write.csv(meanAUCfinal, file=sprintf("../../Result/%s/AUC_10q%d.csv", saveName,10*q))
+  write.csv(medianAUCfinal, file=sprintf("../../Result/%s/AUC_10q%d.csv", saveName,10*q))
   write.csv(medianGenesFDR, file=sprintf("../../Result/%s/GenesFDR_10q%d.csv", saveName,10*q))
   
   ### Plotting heatmaps for AUC- and TPR-values
-  plot_heatmaps(HeatmapData$AUC1, "Mean AUC values at FPR 0.01", "AUC values", "AUC1")
-  plot_heatmaps(HeatmapData$AUC5, "Mean AUC values at FPR 0.05", "AUC values", "AUC5")
-  plot_heatmaps(HeatmapData$AUCtot, "Mean total AUC values", "AUC values", "AUCtot")
-  plot_heatmaps(HeatmapData$TPR1, "Mean TPR values at FPR 0.01", "TPR values", "TPR1")
-  plot_heatmaps(HeatmapData$TPR5, "Mean TPR values at FPR 0.05", "TPR values", "TPR5")
-  plot_heatmaps(HeatmapData$Median.true.FDR, "True FDR values at estimated FDR 0.05", "true FDR values", "FDR")
+  plot_heatmaps(HeatmapData$AUC1, "Median AUC values at FPR 0.01", "AUC values", "AUC1")
+  plot_heatmaps(HeatmapData$AUC5, "Median AUC values at FPR 0.05", "AUC values", "AUC5")
+  plot_heatmaps(HeatmapData$AUCtot, "Median total AUC values", "AUC values", "AUCtot")
+  plot_heatmaps(HeatmapData$TPR1, "Median TPR values at FPR 0.01", "TPR values", "TPR1")
+  plot_heatmaps(HeatmapData$TPR5, "Median TPR values at FPR 0.05", "TPR values", "TPR5")
+  plot_heatmaps(HeatmapData$Median.true.FDR, "Median True FDR values at estimated FDR 0.05", "true FDR values", "FDR")
   
   ### Plot mean RoC-curves for all experimental designs
   # mean plots with set groupsize
