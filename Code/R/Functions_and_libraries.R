@@ -44,7 +44,7 @@ remove_low_counts=function(Data){
     FilteredData=Data[r==0,]
     
   } else if (saveName=="Resistance") {
-    # Ändra eventuellt senare!
+    # ?ndra eventuellt senare!
     a=rowMeans(Data)<20
     FilteredData=Data[a==F,]
   }
@@ -395,10 +395,13 @@ plot_heatmaps<-function(variable,variableName, fillName, variableSave){
   } else if (variableSave=="FDR"){
     fillCondition <- cut(variable, 
                breaks=c(0, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9,1),
-               #labels=as.character(c(0, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9)),
                labels=c("< 0.05","0.05 - 0.1", "0.1 - 0.2","0.2 - 0.3", "0.3 - 0.4", "0.4 - 0.5", "0.5 - 0.6", "0.6 - 0.7", "0.7 - 0.8", "0.8 - 0.9", "0.9 - 1"),
                include.lowest=T)
-    perf_cols <- c("66c2A5", c(colorRampPalette(brewer.pal(11, "Spectral")[c(10:11,1)])(10)))
+    if (min(variable, na.rm = T)<=0.05){
+    perf_cols <- c("#66c2A5", c(colorRampPalette(brewer.pal(11, "Spectral")[c(10:11,1)])(10)))
+    } else {
+      perf_cols <- c(c(colorRampPalette(brewer.pal(11, "Spectral")[c(10:11,1)])(10)))
+    }
     fillScale <- scale_fill_manual(values=perf_cols, na.value="grey50")
   }
 
