@@ -26,3 +26,6 @@ install.packages("pracma")
 
 # for loading excel-files
 install.packages("readxl")
+
+# Chack! Cannot remember
+install.packages("plyr")
