@@ -34,7 +34,7 @@ if (onTerra==T){
   savePlot = T                                              # use T when plots should be saved (for many repeats)
   loadData = F                                              # use T if it is a rerun of existing results
   effectsizes=c(5,10)                                      # q = Fold-change for downsampling
-  groupSize<-c(3,5,10,30,50)                                # m = Number of samples in each group (total nr samples = 2*m)
+  groupSize<-c(5,10,30,50)                                # m = Number of samples in each group (total nr samples = 2*m)
   # sequencing depths are set later depending on dataset    # d and dD = Desired sequencing depths and how it should be displayed
 }
 
