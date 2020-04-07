@@ -208,7 +208,11 @@ DESeq2_analysis=function(Data){
   DesignMatrix <- data.frame(group=factor(c(rep(1,m),rep(0,m))))          # define the different groups 
   CountsDataset<-DESeqDataSetFromMatrix(countData=Data, 
                                         DesignMatrix, design=~group)      # combine design matrix and data into a dataset
-  ResultDESeq<-suppressMessages(DESeq(CountsDataset))                     # Perform analysis (suppress messages from it) 
+  if (saveName == "Resistance"){
+    ResultDESeq<-suppressMessages(DESeq(CountsDataset, fitType = "mean"))   # Perform analysis with non-default fit-Type (suppress messages from it) 
+  } else {
+    ResultDESeq<-suppressMessages(DESeq(CountsDataset))                     # Perform analysis (suppress messages from it)  
+  }
   Res=results(ResultDESeq, independentFiltering=FALSE, cooksCutoff=FALSE) # extract results
   
   Result=data.frame(rownames(Data), Res$pvalue, Res$padj)                   # dataframe with genes, their p-values and adjusted p-values
@@ -329,7 +333,7 @@ Compute_ROC_AUC = function(ResultsData, trueTP, run, computeStrata){
   if (cutoffID==0){
     genesFDR<-data.frame(0,0,NA)
   } else {
-    genesFDR<-data.frame(nT[cutoffID], nF[cutoffID],(nF[cutoffID]/(nF[cutoffID]+nT[cutoffID]))) 
+    genesFDR<-data.frame(nT[cutoffID+1], nF[cutoffID+1],(nF[cutoffID+1]/(nF[cutoffID+1]+nT[cutoffID+1]))) 
   }
   colnames(genesFDR)<-c("NumberOfTP","NumberOfFP","TrueFDR")
   
