@@ -61,7 +61,7 @@ if(saveName == "Gut2"){
   if (onTerra==T){
     sequencingDepth<-c(500000,1000000,5000000,10000000) #c(10000,100000,500000,1000000,5000000,10000000)
     sequencingDepthName<-c("500k","1M", "5M", "10M") #c("10k","100k","500k","1M", "5M", "10M")
-#    groupSize<-c(5,10,30,50)                                # m = Number of samples in each group (total nr samples = 2*m)
+    groupSize<-c(5,10,30,50)                                # m = Number of samples in each group (total nr samples = 2*m)
   }
   
   rm(Resistance, ResistanceOriginal, ResistanceIntermediate)  # remove original and intermediate datasets

@@ -194,6 +194,7 @@ introducing_DAGs = function(Data, q, f){
   
   DAGs<-DAGs[rowSums(DAGs, na.rm=T)!=0,]
   return(list(downSampledData,DAGs))
+
 }
 
 #===========================================================================================================================================
@@ -234,7 +235,7 @@ OGLM_analysis<-function(Data){
   colnames(ModData)[1]<-"SampleGroup"
   
   logTotSeq<-log(colSums(Data))
-  GeneNames<-colnames(ModData)
+  GeneNames<-c("Sample group",rownames(Data))
   Results <- data.frame(Gene=numeric(0), pValue=numeric(0))
   
   # Loopin over all genes and comparing models with and without group-covariate
