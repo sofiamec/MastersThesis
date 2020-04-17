@@ -45,7 +45,7 @@ remove_low_counts=function(Data){
     
   } else if (saveName=="Resistance") {
     # ?ndra eventuellt senare!
-    a=rowMeans(Data)<20
+    a=rowMeans(Data)<6
     FilteredData=Data[a==F,]
   }
   return(FilteredData)
