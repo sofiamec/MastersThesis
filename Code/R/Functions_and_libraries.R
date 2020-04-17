@@ -209,8 +209,17 @@ DESeq2_analysis=function(Data){
   DesignMatrix <- data.frame(group=factor(c(rep(1,m),rep(0,m))))          # define the different groups 
   CountsDataset<-DESeqDataSetFromMatrix(countData=Data, 
                                         DesignMatrix, design=~group)      # combine design matrix and data into a dataset
-  if (saveName == "Resistance"){
-    ResultDESeq<-suppressMessages(DESeq(CountsDataset, fitType = "mean"))   # Perform analysis with non-default fit-Type (suppress messages from it) 
+  
+  if (saveName == "Resistance"){                                          # create special case for Resisance since it contains few genes 
+    if(m==3 | m==5){                                                      # all gene-wise dispersion estimates are within 2 orders of magnitude from the minimum value, and so the standard curve fitting techniques will not work.
+                                                                          # Perform DESeqs steps separatley:
+      CountsDataset <- estimateSizeFactors(CountsDataset) 
+      CountsDataset <- estimateDispersionsGeneEst(CountsDataset)
+      dispersions(CountsDataset) <- mcols(CountsDataset)$dispGeneEst      # Use the gene-wise estimates as final estimates
+      ResultDESeq <- nbinomWaldTest(CountsDataset)
+    } else {
+      ResultDESeq<-suppressMessages(DESeq(CountsDataset, fitType = "mean")) # Perform analysis with non-default fit-Type (suppress messages from it)  
+    }
   } else {
     ResultDESeq<-suppressMessages(DESeq(CountsDataset))                     # Perform analysis (suppress messages from it)  
   }
