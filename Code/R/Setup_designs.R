@@ -59,8 +59,8 @@ if(saveName == "Gut2"){
   boldvalue2="5e+07"                                              
   relations<-c(3000000,5000000)
   if (onTerra==T){
-    sequencingDepth<-c(500000,1000000,5000000,10000000) #c(10000,100000,500000,1000000,5000000,10000000)
-    sequencingDepthName<-c("500k","1M", "5M", "10M") #c("10k","100k","500k","1M", "5M", "10M")
+    sequencingDepth<-c(10000,100000,500000,1000000,5000000,10000000) #c(10000,100000,500000,1000000,5000000,10000000)
+    sequencingDepthName<-c("10k","100k","500k","1M", "5M", "10M") #c("10k","100k","500k","1M", "5M", "10M")
   }
   
   rm(Resistance, ResistanceOriginal, ResistanceIntermediate)  # remove original and intermediate datasets
