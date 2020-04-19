@@ -20,7 +20,7 @@ if(saveName == "Gut2"){
   relations<-c(3000000)
   if (onTerra==T){
     sequencingDepth<-c(10000,100000,500000,1000000,5000000)
-    sequencingDepthName<-c("10k","100k","500k","1M", "5M")
+    sequencingDepthName<-c("10 k","100 k","500 k","1 M", "5 M")
   }
   
   rm(Gut2, Gut2Original, Gut2Intermediate)        # remove original and intermediate datasets
@@ -36,13 +36,13 @@ if(saveName == "Gut2"){
   relations<-c(3000000,5000000)
   if (onTerra==T){
     sequencingDepth<-c(10000,100000,500000,1000000,5000000,10000000)
-    sequencingDepthName<-c("10k","100k","500k","1M", "5M", "10M")
+    sequencingDepthName<-c("10 k","100 k","500 k","1 M", "5 M", "10 M")
   }
   
   rm(Marine, MarineOriginal, MarineIntermediate)  # remove original and intermediate datasets
   
 } else if(saveName == "Resistance"){
-  plotName = "Antibiotic Resistance Genes"
+  plotName = "Resistance"
   
   ResistanceOriginal=t(read_excel("../../Data/Raw_data/GENE_QUANTIFICATIONS.raw.xlsx")[,-c(2,4)])
   colnames(ResistanceOriginal) <- ResistanceOriginal[1,]
@@ -60,7 +60,7 @@ if(saveName == "Gut2"){
   relations<-c(3000000,5000000)
   if (onTerra==T){
     sequencingDepth<-c(10000,100000,500000,1000000,5000000,10000000) #c(10000,100000,500000,1000000,5000000,10000000)
-    sequencingDepthName<-c("10k","100k","500k","1M", "5M", "10M") #c("10k","100k","500k","1M", "5M", "10M")
+    sequencingDepthName<-c("10 k","100 k","500 k","1 M", "5 M", "10 M") #c("10k","100k","500k","1M", "5M", "10M")
   }
   
   rm(Resistance, ResistanceOriginal, ResistanceIntermediate)  # remove original and intermediate datasets
@@ -86,7 +86,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
       dD=sequencingDepthName[seq]
       
       AllSaveDesigns[effect,group,seq] <- sprintf("m%d_d%s_10q%d_f%d", m, dD, q*10, f*100)
-      AllPlotDesigns[effect,group,seq] <- sprintf("m=%d, d=%s, q=%g, f=%d%%",m,dD,q,f*100)
+      AllPlotDesigns[effect,group,seq] <- sprintf("m = %d, d = %s, q = %g, f = %d%%",m,dD,q,f*100)
       
       # Create folder for certain case if it doesn't exist
       if (!dir.exists(sprintf("../../Intermediate/%s/%s", saveName, AllSaveDesigns[effect,group,seq]))){
@@ -107,7 +107,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
       dD=extraSeqDepthName[i]
       
       AllSaveDesigns[effect,group+i,seq+i] <- sprintf("m%d_d%s_10q%d_f%d", m, dD, q*10, f*100)
-      AllPlotDesigns[effect,group+i,seq+i] <- sprintf("m=%d, d=%s, q=%g, f=%d%%",m,dD,q,f*100)
+      AllPlotDesigns[effect,group+i,seq+i] <- sprintf("m = %d, d = %s, q = %g, f = %d%%",m,dD,q,f*100)
       
       # Create folder for certain case if it doesn't exist
       if (!dir.exists(sprintf("../../Intermediate/%s/%s", saveName, AllSaveDesigns[effect,group+i,seq+i]))){

@@ -377,7 +377,6 @@ Compute_ROC_AUC = function(ResultsData, trueTP, run, computeStrata){
 # Plot individual ROC-plots
 individual_ROC_plot <- function(ROCData){
   ROCplot <- ggplot(data=ROCData, aes(x=FPR, y=TPR, group=run)) +  geom_line(aes(color=run)) + 
-    theme(plot.title = element_text(hjust = 0.5)) +  theme_minimal() + 
     scale_color_viridis(begin = 0, end = 0.85, discrete=TRUE) +
     labs(title=sprintf("ROC curves for %s with effect %g", plotName, q), 
          subtitle = sprintf("Experimental design: %s", plotExpDesign),
@@ -407,29 +406,26 @@ plot_heatmaps<-function(variable,variableName, fillName, variableSave){
     fillScale=scale_fill_viridis_c(begin = 0, end = 1, alpha = 0.5) 
     
   } else if (variableSave=="FDR"){
-    fillCondition <- cut(variable, 
-               breaks=c(0, 0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9,1),
-               labels=c("< 0.05","0.05 - 0.1", "0.1 - 0.2","0.2 - 0.3", "0.3 - 0.4", "0.4 - 0.5", "0.5 - 0.6", "0.6 - 0.7", "0.7 - 0.8", "0.8 - 0.9", "0.9 - 1"),
-               include.lowest=T)
-    if (min(variable, na.rm = T)<=0.05){
-    perf_cols <- c("#66c2A5", c(colorRampPalette(brewer.pal(11, "Spectral")[c(10:11,1)])(10)))
-    } else {
-      perf_cols <- c(c(colorRampPalette(brewer.pal(11, "Spectral")[c(10:11,1)])(10)))
+    variableText = round2(variable, 2)
+    cutOffs <-rev(c(0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1))
+    for (i in 1:length(cutOffs)){
+      variableText[variable <= cutOffs[i]] = sprintf("\u2264 %g", cutOffs[i])
     }
-    fillScale <- scale_fill_manual(values=perf_cols, na.value="grey50")
+    fillCondition = variableText
+    fillScale = scale_fill_manual(values = alpha(c("\u2264 1" = "#9E0142", "\u2264 0.9" = "#8F1257", "\u2264 0.8" = "#81236C", "\u2264 0.7" = "#733582", "\u2264 0.6" = "#654697", "\u2264 0.5" = "#5955A4", "\u2264 0.4" = "#4F62AB", "\u2264 0.3" = "#456EB1", "\u2264 0.2" = "#3B7BB7", "\u2264 0.1" = "#3288BD", "\u2264 0.05" = "#00BC77"), .6), na.value="grey50")
   }
 
-  heatmap <- ggplot(HeatmapData, aes(x=m, y=d, fill=fillCondition)) +
+  heatmap <-ggplot(HeatmapData, aes(x=m, y=d, fill=fillCondition)) +
     geom_tile(aes(fill = fillCondition)) + geom_text(aes(label = round2(variable, 2), fontface=md)) +
-    fillScale + scale_y_discrete(limits = rev(levels(as.factor(HeatmapData$d)))) +
-    theme(panel.border = element_blank(), panel.grid.major = element_blank(),
+    fillScale + scale_y_discrete(labels = c("10000" = "10 k", "1e+05" = "100 k", "5e+05" = "500 k", "1e+06" = "1 M", "5e+06" = "5 M", "1e+07" = "10 M"), limits = rev(levels(as.factor(HeatmapData$d)))) +
+    theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
           panel.grid.minor = element_blank(), axis.line = element_blank(), panel.background=element_rect(fill = "white") ) +
-    labs(title=sprintf("%s for %s with effect %g", variableName, plotName,q), 
-         x = "Group size", y = "Sequencing depth",  color = "sequencing depth", fill = fillName) 
+    labs(title=sprintf("%s", variableName), subtitle = sprintf("%s with effect %g", plotName,q),
+         x = "Group size", y = "Sequencing depth",  fill = fillName) # color = "sequencing depth",
   print(heatmap)
   if(savePlot == TRUE){
     path_save <-  sprintf("../../Result/%s/heatmap_%s_10q%d.pdf", saveName,variableSave,q*10)
-    ggsave(filename = path_save, plot = heatmap, height = 5, width = 6)
+    ggsave(filename = path_save, plot = heatmap, height = 5, width = 6, device = cairo_pdf)
     dev.off()
     print(heatmap)}
   rm(heatmap)
@@ -451,24 +447,40 @@ plot_combined_meanROCs<-function(plotData, variable, parameterVector, parameterN
     path_save2 <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%d_zoom.pdf", saveName,10*q, parameterSave, X)
     steps= seq(0,1,0.2)
     
-    if (all(parameterVector==sequencingDepth)){
+    if (all(parameterVector==relations)){
+      if (X==3000000){
+        Xname = "3 M"
+      } else if (X==5000000){
+        Xname = "5 M"
+      }
+      if (strata != 0){
+        subtitle=sprintf("Experimental designs with %s %s for %s", Xname, parameterName, strataText)
+        path_save <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%d_%s_strata%d.pdf", saveName,10*q, parameterSave, X, strataName, strata)
+        path_save2 <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%d_%s_strata%d_zoom.pdf", saveName,10*q, parameterSave, X, strataName, strata)
+      } else {
+        subtitle=sprintf("Experimental designs with %s %s    (%d repeats each)", Xname, parameterName, repeats)
+      }
+    } else if (all(parameterVector==sequencingDepth)){
       dD=sequencingDepthName[i]
       subtitle=sprintf("Experimental designs with %s %s     (%d repeats each)", parameterName, dD, repeats)
       path_save <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%s.pdf", saveName,10*q, parameterSave, dD)
       path_save2 <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%s_zoom.pdf", saveName,10*q, parameterSave, dD)
-    } 
-    if (strata != 0){
-      subtitle=sprintf("Trade-off with fixed relation for %s, strata %d        (%d repeats each)",strataText, strata, repeats)
-      path_save <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%d_%s_strata%d.pdf", saveName,10*q, parameterSave, X, strataName, strata)
-      path_save2 <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%d_%s_strata%d_zoom.pdf", saveName,10*q, parameterSave, X, strataName, strata)
     }
+    
+    if (fillName=="Sequencing depth"){
+      labelNames = c("10000" = "10 k", "1e+05" = "100 k", "5e+05" = "500 k", "1e+06" = "1 M", "5e+06" = "5 M", "1e+07" = "10 M")
+    } else {
+      labelNames = waiver()#levels(fillVariable)
+    }
+      
+
     if (xLim!=1){
       path_save <- path_save2
       steps= seq(0,xLim,0.005)
     }
     
     combinedPlot<-ggplot(data=plotData[variable==X,], 
-                         aes(x=FPR, y=meanTPR, fill=fillVariable[variable==X])) +  theme_minimal() + 
+                         aes(x=FPR, y=meanTPR, fill=fillVariable[variable==X])) +  #theme_minimal() + 
       geom_ribbon(aes(ymin=(min), ymax=(max),fill = fillVariable[variable==X]), alpha=0.2) +
       geom_line(aes(color = fillVariable[variable==X])) +
       labs(title=sprintf("Mean ROC curves for %s  with effect %g", plotName, q), 
@@ -476,11 +488,11 @@ plot_combined_meanROCs<-function(plotData, variable, parameterVector, parameterN
            color = fillName, fill = fillName) +
       ylim(0, yLim) + 
       coord_cartesian(xlim=c(0,xLim)) + scale_x_continuous( breaks = steps)+
-      scale_fill_viridis_d(begin = 0, end = 0.85) + scale_colour_viridis_d(begin = 0, end = 0.85)
+      scale_fill_viridis_d(begin = 0, end = 0.85, labels = labelNames) + scale_colour_viridis_d(begin = 0, end = 0.85, labels = labelNames)
     print(combinedPlot)
     
     if(savePlot == TRUE){
-      ggsave(filename = path_save, plot = combinedPlot, height = 5, width = 6)
+      ggsave(filename = path_save, plot = combinedPlot, height = 5, width = 8)
       dev.off()
       print(combinedPlot)}
     rm(combinedPlot, X)

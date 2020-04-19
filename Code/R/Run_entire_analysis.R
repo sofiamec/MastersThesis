@@ -1,7 +1,6 @@
 
 # Script for running all scripts, performing the entire analysis of datasets with different designs
 
-## Nu kallar denna p? analysis_of_DAGs_strata och REsample_data_strata!
 
 ####################################################################################################################################
 #===================================================================================================================================
@@ -9,23 +8,23 @@
 #                            (the rest of the code should adjust)
 #===================================================================================================================================
 ## Selecting parameters and data:
-onTerra = T                                                 # use T if running analysis on Terra (large scale settings applied)
+onTerra = F                                                 # use T if running analysis on Terra (large scale settings applied)
 saveName = "Gut2"  # "Gut2", "Marine" or "Resistance      # this will in turn load the correct data
 f = 0.10                                                    # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
 runStrata = T
 extraDesigns = T                                              # use T if the analysis of DAGs should be performed with DESeq2. Use F to choose OGLM instead
-analysis = "OGLM"   # "DESeq", "OGLM", or "t-test"
-limitNA = 2                                                   # the lowest amount of observaitons needed to produce a results other than NA
+analysis = "DESeq"   # "DESeq", "OGLM", or "t-test"
+limitNA = 0                                                   # the lowest amount of observaitons needed to produce a results other than NA
 
 # Test-settings (CHANGE HERE!)
 if (onTerra==F){
   repeats = 2                                               # sets the number of runs for each case (experimental design and q)
-  savePlot = F                                              # use T when plots should be saved (for many repeats)
+  savePlot = T                                              # use T when plots should be saved (for many repeats)
   loadData = F                                              # use T if it is a rerun of existing results
   effectsizes=c(1.5)#,3)                                             # q = Fold-change for downsampling
-  groupSize<-c(5,10)#,30,50)                                            # m = Number of samples in each group (total nr samples = 2*m)
-  sequencingDepth<-c(100000, 5000000)#,10000,1000000,5000000,10000000)      # d = Desired sequencing depth per sample
-  sequencingDepthName<-c("100k", "500k")# "10K","500k","1M", "5M", "10M")         # dD = Displayed names for sequencing depths
+  groupSize<-c(3,5)#,10,30)#,30,50)                                            # m = Number of samples in each group (total nr samples = 2*m)
+  sequencingDepth<-c(10000,500000)#, 5000000)#,10000,1000000,5000000,10000000)      # d = Desired sequencing depth per sample
+  sequencingDepthName<-c("10 k", "500 k")#, "500 k")# "10 k","500 k","1 M", "5 M", "10 M")         # dD = Displayed names for sequencing depths
 }
 
 # Real settings
@@ -43,7 +42,7 @@ extraL=0                                                    # unless extraDesign
 if (extraDesigns==T){
   # The 3 following must have equal lengths!                # Combined they give more results for trade-off curves. Here with m*d = 3M, 3M and 5M respectively
   extraSeqDepth=c(200000,500000,250000)      
-  extraSeqDepthName=c("200k","500k","250k")
+  extraSeqDepthName=c("200 k","500 k","250 k")
   extraGroups=c(15,6,20)
   extraL<-length(extraGroups)
 }
@@ -82,8 +81,8 @@ for (effect in 1:length(effectsizes)) {           # looping over q
   meanROCfinal = data.frame() 
   medianGenesFDR = data.frame()
   if (runStrata==T){
-    meanAUCfinalAb = data.frame()
-    meanAUCfinalV = data.frame()
+    medianAUCfinalAb = data.frame()
+    medianAUCfinalV = data.frame()
     meanROCfinalAb = data.frame() 
     meanROCfinalV = data.frame() 
   }
@@ -159,9 +158,9 @@ for (effect in 1:length(effectsizes)) {           # looping over q
       colnames(meanROC2)[3]<-"meanTPR"
       
       # Save results for this experimental design
-      medianAUCfinal<-rbind(medianAUCfinal,data.frame(t(colMedians(as.matrix(AUC)[,1:5],na.rm = T)),t(colSums(!is.na(AUC[1:5]))),d,m,m*d,sprintf("m=%d d=%s",m,dD)))
-      meanROCfinal<-rbind(meanROCfinal,data.frame(meanROC2,d,m,m*d,sprintf("m=%d d=%s",m,dD)))
-      medianGenesFDR<-rbind(medianGenesFDR,data.frame(t(colMedians(as.matrix(genesFDR),na.rm = T)), t(colSums(!is.na(genesFDR))),sprintf("m=%d d=%s",m,dD)))
+      medianAUCfinal<-rbind(medianAUCfinal,data.frame(t(colMedians(as.matrix(AUC)[,1:5],na.rm = T)),t(colSums(!is.na(AUC[1:5]))),d,m,m*d,sprintf("m = %d d = %s",m,dD)))
+      meanROCfinal<-rbind(meanROCfinal,data.frame(meanROC2,d,m,m*d,sprintf("m = %d d = %s",m,dD)))
+      medianGenesFDR<-rbind(medianGenesFDR,data.frame(t(colMedians(as.matrix(genesFDR),na.rm = T)), t(colSums(!is.na(genesFDR))),sprintf("m = %d d = %s",m,dD)))
       
       if(runStrata==T){
         ROCAbundance$run<-as.factor(ROCAbundance$run)
@@ -190,7 +189,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
         # Plot mean RoC-curves for certain experimental design with Abundance-strata
         meanROCplotAb <- ggplot(data=meanROCAb2, aes(x=FPR, y=meanTPR, group=strata)) + 
           geom_ribbon(aes(ymin=(min), ymax=(max), fill=strataClass[strata]), alpha = 0.2) + 
-          geom_line(aes(color=strataClass[strata])) +   theme_minimal() + 
+          geom_line(aes(color=strataClass[strata])) + #theme_minimal() + 
           labs(title=sprintf("Mean ROC-curve for %s with effect %g", plotName,q), 
                subtitle = sprintf("Experimental design: %s     (%s repeats)", plotExpDesign, repeats),
                x = "False Positive Rate", y = "True Positive Rate", color="Abundance strata", fill="Abundance strata")+
@@ -210,7 +209,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
         # Plot mean RoC-curves for certain experimental design with Variability-strata
         meanROCplotV <- ggplot(data=meanROCV2, aes(x=FPR, y=meanTPR, group=strata)) + 
           geom_ribbon(aes(ymin=(min), ymax=(max), fill=strataClass[strata]), alpha = 0.2) + 
-          geom_line(aes(color=strataClass[strata])) + theme_minimal() + 
+          geom_line(aes(color=strataClass[strata])) + #theme_minimal() + 
           labs(title=sprintf("Mean ROC-curve for %s with effect %g", plotName,q), 
                subtitle = sprintf("Experimental design: %s     (%s repeats)", plotExpDesign, repeats),
                x = "False Positive Rate", y = "True Positive Rate", color="Variability strata", fill="Variability strata")+
@@ -229,11 +228,11 @@ for (effect in 1:length(effectsizes)) {           # looping over q
         
         # Save strata-results for this experimental design
         for (k in 1:numberOfStrata) {
-          meanAUCfinalAb <-rbind(meanAUCfinalAb,data.frame(t(colMeans(AUCAbundance[AUCAbundance$strata==k,])[-6]), t(colSums(!is.na(AUCAbundance[AUCAbundance$strata==k,1:5]))),d,m,m*d,sprintf("m=%d d=%s",m,dD)))
-          meanAUCfinalV <- rbind(meanAUCfinalV,data.frame(t(colMeans(AUCVariability[AUCVariability$strata==k,])[-6]), t(colSums(!is.na(AUCVariability[AUCVariability$strata==k,1:5]))), d,m,m*d,sprintf("m=%d d=%s",m,dD)))
+          medianAUCfinalAb <-rbind(medianAUCfinalAb,data.frame(t(colMedians(as.matrix(AUCAbundance[AUCAbundance$strata==k,])[,1:5],na.rm = T)), t(colSums(!is.na(AUCAbundance[AUCAbundance$strata==k,1:5]))), k, d,m,m*d,sprintf("m = %d d = %s",m,dD)))
+          medianAUCfinalV <- rbind(medianAUCfinalV,data.frame(t(colMedians(as.matrix(AUCVariability[AUCVariability$strata==k,])[,1:5],na.rm = T)), t(colSums(!is.na(AUCVariability[AUCVariability$strata==k,1:5]))),k, d,m,m*d,sprintf("m = %d d = %s",m,dD)))
         }
-        meanROCfinalAb<-rbind(meanROCfinalAb,data.frame(meanROCAb2,d,m,m*d,sprintf("m=%d d=%s",m,dD)))
-        meanROCfinalV<-rbind(meanROCfinalV,data.frame(meanROCV2,d,m,m*d,sprintf("m=%d d=%s",m,dD)))
+        meanROCfinalAb<-rbind(meanROCfinalAb,data.frame(meanROCAb2,d,m,m*d,sprintf("m = %d d = %s",m,dD)))
+        meanROCfinalV<-rbind(meanROCfinalV,data.frame(meanROCV2,d,m,m*d,sprintf("m = %d d = %s",m,dD)))
         rm(meanROCAbundance, meanROCVariability, meanROCAb2, meanROCV2)
       }
       
@@ -313,9 +312,9 @@ for (effect in 1:length(effectsizes)) {           # looping over q
     colnames(meanROC2)[3]<-"meanTPR"
     
     # Save results for this experimental design
-    medianAUCfinal<-rbind(medianAUCfinal,data.frame(t(colMedians(as.matrix(AUC)[,1:5],na.rm = T)), t(colSums(!is.na(AUC[1:5]))), d,m,m*d,sprintf("m=%d d=%s",m,dD)))
-    meanROCfinal<-rbind(meanROCfinal,data.frame(meanROC2,d,m,m*d,sprintf("m=%d d=%s",m,dD)))
-    medianGenesFDR<-rbind(medianGenesFDR,data.frame(t(colMedians(as.matrix(genesFDR),na.rm = T)), t(colSums(!is.na(genesFDR))), sprintf("m=%d d=%s",m,dD)))
+    medianAUCfinal<-rbind(medianAUCfinal,data.frame(t(colMedians(as.matrix(AUC)[,1:5],na.rm = T)), t(colSums(!is.na(AUC[1:5]))), d,m,m*d,sprintf("m = %d d = %s",m,dD)))
+    meanROCfinal<-rbind(meanROCfinal,data.frame(meanROC2,d,m,m*d,sprintf("m = %d d = %s",m,dD)))
+    medianGenesFDR<-rbind(medianGenesFDR,data.frame(t(colMedians(as.matrix(genesFDR),na.rm = T)), t(colSums(!is.na(genesFDR))), sprintf("m = %d d = %s",m,dD)))
     
     if (runStrata==T){
       ROCAbundance$run<-as.factor(ROCAbundance$run)
@@ -345,11 +344,11 @@ for (effect in 1:length(effectsizes)) {           # looping over q
       
       # Save strata-results for this experimental design
       for (k in 1:numberOfStrata) {
-        meanAUCfinalAb <-rbind(meanAUCfinalAb,data.frame(t(colMeans(AUCAbundance[AUCAbundance$strata==k,])[-6]), t(colSums(!is.na(AUCAbundance[AUCAbundance$strata==k,1:5]))),d,m,m*d,sprintf("m=%d d=%s",m,dD)))
-        meanAUCfinalV <- rbind(meanAUCfinalV,data.frame(t(colMeans(AUCVariability[AUCVariability$strata==k,])[-6]), t(colSums(!is.na(AUCVariability[AUCVariability$strata==k,1:5]))), d,m,m*d,sprintf("m=%d d=%s",m,dD)))
+        medianAUCfinalAb <-rbind(medianAUCfinalAb,data.frame(t(colMedians(as.matrix(AUCAbundance[AUCAbundance$strata==k,])[,1:5],na.rm = T)), t(colSums(!is.na(AUCAbundance[AUCAbundance$strata==k,1:5]))),k,d,m,m*d,sprintf("m = %d d = %s",m,dD)))
+        medianAUCfinalV <- rbind(medianAUCfinalV,data.frame(t(colMedians(as.matrix(AUCVariability[AUCVariability$strata==k,])[,1:5],na.rm = T)), t(colSums(!is.na(AUCVariability[AUCVariability$strata==k,1:5]))),k, d,m,m*d,sprintf("m = %d d = %s",m,dD)))
       }
-      meanROCfinalAb <- rbind(meanROCfinalAb,data.frame(meanROCAb2,d,m,m*d,sprintf("m=%d d=%s",m,dD)))
-      meanROCfinalV <- rbind(meanROCfinalV,data.frame(meanROCV2,d,m,m*d,sprintf("m=%d d=%s",m,dD)))
+      meanROCfinalAb <- rbind(meanROCfinalAb,data.frame(meanROCAb2,d,m,m*d,sprintf("m = %d d = %s",m,dD)))
+      meanROCfinalV <- rbind(meanROCfinalV,data.frame(meanROCV2,d,m,m*d,sprintf("m = %d d = %s",m,dD)))
       
       rm(ROCAbundance, ROCVariability, meanROCAbundance, meanROCVariability, meanROCAb2, meanROCV2, AUCAbundance,AUCVariability)
     }
@@ -381,6 +380,10 @@ for (effect in 1:length(effectsizes)) {           # looping over q
   medianAUCfinal$md[medianAUCfinal$md==boldvalue2]<-"bold"
   medianAUCfinal$md[medianAUCfinal$md!="bold"]<-"plain"
   
+  # Save tables:
+  write.csv(medianAUCfinal, file=sprintf("../../Result/%s/AUC_10q%d.csv", saveName,10*q))
+  write.csv(medianGenesFDR, file=sprintf("../../Result/%s/GenesFDR_10q%d.csv", saveName,10*q))
+  
   if (extraDesigns==T){
     HeatmapData<-data.frame(head(medianAUCfinal,-extraL), head(medianGenesFDR[1:3],-extraL)) 
   } else if (extraDesigns==F){
@@ -393,27 +396,26 @@ for (effect in 1:length(effectsizes)) {           # looping over q
   meanROCfinal$d<-as.factor(meanROCfinal$d)
   meanROCfinal$m<-as.factor(meanROCfinal$m)
   meanROCfinal$plotMD = factor(meanROCfinal$plotMD, levels=unique(meanROCfinal$plotMD[order(meanROCfinal$m,meanROCfinal$d)]), ordered=TRUE)
-  
+
   ## for strata
   if (runStrata==T){
+    medianAUCfinalAb[(medianAUCfinalAb[,6]<=limitNA|is.na(medianAUCfinalAb[,7])),1]<-NA 
+    medianAUCfinalAb[(medianAUCfinalAb[,7]<=limitNA|is.na(medianAUCfinalAb[,8])),2]<-NA 
+    medianAUCfinalAb[(medianAUCfinalAb[,8]<=limitNA|is.na(medianAUCfinalAb[,9])),3]<-NA 
+    medianAUCfinalAb[(medianAUCfinalAb[,9]<=limitNA|is.na(medianAUCfinalAb[,10])),4]<-NA
+    medianAUCfinalAb[(medianAUCfinalAb[,10]<=limitNA|is.na(medianAUCfinalAb[,11])),5]<-NA 
+    medianAUCfinalAb<-medianAUCfinalAb[,-c(6:10)]
     
-    meanAUCfinalAb[(meanAUCfinalAb[,7]<=limitNA|is.na(meanAUCfinalAb[,7])),1]<-NA 
-    meanAUCfinalAb[(meanAUCfinalAb[,8]<=limitNA|is.na(meanAUCfinalAb[,8])),2]<-NA 
-    meanAUCfinalAb[(meanAUCfinalAb[,9]<=limitNA|is.na(meanAUCfinalAb[,9])),3]<-NA 
-    meanAUCfinalAb[(meanAUCfinalAb[,10]<=limitNA|is.na(meanAUCfinalAb[,10])),4]<-NA
-    meanAUCfinalAb[(meanAUCfinalAb[,11]<=limitNA|is.na(meanAUCfinalAb[,11])),5]<-NA 
-    meanAUCfinalAb<-meanAUCfinalAb[,-c(7:11)]
+    medianAUCfinalV[(medianAUCfinalV[,6]<=limitNA|is.na(medianAUCfinalV[,7])),1]<-NA 
+    medianAUCfinalV[(medianAUCfinalV[,7]<=limitNA|is.na(medianAUCfinalV[,8])),2]<-NA 
+    medianAUCfinalV[(medianAUCfinalV[,8]<=limitNA|is.na(medianAUCfinalV[,9])),3]<-NA 
+    medianAUCfinalV[(medianAUCfinalV[,9]<=limitNA|is.na(medianAUCfinalV[,10])),4]<-NA 
+    medianAUCfinalV[(medianAUCfinalV[,10]<=limitNA|is.na(medianAUCfinalV[,10])),5]<-NA 
+    medianAUCfinalV<-medianAUCfinalV[,-c(6:10)]
     
-    meanAUCfinalV[(meanAUCfinalV[,7]<=limitNA|is.na(meanAUCfinalV[,7])),1]<-NA 
-    meanAUCfinalV[(meanAUCfinalV[,8]<=limitNA|is.na(meanAUCfinalV[,8])),2]<-NA 
-    meanAUCfinalV[(meanAUCfinalV[,9]<=limitNA|is.na(meanAUCfinalV[,9])),3]<-NA 
-    meanAUCfinalV[(meanAUCfinalV[,10]<=limitNA|is.na(meanAUCfinalV[,10])),4]<-NA 
-    meanAUCfinalV[(meanAUCfinalV[,11]<=limitNA|is.na(meanAUCfinalV[,10])),5]<-NA 
-    meanAUCfinalV<-meanAUCfinalV[,-c(7:11)]
-    
-    colnames(meanAUCfinalAb)<-c("AUC1", "AUC5", "AUCtot", "TPR1", "TPR5", "strata", "d", "m" ,"md","plotMD")
+    colnames(medianAUCfinalAb)<-c("AUC1", "AUC5", "AUCtot", "TPR1", "TPR5", "strata", "d", "m" ,"md","plotMD")
     colnames(meanROCfinalAb)<-c("FPR", "strata", "N", "meanTPR", "min", "max", "d", "m" ,"md","plotMD")
-    colnames(meanAUCfinalV)<-c("AUC1", "AUC5", "AUCtot", "TPR1", "TPR5", "strata", "d", "m" ,"md","plotMD")
+    colnames(medianAUCfinalV)<-c("AUC1", "AUC5", "AUCtot", "TPR1", "TPR5", "strata", "d", "m" ,"md","plotMD")
     colnames(meanROCfinalV)<-c("FPR", "strata", "N", "meanTPR", "min", "max", "d", "m" ,"md","plotMD")
     
     meanROCfinalAb$d<-as.factor(meanROCfinalAb$d)
@@ -425,34 +427,30 @@ for (effect in 1:length(effectsizes)) {           # looping over q
     meanROCfinalV$plotMD = factor(meanROCfinalV$plotMD, levels=unique(meanROCfinal$plotMD[order(meanROCfinal$m,meanROCfinal$d)]), ordered=TRUE)
   
     for (i in relations) {
-      meanAUCrelationAbundance<-meanAUCfinalV[meanAUCfinalV$md==i,]
-      meanAUCrelationAbundance<-meanAUCrelationAbundance[order(meanAUCrelationAbundance$plotMD, decreasing = TRUE),]
-      meanAUCrelationAbundance<-meanAUCrelationAbundance[order(meanAUCrelationAbundance$strata),]
-      meanAUCrelationAbundance<-meanAUCrelationAbundance[,-c(4,5,7,8,9)]
-      write.csv(meanAUCrelationAbundance, file=sprintf("../../Result/%s/AUC_Abundance_%d_10q%d.csv", saveName,i,10*q))
+      medianAUCrelationAbundance<-medianAUCfinalV[medianAUCfinalV$md==i,]
+      medianAUCrelationAbundance<-medianAUCrelationAbundance[order(medianAUCrelationAbundance$plotMD, decreasing = TRUE),]
+      medianAUCrelationAbundance<-medianAUCrelationAbundance[order(medianAUCrelationAbundance$strata),]
+      medianAUCrelationAbundance<-medianAUCrelationAbundance[,-c(4,5,7,8,9)]
+      write.csv(medianAUCrelationAbundance, file=sprintf("../../Result/%s/AUC_Abundance_%d_10q%d.csv", saveName,i,10*q))
       
-      meanAUCrelationVariability<-meanAUCfinalV[meanAUCfinalV$md==i,]
-      meanAUCrelationVariability<-meanAUCrelationVariability[order(meanAUCrelationVariability$plotMD, decreasing = TRUE),]
-      meanAUCrelationVariability<-meanAUCrelationVariability[order(meanAUCrelationVariability$strata),]
-      meanAUCrelationVariability<-meanAUCrelationVariability[,-c(4,5,7,8,9)]
-      write.csv(meanAUCrelationVariability, file=sprintf("../../Result/%s/AUC_Variability_%d_10q%d.csv", saveName,i,10*q))
+      medianAUCrelationVariability<-medianAUCfinalV[medianAUCfinalV$md==i,]
+      medianAUCrelationVariability<-medianAUCrelationVariability[order(medianAUCrelationVariability$plotMD, decreasing = TRUE),]
+      medianAUCrelationVariability<-medianAUCrelationVariability[order(medianAUCrelationVariability$strata),]
+      medianAUCrelationVariability<-medianAUCrelationVariability[,-c(4,5,7,8,9)]
+      write.csv(medianAUCrelationVariability, file=sprintf("../../Result/%s/AUC_Variability_%d_10q%d.csv", saveName,i,10*q))
     
-      rm(meanAUCrelationAbundance, meanAUCrelationVariability)
+      rm(medianAUCrelationAbundance, medianAUCrelationVariability)
     }
     
     }
-
-  # Save tables:
-  write.csv(medianAUCfinal, file=sprintf("../../Result/%s/AUC_10q%d.csv", saveName,10*q))
-  write.csv(medianGenesFDR, file=sprintf("../../Result/%s/GenesFDR_10q%d.csv", saveName,10*q))
   
   ### Plotting heatmaps for AUC- and TPR-values
-  plot_heatmaps(HeatmapData$AUC1, "Median AUC values at FPR 0.01", "AUC values", "AUC1")
-  plot_heatmaps(HeatmapData$AUC5, "Median AUC values at FPR 0.05", "AUC values", "AUC5")
-  plot_heatmaps(HeatmapData$AUCtot, "Median total AUC values", "AUC values", "AUCtot")
-  plot_heatmaps(HeatmapData$TPR1, "Median TPR values at FPR 0.01", "TPR values", "TPR1")
-  plot_heatmaps(HeatmapData$TPR5, "Median TPR values at FPR 0.05", "TPR values", "TPR5")
-  plot_heatmaps(HeatmapData$Median.true.FDR, "Median True FDR values at estimated FDR 0.05", "true FDR values", "FDR")
+  plot_heatmaps(HeatmapData$AUC1, "Median AUC values at FPR 0.01", expression(AUC[0.01]), "AUC1")
+  plot_heatmaps(HeatmapData$AUC5, "Median AUC values at FPR 0.05", expression(AUC[0.05]), "AUC5")
+  plot_heatmaps(HeatmapData$AUCtot, "Median total AUC values", expression(AUC[Tot]), "AUCtot")
+  plot_heatmaps(HeatmapData$TPR1, "Median TPR values at FPR 0.01", expression(TPR[0.01]), "TPR1")
+  plot_heatmaps(HeatmapData$TPR5, "Median TPR values at FPR 0.05", expression(TPR[0.05]), "TPR5")
+  suppressWarnings( plot_heatmaps(variable = HeatmapData$Median.true.FDR, variableName = "Median True FDR values at estimated FDR 0.05", fillName = expression(FDR[True]), variableSave = "FDR") )
   
   ### Plot mean RoC-curves for all experimental designs
   # mean plots with set groupsize
@@ -460,7 +458,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
   # mean plots with set sequencing depth
   suppressWarnings( plot_combined_meanROCs(meanROCfinal, meanROCfinal$d, sequencingDepth, "sequencing depth", "depth", meanROCfinal$m, "Group size", 1, 1, 0))
   # mean plots with set groupsize and depth relation (m*d)
-  suppressWarnings( plot_combined_meanROCs(meanROCfinal, meanROCfinal$md, relations, "relation/trade-off/m*d", "relation", meanROCfinal$plotMD, "Experimental design", 1, 1, 0))
+  suppressWarnings( plot_combined_meanROCs(meanROCfinal, meanROCfinal$md, relations, "total mapped reads", "relation", meanROCfinal$plotMD, "Experimental design", 1, 1, 0))
   
   # Remove xLim and yLim from function! Zoomed in plots not neccessary
   #plot_combined_meanROCs(meanROCfinal, meanROCfinal$md, relations, "relation/trade-off/m*d", "relation", meanROCfinal$plotMD, "Experimental design", 1, 0.01, 0)
@@ -472,9 +470,9 @@ for (effect in 1:length(effectsizes)) {           # looping over q
     for (strata in 1:numberOfStrata){
       class<-strataClass[strata]
       plotData=meanROCfinalAb[meanROCfinalAb$strata==strata,]
-      suppressWarnings( plot_combined_meanROCs(plotData, plotData$md, relations, "relation/trade-off/m*d", "relation", plotData$plotMD, "Experimental design", 1, 1, strata, sprintf("genes with %s abundance", class),"abundance"))
+      suppressWarnings( plot_combined_meanROCs(plotData, plotData$md, relations, "total mapped reads", "relation", plotData$plotMD, "Experimental design", 1, 1, strata, sprintf("genes with %s abundance", class),"abundance"))
       plotData=meanROCfinalV[meanROCfinalV$strata==strata,]
-      suppressWarnings( plot_combined_meanROCs(plotData, plotData$md, relations, "relation/trade-off/m*d", "relation", plotData$plotMD, "Experimental design", 1, 1, strata, sprintf("genes with %s variability", class),"variability"))
+      suppressWarnings( plot_combined_meanROCs(plotData, plotData$md, relations, "total mapped reads", "relation", plotData$plotMD, "Experimental design", 1, 1, strata, sprintf("genes with %s variability", class),"variability"))
     }
     rm(strata, plotData, class)
   }
