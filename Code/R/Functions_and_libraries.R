@@ -211,7 +211,7 @@ DESeq2_analysis=function(Data){
                                         DesignMatrix, design=~group)      # combine design matrix and data into a dataset
   
   if (saveName == "Resistance"){                                          # create special case for Resisance since it contains few genes 
-    if(m==3 | m==5){                                                      # all gene-wise dispersion estimates are within 2 orders of magnitude from the minimum value, and so the standard curve fitting techniques will not work.
+    if(m==3 | m==5 | d==10000){                                                      # all gene-wise dispersion estimates are within 2 orders of magnitude from the minimum value, and so the standard curve fitting techniques will not work.
                                                                           # Perform DESeqs steps separatley:
       CountsDataset <- estimateSizeFactors(CountsDataset) 
       CountsDataset <- estimateDispersionsGeneEst(CountsDataset)
