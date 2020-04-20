@@ -442,7 +442,7 @@ plot_heatmaps<-function(variable,variableName, fillName, variableSave){
 plot_combined_meanROCs<-function(plotData, variable, parameterVector, parameterName, parameterSave, fillVariable, fillName, yLim, xLim, strata, strataText, strataName){
   for (i in 1:length(parameterVector)) {
     X=parameterVector[i]
-    subtitle=sprintf("Experimental designs with %s %d    (%d repeats each)", parameterName, X, repeats)
+    subtitle=sprintf("Experimental designs with %s %d", parameterName, X, repeats)
     path_save <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%d.pdf", saveName,10*q, parameterSave, X)
     path_save2 <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%d_zoom.pdf", saveName,10*q, parameterSave, X)
     steps= seq(0,1,0.2)
@@ -458,11 +458,11 @@ plot_combined_meanROCs<-function(plotData, variable, parameterVector, parameterN
         path_save <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%d_%s_strata%d.pdf", saveName,10*q, parameterSave, X, strataName, strata)
         path_save2 <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%d_%s_strata%d_zoom.pdf", saveName,10*q, parameterSave, X, strataName, strata)
       } else {
-        subtitle=sprintf("Experimental designs with %s %s    (%d repeats each)", Xname, parameterName, repeats)
+        subtitle=sprintf("Experimental designs with %s %s", Xname, parameterName)
       }
     } else if (all(parameterVector==sequencingDepth)){
       dD=sequencingDepthName[i]
-      subtitle=sprintf("Experimental designs with %s %s     (%d repeats each)", parameterName, dD, repeats)
+      subtitle=sprintf("Experimental designs with %s %s", parameterName, dD)
       path_save <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%s.pdf", saveName,10*q, parameterSave, dD)
       path_save2 <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%s_zoom.pdf", saveName,10*q, parameterSave, dD)
     }
@@ -483,7 +483,7 @@ plot_combined_meanROCs<-function(plotData, variable, parameterVector, parameterN
                          aes(x=FPR, y=meanTPR, fill=fillVariable[variable==X])) +  #theme_minimal() + 
       geom_ribbon(aes(ymin=(min), ymax=(max),fill = fillVariable[variable==X]), alpha=0.2) +
       geom_line(aes(color = fillVariable[variable==X])) +
-      labs(title=sprintf("Mean ROC curves for %s  with effect %g", plotName, q), 
+      labs(title=sprintf("ROC curves for %s  with effect %g", plotName, q), 
            subtitle = subtitle, x = "False Positive Rate", y = "True Positive Rate",  
            color = fillName, fill = fillName) +
       ylim(0, yLim) + 
@@ -492,7 +492,7 @@ plot_combined_meanROCs<-function(plotData, variable, parameterVector, parameterN
     print(combinedPlot)
     
     if(savePlot == TRUE){
-      ggsave(filename = path_save, plot = combinedPlot, height = 5, width = 8)
+      ggsave(filename = path_save, plot = combinedPlot, height = 5, width = 6.5)
       dev.off()
       print(combinedPlot)}
     rm(combinedPlot, X)

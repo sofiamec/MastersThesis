@@ -85,8 +85,8 @@ for (effect in 1:length(effectsizes)) {           # looping over q
       d=sequencingDepth[seq]
       dD=sequencingDepthName[seq]
       
-      AllSaveDesigns[effect,group,seq] <- sprintf("m%d_d%s_10q%d_f%d", m, dD, q*10, f*100)
-      AllPlotDesigns[effect,group,seq] <- sprintf("m = %d, d = %s, q = %g, f = %d%%",m,dD,q,f*100)
+      AllSaveDesigns[effect,group,seq] <- sprintf("m%d_d%s_10q%d_f%d",m, dD, q*10, f*100)
+      AllPlotDesigns[effect,group,seq] <- sprintf("m=%d, d=%s, q=%g, f=%d%%",m,dD,q,f*100)
       
       # Create folder for certain case if it doesn't exist
       if (!dir.exists(sprintf("../../Intermediate/%s/%s", saveName, AllSaveDesigns[effect,group,seq]))){
@@ -107,7 +107,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
       dD=extraSeqDepthName[i]
       
       AllSaveDesigns[effect,group+i,seq+i] <- sprintf("m%d_d%s_10q%d_f%d", m, dD, q*10, f*100)
-      AllPlotDesigns[effect,group+i,seq+i] <- sprintf("m = %d, d = %s, q = %g, f = %d%%",m,dD,q,f*100)
+      AllPlotDesigns[effect,group+i,seq+i] <- sprintf("m=%d, d=%s, q=%g, f=%d%%",m,dD,q,f*100)
       
       # Create folder for certain case if it doesn't exist
       if (!dir.exists(sprintf("../../Intermediate/%s/%s", saveName, AllSaveDesigns[effect,group+i,seq+i]))){
