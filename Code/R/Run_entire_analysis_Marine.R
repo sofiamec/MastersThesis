@@ -154,8 +154,8 @@ for (effect in 1:length(effectsizes)) {           # looping over q
       }
       
       # plot individual ROCs
-      ROC$run<-as.factor(ROC$run)
-      individual_ROC_plot(ROC)
+      #ROC$run<-as.factor(ROC$run)
+      #individual_ROC_plot(ROC)
 
       colnames(meanROC)[3]<-"meanTPR"
       meanROC2<-ddply(meanROC, "FPR", summarise,
@@ -195,44 +195,44 @@ for (effect in 1:length(effectsizes)) {           # looping over q
         meanROCV2$strata<-as.factor(meanROCV2$strata)
         
         # Plot mean RoC-curves for certain experimental design with Abundance-strata
-        meanROCplotAb <- ggplot(data=meanROCAb2, aes(x=FPR, y=meanTPR, group=strata)) + 
-          geom_ribbon(aes(ymin=(min), ymax=(max), fill=strataClass[strata]), alpha = 0.2) + 
-          geom_line(aes(color=strataClass[strata])) + #theme_minimal() + 
-          labs(title=sprintf("Mean ROC-curve for %s with effect %g", plotName,q), 
-               subtitle = sprintf("Experimental design: %s     (%s repeats)", plotExpDesign, repeats),
-               x = "False Positive Rate", y = "True Positive Rate", color="Abundance strata", fill="Abundance strata")+
-          ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2))+
-          scale_fill_viridis_d(begin = 0.2, end = 0.6) +
-          scale_colour_viridis_d(begin = 0.2, end = 0.6)
-        print(meanROCplotAb)
-        if(savePlot == TRUE){
-          path_save <-  sprintf("../../Result/%s/IntermediatePlots/meanROC_%s_AbStrata.pdf", saveName, saveExpDesign)
-          ggsave(filename = path_save, plot = meanROCplotAb, height = 5, width = 6)
-          dev.off()
-          print(meanROCplotAb)
-          rm(path_save)
-        }
-        rm(meanROCplotAb)
+        #meanROCplotAb <- ggplot(data=meanROCAb2, aes(x=FPR, y=meanTPR, group=strata)) + 
+        #  geom_ribbon(aes(ymin=(min), ymax=(max), fill=strataClass[strata]), alpha = 0.2) + 
+        #  geom_line(aes(color=strataClass[strata])) + #theme_minimal() + 
+        #  labs(title=sprintf("Mean ROC-curve for %s with effect %g", plotName,q), 
+        #       subtitle = sprintf("Experimental design: %s     (%s repeats)", plotExpDesign, repeats),
+        #       x = "False Positive Rate", y = "True Positive Rate", color="Abundance strata", fill="Abundance strata")+
+        #  ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2))+
+        #  scale_fill_viridis_d(begin = 0.2, end = 0.6) +
+        #  scale_colour_viridis_d(begin = 0.2, end = 0.6)
+        #print(meanROCplotAb)
+        #if(savePlot == TRUE){
+        #  path_save <-  sprintf("../../Result/%s/IntermediatePlots/meanROC_%s_AbStrata.pdf", saveName, saveExpDesign)
+        #  ggsave(filename = path_save, plot = meanROCplotAb, height = 5, width = 6)
+        #  dev.off()
+        #  print(meanROCplotAb)
+        #  rm(path_save)
+        #}
+        #rm(meanROCplotAb)
         
         # Plot mean RoC-curves for certain experimental design with Variability-strata
-        meanROCplotV <- ggplot(data=meanROCV2, aes(x=FPR, y=meanTPR, group=strata)) + 
-          geom_ribbon(aes(ymin=(min), ymax=(max), fill=strataClass[strata]), alpha = 0.2) + 
-          geom_line(aes(color=strataClass[strata])) + #theme_minimal() + 
-          labs(title=sprintf("Mean ROC-curve for %s with effect %g", plotName,q), 
-               subtitle = sprintf("Experimental design: %s     (%s repeats)", plotExpDesign, repeats),
-               x = "False Positive Rate", y = "True Positive Rate", color="Variability strata", fill="Variability strata")+
-          ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2))+
-          scale_fill_viridis_d(begin = 0.2, end = 0.6) +
-          scale_colour_viridis_d(begin = 0.2, end = 0.6)
-        print(meanROCplotV)
-        if(savePlot == TRUE){
-          path_save <-  sprintf("../../Result/%s/IntermediatePlots/meanROC_%s_VarStrata.pdf", saveName, saveExpDesign)
-          ggsave(filename = path_save, plot = meanROCplotV, height = 5, width = 6)
-          dev.off()
-          print(meanROCplotV)
-          rm(path_save)
-        }
-        rm(meanROCplotV)
+        # meanROCplotV <- ggplot(data=meanROCV2, aes(x=FPR, y=meanTPR, group=strata)) + 
+        #  geom_ribbon(aes(ymin=(min), ymax=(max), fill=strataClass[strata]), alpha = 0.2) + 
+        #  geom_line(aes(color=strataClass[strata])) + #theme_minimal() + 
+        #  labs(title=sprintf("Mean ROC-curve for %s with effect %g", plotName,q), 
+        #       subtitle = sprintf("Experimental design: %s     (%s repeats)", plotExpDesign, repeats),
+        #       x = "False Positive Rate", y = "True Positive Rate", color="Variability strata", fill="Variability strata")+
+        #  ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2))+
+        #  scale_fill_viridis_d(begin = 0.2, end = 0.6) +
+        #  scale_colour_viridis_d(begin = 0.2, end = 0.6)
+        #print(meanROCplotV)
+        #if(savePlot == TRUE){
+        #  path_save <-  sprintf("../../Result/%s/IntermediatePlots/meanROC_%s_VarStrata.pdf", saveName, saveExpDesign)
+        #  ggsave(filename = path_save, plot = meanROCplotV, height = 5, width = 6)
+        #  dev.off()
+        #  print(meanROCplotV)
+        #  rm(path_save)
+        #}
+        #rm(meanROCplotV)
         
         # Save strata-results for this experimental design
         for (k in 1:numberOfStrata) {
@@ -308,8 +308,8 @@ for (effect in 1:length(effectsizes)) {           # looping over q
     }
     
     # plot individual ROCs
-    ROC$run<-as.factor(ROC$run)
-    individual_ROC_plot(ROC)
+    # ROC$run<-as.factor(ROC$run)
+    # individual_ROC_plot(ROC)
     
     colnames(meanROC)[3]<-"meanTPR"
     meanROC2<-ddply(meanROC, "FPR", summarise,
@@ -439,7 +439,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
     meanROCfinalV$plotMD = factor(meanROCfinalV$plotMD, levels=unique(meanROCfinal$plotMD[order(meanROCfinal$m,meanROCfinal$d)]), ordered=TRUE)
   
     for (i in relations) {
-      medianAUCrelationAbundance<-medianAUCfinalV[medianAUCfinalV$md==i,]
+      medianAUCrelationAbundance<-medianAUCfinalAb[medianAUCfinalAb$md==i,]
       medianAUCrelationAbundance<-medianAUCrelationAbundance[order(medianAUCrelationAbundance$plotMD, decreasing = TRUE),]
       medianAUCrelationAbundance<-medianAUCrelationAbundance[order(medianAUCrelationAbundance$strata),]
       medianAUCrelationAbundance<-medianAUCrelationAbundance[,-c(4,5,7,8,9)]
@@ -451,7 +451,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
       medianAUCrelationVariability<-medianAUCrelationVariability[,-c(4,5,7,8,9)]
       write.csv(medianAUCrelationVariability, file=sprintf("../../Result/%s/AUC_Variability_%d_10q%d.csv", saveName,i,10*q))
     
-      rm(medianAUCrelationAbundance, medianAUCrelationVariability)
+      #rm(medianAUCrelationAbundance, medianAUCrelationVariability)
     }
     
     }
