@@ -399,29 +399,51 @@ individual_ROC_plot <- function(ROCData){
 #           fillName = "AUC-values" or "TPR-values"
 #           variableSave = "AUCtot", "TPR1" etc
 # Outputs:  a plotted heatmap which is saved if savePlot==T
-plot_heatmaps<-function(variable,variableName, fillName, variableSave){
-
+plot_heatmaps<-function(variable,variableName, variableValue, fillName, variableSave){
+  elementText = round2(variable, 2)
+  elementText[is.na(elementText)] <- "NA"
   if (variableSave!="FDR"){
     fillCondition=variable 
-    fillScale=scale_fill_viridis_c(begin = 0, end = 1, alpha = 0.5) 
+    fillScale=scale_fill_viridis_c(begin = 0, end = 1, alpha = 0.5)  
+    if (variableName=="AUC"){
+    titleName <- bquote(AUC[.(variableValue)]~"for"~.(plotName)~"with effect"~.(q))
+    } else if (variableName=="TPR"){
+    titleName <- bquote(TPR[.(variableValue)]~"for"~.(plotName)~"with effect"~.(q))
+    }
     
   } else if (variableSave=="FDR"){
-    variableText = round2(variable, 2)
-    cutOffs <-rev(c(0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1))
-    for (i in 1:length(cutOffs)){
-      variableText[variable <= cutOffs[i]] = sprintf("\u2264 %g", cutOffs[i])
-    }
-    fillCondition = variableText
-    fillScale = scale_fill_manual(values = alpha(c("\u2264 1" = "#9E0142", "\u2264 0.9" = "#8F1257", "\u2264 0.8" = "#81236C", "\u2264 0.7" = "#733582", "\u2264 0.6" = "#654697", "\u2264 0.5" = "#5955A4", "\u2264 0.4" = "#4F62AB", "\u2264 0.3" = "#456EB1", "\u2264 0.2" = "#3B7BB7", "\u2264 0.1" = "#3288BD", "\u2264 0.05" = "#00BC77"), .6), na.value="grey50")
+    titleName <- bquote("True FDR for"~.(plotName)~"with effect"~.(q))
+    #elementColour = variable
+    #elementColour[elementColour <= 0.05] = 0
+    
+    #cutOffs <-rev(c(0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1))
+    #for (i in 1:length(cutOffs)){
+    #  elementText[variable <= cutOffs[i]] = sprintf("\u2264 %g", cutOffs[i])
+    #  elementColour[]
+    #}
+    #fillScale = scale_fill_manual(values = alpha(c("\u2264 1" = "#9E0142", "\u2264 0.9" = "#8F1257", "\u2264 0.8" = "#81236C", "\u2264 0.7" = "#733582", "\u2264 0.6" = "#654697", "\u2264 0.5" = "#5955A4", "\u2264 0.4" = "#4F62AB", "\u2264 0.3" = "#456EB1", "\u2264 0.2" = "#3B7BB7", "\u2264 0.1" = "#3288BD", "\u2264 0.05" = "#00BC77"), .6), na.value="grey50")
+    
+    #fillCondition = elementColour
+    #if (min(elementColour, na.rm = T)>0){
+    #  fillScale=scale_fill_viridis_c(begin = 0.6, end = 0, alpha = 0.5, na.value = "grey90", values) 
+      
+    #} else {
+    #   fillScale=scale_fill_viridis_c(begin = 0.8, end = 0, alpha = 0.5, na.value = "grey90")  
+    #}
+    fillCondition = variable
+    fillScale = scale_fill_viridis_c(begin = 0, end=0.8, alpha = 0.5, rescaler = function(variable, to = c(0,1), from = NULL){
+        ifelse(variable>0.06, 
+               scales::rescale(variable,
+                               to = c(0.9, 0),
+                               from = c(min(variable, na.rm = TRUE), 1)),1)}) 
   }
 
   heatmap <-ggplot(HeatmapData, aes(x=m, y=d, fill=fillCondition)) +
-    geom_tile(aes(fill = fillCondition)) + geom_text(aes(label = round2(variable, 2), fontface=md)) +
+    geom_tile(aes(fill = fillCondition)) + geom_text(aes(label = elementText)) + #, fontface=md)) +
     fillScale + scale_y_discrete(labels = c("10000" = "10 k", "1e+05" = "100 k", "5e+05" = "500 k", "1e+06" = "1 M", "5e+06" = "5 M", "1e+07" = "10 M"), limits = rev(levels(as.factor(HeatmapData$d)))) +
     theme(panel.border = element_blank(), panel.grid.major = element_blank(), 
           panel.grid.minor = element_blank(), axis.line = element_blank(), panel.background=element_rect(fill = "white") ) +
-    labs(title=sprintf("%s", variableName), subtitle = sprintf("%s with effect %g", plotName,q),
-         x = "Group size", y = "Sequencing depth",  fill = fillName) # color = "sequencing depth",
+    labs(title = titleName, x = "Group size", y = "Sequencing depth",  fill = fillName)
   print(heatmap)
   if(savePlot == TRUE){
     path_save <-  sprintf("../../Result/%s/heatmap_%s_10q%d.pdf", saveName,variableSave,q*10)
@@ -439,15 +461,17 @@ plot_heatmaps<-function(variable,variableName, fillName, variableSave){
 #           fillVariable = meanROCfinal$d, meanROCfinal$m or meanROCfinal$plotMD
 #           fillName = "Sequencing depth", "Group size" or "Experimental design"
 # Outputs:  several plots of combined meanROC-curves which are saved if savePlot==T
-plot_combined_meanROCs<-function(plotData, variable, parameterVector, parameterName, parameterSave, fillVariable, fillName, yLim, xLim, strata, strataText, strataName){
+plot_combined_meanROCs<-function(plotData, variable, parameterVector, parameterName, parameterSave, fillVariable, fillName, strata, strataText, strataName){
   for (i in 1:length(parameterVector)) {
     X=parameterVector[i]
     subtitle=sprintf("Experimental designs with %s %d", parameterName, X, repeats)
     path_save <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%d.pdf", saveName,10*q, parameterSave, X)
     path_save2 <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%d_zoom.pdf", saveName,10*q, parameterSave, X)
     steps= seq(0,1,0.2)
+    plotWidth = 6.5
     
     if (all(parameterVector==relations)){
+      plotWidth = 7.5
       if (X==3000000){
         Xname = "3 M"
       } else if (X==5000000){
@@ -470,13 +494,7 @@ plot_combined_meanROCs<-function(plotData, variable, parameterVector, parameterN
     if (fillName=="Sequencing depth"){
       labelNames = c("10000" = "10 k", "1e+05" = "100 k", "5e+05" = "500 k", "1e+06" = "1 M", "5e+06" = "5 M", "1e+07" = "10 M")
     } else {
-      labelNames = waiver()#levels(fillVariable)
-    }
-      
-
-    if (xLim!=1){
-      path_save <- path_save2
-      steps= seq(0,xLim,0.005)
+      labelNames = waiver()
     }
     
     combinedPlot<-ggplot(data=plotData[variable==X,], 
@@ -486,13 +504,13 @@ plot_combined_meanROCs<-function(plotData, variable, parameterVector, parameterN
       labs(title=sprintf("ROC curves for %s  with effect %g", plotName, q), 
            subtitle = subtitle, x = "False Positive Rate", y = "True Positive Rate",  
            color = fillName, fill = fillName) +
-      ylim(0, yLim) + 
-      coord_cartesian(xlim=c(0,xLim)) + scale_x_continuous( breaks = steps)+
+      ylim(0, 1) + 
+      coord_cartesian(xlim=c(0, 1)) + scale_x_continuous( breaks = steps)+
       scale_fill_viridis_d(begin = 0, end = 0.85, labels = labelNames) + scale_colour_viridis_d(begin = 0, end = 0.85, labels = labelNames)
     print(combinedPlot)
     
     if(savePlot == TRUE){
-      ggsave(filename = path_save, plot = combinedPlot, height = 5, width = 6.5)
+      ggsave(filename = path_save, plot = combinedPlot, height = 5, width = plotWidth)
       dev.off()
       print(combinedPlot)}
     rm(combinedPlot, X)

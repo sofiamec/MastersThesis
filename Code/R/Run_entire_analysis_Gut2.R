@@ -9,7 +9,7 @@
 #===================================================================================================================================
 ## Selecting parameters and data:
 onTerra = T                                                 # use T if running analysis on Terra (large scale settings applied)
-saveName = "Marine"  # "Gut2", "Marine" or "Resistance      # this will in turn load the correct data
+saveName = "Gut2"  # "Gut2", "Marine" or "Resistance      # this will in turn load the correct data
 f = 0.10                                                    # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
 runStrata = T
 extraDesigns = T                                              # use T if the analysis of DAGs should be performed with DESeq2. Use F to choose OGLM instead
@@ -18,7 +18,7 @@ analysis = "DESeq"   # "DESeq", "OGLM", or "t-test"
 # Test-settings (CHANGE HERE!)
 if (onTerra==F){
   repeats = 2                                               # sets the number of runs for each case (experimental design and q)
-  limitNA = 0                                                   # the lowest amount of observaitons needed to produce a results other than NA
+  limitNA = 0                                               # the lowest amount of observaitons needed to produce a results other than NA
   savePlot = T                                              # use T when plots should be saved (for many repeats)
   loadData = F                                              # use T if it is a rerun of existing results
   effectsizes=c(1.5)#,3)                                             # q = Fold-change for downsampling

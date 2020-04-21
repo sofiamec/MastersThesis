@@ -14,11 +14,11 @@ f = 0.10                                                    # Desired total frac
 runStrata = T
 extraDesigns = T                                              # use T if the analysis of DAGs should be performed with DESeq2. Use F to choose OGLM instead
 analysis = "DESeq"   # "DESeq", "OGLM", or "t-test"
-limitNA = 2                                                   # the lowest amount of observaitons needed to produce a results other than NA
 
 # Test-settings (CHANGE HERE!)
 if (onTerra==F){
   repeats = 2                                               # sets the number of runs for each case (experimental design and q)
+  limitNA = 0                                                   # the lowest amount of observaitons needed to produce a results other than NA
   savePlot = T                                              # use T when plots should be saved (for many repeats)
   loadData = F                                              # use T if it is a rerun of existing results
   effectsizes=c(1.5)#,3)                                             # q = Fold-change for downsampling
@@ -30,9 +30,17 @@ if (onTerra==F){
 # Real settings
 if (onTerra==T){
   repeats = 10                                              # sets the number of runs for each case (experimental design and q)
+  limitNA = 2                                                   # the lowest amount of observaitons needed to produce a results other than NA
   savePlot = T                                              # use T when plots should be saved (for many repeats)
   loadData = F                                              # use T if it is a rerun of existing results
-  effectsizes=c(1.5,3)                                      # q = Fold-change for downsampling
+  
+  # flytta eventuellt allt detta till setup-skriptet
+   if (saveName =="Resistance"){
+     effectsizes=c(3,5)                                     # q = Fold-change for downsampling
+   } else {
+     effectsizes=c(1.5,3)                                   # q = Fold-change for downsampling
+   }
+  
   groupSize<-c(3,5,10,30,50)                                # m = Number of samples in each group (total nr samples = 2*m)
   # sequencing depths are set later depending on dataset    # d and dD = Desired sequencing depths and how it should be displayed
 }
@@ -359,6 +367,10 @@ for (effect in 1:length(effectsizes)) {           # looping over q
   #===================================================================================================================================
   ### Summarising results:
   
+  # Read tables:
+  # medianAUCfinal <- read.csv(file=sprintf("../../Result/%s_DESeq/AUC_10q%d.csv", saveName,10*q))[,-1]
+  # medianGenesFDR <- read.csv(file=sprintf("../../Result/%s_DESeq/GenesFDR_10q%d.csv", saveName,10*q))[,-1]
+  
   colnames(medianAUCfinal)<-c("AUC1", "AUC5", "AUCtot", "TPR1", "TPR5", "AUC1 Non-NA", "AUC5 Non-NA", "AUCtot Non-NA", "TPR1 Non-NA", "TPR5 Non-NA", "d", "m" ,"md","plotMD")
   colnames(meanROCfinal)<-c("FPR", "N", "meanTPR", "min", "max", "d", "m" ,"md","plotMD")
   colnames(medianGenesFDR)<-c("Median TP count",  "Median FP count",  "Median true FDR", "TP Non-NA", "FP Non-NA", "FDR Non-NA","plotMD")
@@ -376,9 +388,9 @@ for (effect in 1:length(effectsizes)) {           # looping over q
   medianAUCfinal[(medianAUCfinal[,10]<=limitNA|is.na(medianAUCfinal[,10])),5]<-NA 
   medianAUCfinal<-medianAUCfinal[,-c(6:10)]
   
-  medianAUCfinal$md[medianAUCfinal$md=="5e+06"]<-"bold"
-  medianAUCfinal$md[medianAUCfinal$md==boldvalue2]<-"bold"
-  medianAUCfinal$md[medianAUCfinal$md!="bold"]<-"plain"
+  #medianAUCfinal$md[medianAUCfinal$md=="5e+06"]<-"bold"
+  #medianAUCfinal$md[medianAUCfinal$md==boldvalue2]<-"bold"
+  #medianAUCfinal$md[medianAUCfinal$md!="bold"]<-"plain"
   
   # Save tables:
   write.csv(medianAUCfinal, file=sprintf("../../Result/%s/AUC_10q%d.csv", saveName,10*q))
@@ -445,34 +457,30 @@ for (effect in 1:length(effectsizes)) {           # looping over q
     }
   
   ### Plotting heatmaps for AUC- and TPR-values
-  plot_heatmaps(HeatmapData$AUC1, "AUC values at FPR 0.01", expression(AUC[0.01]), "AUC1")
-  plot_heatmaps(HeatmapData$AUC5, "AUC values at FPR 0.05", expression(AUC[0.05]), "AUC5")
-  plot_heatmaps(HeatmapData$AUCtot, "Total AUC values", expression(AUC[Tot]), "AUCtot")
-  plot_heatmaps(HeatmapData$TPR1, "TPR values at FPR 0.01", expression(TPR[0.01]), "TPR1")
-  plot_heatmaps(HeatmapData$TPR5, "TPR values at FPR 0.05", expression(TPR[0.05]), "TPR5")
-  suppressWarnings( plot_heatmaps(variable = HeatmapData$Median.true.FDR, variableName = "True FDR", fillName = "True FDR", variableSave = "FDR") )
+  plot_heatmaps(HeatmapData$AUC1,"AUC", "0.01", expression(AUC[0.01]), "AUC1")
+  plot_heatmaps(HeatmapData$AUC5, "AUC", "0.05", expression(AUC[0.05]), "AUC5")
+  plot_heatmaps(HeatmapData$AUCtot, "AUC", "tot", expression(AUC[tot]), "AUCtot")
+  plot_heatmaps(HeatmapData$TPR1, "TPR", "0.01", expression(TPR[0.01]), "TPR1")
+  plot_heatmaps(HeatmapData$TPR5, "TPR", "0.05", expression(TPR[0.05]), "TPR5")
+  suppressWarnings( plot_heatmaps(HeatmapData$Median.true.FDR, "True FDR", 0, "True FDR", "FDR") )
   
   ### Plot mean RoC-curves for all experimental designs
   # mean plots with set groupsize
-  suppressWarnings( plot_combined_meanROCs(meanROCfinal, meanROCfinal$m, groupSize, "group size", "groupsize", meanROCfinal$d, "Sequencing depth", 1, 1, 0))
+  suppressWarnings( plot_combined_meanROCs(meanROCfinal, meanROCfinal$m, groupSize, "group size", "groupsize", meanROCfinal$d, "Sequencing depth", 0))
   # mean plots with set sequencing depth
-  suppressWarnings( plot_combined_meanROCs(meanROCfinal, meanROCfinal$d, sequencingDepth, "sequencing depth", "depth", meanROCfinal$m, "Group size", 1, 1, 0))
+  suppressWarnings( plot_combined_meanROCs(meanROCfinal, meanROCfinal$d, sequencingDepth, "sequencing depth", "depth", meanROCfinal$m, "Group size", 0))
   # mean plots with set groupsize and depth relation (m*d)
-  suppressWarnings( plot_combined_meanROCs(meanROCfinal, meanROCfinal$md, relations, "reads in total", "relation", meanROCfinal$plotMD, "Experimental design", 1, 1, 0))
-  
-  # Remove xLim and yLim from function! Zoomed in plots not neccessary
-  #plot_combined_meanROCs(meanROCfinal, meanROCfinal$md, relations, "relation/trade-off/m*d", "relation", meanROCfinal$plotMD, "Experimental design", 1, 0.01, 0)
-  
-  
+  suppressWarnings( plot_combined_meanROCs(meanROCfinal, meanROCfinal$md, relations, "reads in total", "relation", meanROCfinal$plotMD, "Experimental design", 0))
+ 
   ### Plot mean ROC-curves for strata
   if (runStrata==T){
   # mean plots with set groupsize and depth relation (m*d)
     for (strata in 1:numberOfStrata){
       class<-strataClass[strata]
       plotData=meanROCfinalAb[meanROCfinalAb$strata==strata,]
-      suppressWarnings( plot_combined_meanROCs(plotData, plotData$md, relations, "reads in total", "relation", plotData$plotMD, "Experimental design", 1, 1, strata, sprintf("genes with %s abundance", class),"abundance"))
+      suppressWarnings( plot_combined_meanROCs(plotData, plotData$md, relations, "reads in total", "relation", plotData$plotMD, "Experimental design", strata, sprintf("genes with %s abundance", class),"abundance"))
       plotData=meanROCfinalV[meanROCfinalV$strata==strata,]
-      suppressWarnings( plot_combined_meanROCs(plotData, plotData$md, relations, "reads in total", "relation", plotData$plotMD, "Experimental design", 1, 1, strata, sprintf("genes with %s variability", class),"variability"))
+      suppressWarnings( plot_combined_meanROCs(plotData, plotData$md, relations, "reads in total", "relation", plotData$plotMD, "Experimental design", strata, sprintf("genes with %s variability", class),"variability"))
     }
     rm(strata, plotData, class)
   }
