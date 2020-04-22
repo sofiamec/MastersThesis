@@ -13,7 +13,7 @@ saveName = "Marine"  # "Gut2", "Marine" or "Resistance      # this will in turn 
 f = 0.10                                                    # Desired total fraction of genes to be downsampled. It will not be exact. The effects will be balanced
 runStrata = T
 extraDesigns = T                                              # use T if the analysis of DAGs should be performed with DESeq2. Use F to choose OGLM instead
-analysis = "DESeq"   # "DESeq", "OGLM", or "t-test"
+analysis = "OGLM"   # "DESeq", "OGLM", or "t-test"
 
 # Test-settings (CHANGE HERE!)
 if (onTerra==F){
