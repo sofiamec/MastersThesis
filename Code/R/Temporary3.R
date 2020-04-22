@@ -3,8 +3,8 @@
 library(xtable)
 
 # Read AUC-tables  
-AUCq15 <- read.csv("../../Result/Marine/AUC_10q15.csv", header = T)[,c("plotMD","AUC1")]
-AUCq30 <- read.csv("../../Result/Marine/AUC_10q30.csv", header = T)[,c("plotMD","AUC1")]
+AUCq15 <- read.csv("../../Result/Marine_DESeq/AUC_10q15.csv", header = T)[,c("plotMD","AUC1")]
+AUCq30 <- read.csv("../../Result/Marine_DESeq/AUC_10q30.csv", header = T)[,c("plotMD","AUC1")]
 
 # Create table for trade-off for 3M reads in total
 AUC3M <- cbind(AUCq15[c(which(AUCq15$plotMD=="m=3, d=1 M"), which(AUCq15$plotMD=="m=6, d=500 k"), 
@@ -29,8 +29,8 @@ print(xtable(AUC5M, digits = 3), include.rownames = F)
 #-----------------------------------------------------------------------------------------------------------------#
 
 # Read AUC-tables  
-AUCAbun3M <- read.csv("../../Result/Marine/AUC_Abundance_3000000_10q15.csv", header = T)[,c("plotMD","AUC1","strata")]
-AUCVar3M <- read.csv("../../Result/Marine/AUC_Variability_3000000_10q15.csv", header = T)[,c("plotMD","AUC1","strata")]
+AUCAbun3M <- read.csv("../../Result/Marine_DESeq/AUC_Abundance_3000000_10q15.csv", header = T)[,c("plotMD","AUC1","strata")]
+AUCVar3M <- read.csv("../../Result/Marine_DESeq/AUC_Variability_3000000_10q15.csv", header = T)[,c("plotMD","AUC1","strata")]
 
 # ABUNDANCE
 AUCAbun3M <- AUCAbun3M[c(which(AUCAbun3M$plotMD=="m=3, d=1 M"), which(AUCAbun3M$plotMD=="m=6, d=500 k"), 
