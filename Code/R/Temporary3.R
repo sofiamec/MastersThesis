@@ -25,23 +25,34 @@ print(xtable(AUC3M, digits = 3), include.rownames = F)
 print(xtable(AUC5M, digits = 3), include.rownames = F)
 
 #-----------------------------------------------------------------------------------------------------------------#
-#-----------------------------------Trade-off tables for strata --------------------------------------------------#
+#----------------------------------- Trade-off tables for strata -------------------------------------------------#
 #-----------------------------------------------------------------------------------------------------------------#
+# Choose which table to generate:
+depth=5000000                   # "3000000" or "5000000"
+q=30                            # "15"      or "3"
 
 # Read AUC-tables  
-AUCAbun3M <- read.csv("../../Result/Marine_DESeq/AUC_Abundance_3000000_10q15.csv", header = T)[,c("plotMD","AUC1","strata")]
-AUCVar3M <- read.csv("../../Result/Marine_DESeq/AUC_Variability_3000000_10q15.csv", header = T)[,c("plotMD","AUC1","strata")]
+AUCAbun <- read.csv(sprintf("../../Result/Marine_DESeq/AUC_Abundance_%d_10q%d.csv",depth,q), header = T)[,c("plotMD","AUC1","strata")]
+AUCVar <- read.csv(sprintf("../../Result/Marine_DESeq/AUC_Variability_%d_10q%d.csv",depth,q), header = T)[,c("plotMD","AUC1","strata")]
 
-# ABUNDANCE
-AUCAbun3M <- AUCAbun3M[c(which(AUCAbun3M$plotMD=="m=3, d=1 M"), which(AUCAbun3M$plotMD=="m=6, d=500 k"), 
-                    which(AUCAbun3M$plotMD=="m=15, d=200 k"), which(AUCAbun3M$plotMD=="m=30, d=100 k")), ]
+if(depth==3000000){
+  AUCAbun <- AUCAbun[c(which(AUCAbun$plotMD=="m=3, d=1 M"), which(AUCAbun$plotMD=="m=6, d=500 k"), 
+                       which(AUCAbun$plotMD=="m=15, d=200 k"), which(AUCAbun$plotMD=="m=30, d=100 k")), ]
+  
+  AUCVar <- AUCVar[c(which(AUCVar$plotMD=="m=3, d=1 M"), which(AUCVar$plotMD=="m=6, d=500 k"), 
+                     which(AUCVar$plotMD=="m=15, d=200 k"), which(AUCVar$plotMD=="m=30, d=100 k")), ]
+} else {
+  AUCAbun <- AUCAbun[c(which(AUCAbun$plotMD=="m=5, d=1 M"), which(AUCAbun$plotMD=="m=10, d=500 k"), 
+                       which(AUCAbun$plotMD=="m=20, d=250 k"), which(AUCAbun$plotMD=="m=50, d=100 k")), ]
+  
+  AUCVar <- AUCVar[c(which(AUCVar$plotMD=="m=5, d=1 M"), which(AUCVar$plotMD=="m=10, d=500 k"), 
+                     which(AUCVar$plotMD=="m=20, d=250 k"), which(AUCVar$plotMD=="m=50, d=100 k")), ]
+}
 
-AUCVar3M <- AUCVar3M[c(which(AUCVar3M$plotMD=="m=3, d=1 M"), which(AUCVar3M$plotMD=="m=6, d=500 k"), 
-                       which(AUCVar3M$plotMD=="m=15, d=200 k"), which(AUCVar3M$plotMD=="m=30, d=100 k")), ]
 
-AUCStrata <- cbind(AUCAbun3M[AUCAbun3M$strata==1,c(1,2)],AUCAbun3M[AUCAbun3M$strata==2,2],
-                   AUCAbun3M[AUCAbun3M$strata==3,2], AUCVar3M[AUCVar3M$strata==1,2],
-                   AUCVar3M[AUCVar3M$strata==2,2],AUCVar3M[AUCVar3M$strata==3,2])
+AUCStrata <- cbind(AUCAbun[AUCAbun$strata==1,c(1,2)],AUCAbun[AUCAbun$strata==2,2],
+                   AUCAbun[AUCAbun$strata==3,2], AUCVar[AUCVar$strata==1,2],
+                   AUCVar[AUCVar$strata==2,2],AUCVar[AUCVar$strata==3,2])
 colnames(AUCStrata) <- c("Experimental Design", "Low Abundance", "Medium Abundance", "High Abundance", 
                             "Low Variability", "Medium Variability", "High Variability")
 
