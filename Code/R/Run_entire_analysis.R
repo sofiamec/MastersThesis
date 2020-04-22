@@ -451,7 +451,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
       medianAUCrelationVariability<-medianAUCrelationVariability[,-c(4,5,7,8,9)]
       write.csv(medianAUCrelationVariability, file=sprintf("../../Result/%s/AUC_Variability_%d_10q%d.csv", saveName,i,10*q))
     
-      #rm(medianAUCrelationAbundance, medianAUCrelationVariability)
+      rm(medianAUCrelationAbundance, medianAUCrelationVariability)
     }
     
     }

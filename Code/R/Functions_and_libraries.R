@@ -501,7 +501,7 @@ plot_combined_meanROCs<-function(plotData, variable, parameterVector, parameterN
                          aes(x=FPR, y=meanTPR, fill=fillVariable[variable==X])) +  #theme_minimal() + 
       geom_ribbon(aes(ymin=(min), ymax=(max),fill = fillVariable[variable==X]), alpha=0.2) +
       geom_line(aes(color = fillVariable[variable==X])) +
-      labs(title=sprintf("ROC curves for %s  with effect %g", plotName, q), 
+      labs(title=sprintf("ROC curves for %s with effect %g", plotName, q), 
            subtitle = subtitle, x = "False Positive Rate", y = "True Positive Rate",  
            color = fillName, fill = fillName) +
       ylim(0, 1) + 
