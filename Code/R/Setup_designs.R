@@ -89,8 +89,8 @@ for (effect in 1:length(effectsizes)) {           # looping over q
       AllPlotDesigns[effect,group,seq] <- sprintf("m=%d, d=%s, q=%g, f=%d%%",m,dD,q,f*100)
       
       # Create folder for certain case if it doesn't exist
-      if (!dir.exists(sprintf("../../Intermediate/%s_%s/%s", saveName, analysis, AllSaveDesigns[effect,group,seq]))){
-        dir.create(file.path("../../Intermediate", sprintf("%s_%s", saveName, analysis), sprintf("%s", AllSaveDesigns[effect,group,seq])), recursive = T)
+      if (!dir.exists(sprintf("../../Intermediate/%s/%s", saveName, AllSaveDesigns[effect,group,seq]))){
+        dir.create(file.path("../../Intermediate", sprintf("%s", saveName), sprintf("%s", AllSaveDesigns[effect,group,seq])), recursive = T)
       }
       
       if (!dir.exists(sprintf("../../Result/%s_%s/IntermediatePlots", saveName, analysis))){
@@ -110,8 +110,8 @@ for (effect in 1:length(effectsizes)) {           # looping over q
       AllPlotDesigns[effect,group+i,seq+i] <- sprintf("m=%d, d=%s, q=%g, f=%d%%",m,dD,q,f*100)
       
       # Create folder for certain case if it doesn't exist
-      if (!dir.exists(sprintf("../../Intermediate/%s_%s/%s", saveName, analysis, AllSaveDesigns[effect,group+i,seq+i]))){
-        dir.create(file.path("../../Intermediate", sprintf("%s_%s", saveName, analysis), sprintf("%s", AllSaveDesigns[effect,group+i,seq+i])), recursive = T)
+      if (!dir.exists(sprintf("../../Intermediate/%s/%s", saveName, AllSaveDesigns[effect,group+i,seq+i]))){
+        dir.create(file.path("../../Intermediate", sprintf("%s", saveName), sprintf("%s", AllSaveDesigns[effect,group+i,seq+i])), recursive = T)
       }
       
       if (!dir.exists(sprintf("../../Result/%s_%s/IntermediatePlots", saveName, analysis))){

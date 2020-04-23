@@ -39,8 +39,8 @@ if (runStrata==T){
 
 
 # Saving downsampled datasets and corresponding overview of DAGs
-write.csv(DownSampledData, file=sprintf("../../Intermediate/%s_%s/%s/DownSampledData_run%d.csv", saveName, analysis, saveExpDesign, run))
-write.csv(DAGs, file=sprintf("../../Intermediate/%s_%s/%s/DAGs_run%d.csv", saveName, analysis, saveExpDesign, run))
+write.csv(DownSampledData, file=sprintf("../../Intermediate/%s/%s/DownSampledData_run%d.csv", saveName, saveExpDesign, run))
+write.csv(DAGs, file=sprintf("../../Intermediate/%s/%s/DAGs_run%d.csv", saveName, saveExpDesign, run))
 
 # remove variables/datasets
 rm(ResampData, countsResampData, resultList)
