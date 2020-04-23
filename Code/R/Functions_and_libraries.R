@@ -384,7 +384,7 @@ individual_ROC_plot <- function(ROCData){
     ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2))
   print(ROCplot)
   if(savePlot == TRUE){
-    path_save <-  sprintf("../../Result/%s/IntermediatePlots/individualROCs_%s.pdf", saveName, saveExpDesign)
+    path_save <-  sprintf("../../Result/%s_%s/IntermediatePlots/individualROCs_%s.pdf", saveName, analysis, saveExpDesign)
     ggsave(filename = path_save, plot = ROCplot, height = 5, width = 6)
     dev.off()
     print(ROCplot)
@@ -446,7 +446,7 @@ plot_heatmaps<-function(variable,variableName, variableValue, fillName, variable
     labs(title = titleName, x = "Group size", y = "Sequencing depth",  fill = fillName)
   print(heatmap)
   if(savePlot == TRUE){
-    path_save <-  sprintf("../../Result/%s/heatmap_%s_10q%d.pdf", saveName,variableSave,q*10)
+    path_save <-  sprintf("../../Result/%s_%s/heatmap_%s_10q%d.pdf", saveName, analysis, variableSave,q*10)
     ggsave(filename = path_save, plot = heatmap, height = 5, width = 6, device = cairo_pdf)
     dev.off()
     print(heatmap)}
@@ -465,8 +465,8 @@ plot_combined_meanROCs<-function(plotData, variable, parameterVector, parameterN
   for (i in 1:length(parameterVector)) {
     X=parameterVector[i]
     subtitle=sprintf("Experimental designs with %s %d", parameterName, X, repeats)
-    path_save <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%d.pdf", saveName,10*q, parameterSave, X)
-    path_save2 <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%d_zoom.pdf", saveName,10*q, parameterSave, X)
+    path_save <-  sprintf("../../Result/%s_%s/meanROC_10q%d_%s_%d.pdf", saveName, analysis, 10*q, parameterSave, X)
+    path_save2 <-  sprintf("../../Result/%s_%s/meanROC_10q%d_%s_%d_zoom.pdf", saveName, analysis, 10*q, parameterSave, X)
     steps= seq(0,1,0.2)
     plotWidth = 6.5
     
@@ -479,16 +479,16 @@ plot_combined_meanROCs<-function(plotData, variable, parameterVector, parameterN
       }
       if (strata != 0){
         subtitle=sprintf("Experimental designs with %s %s for %s", Xname, parameterName, strataText)
-        path_save <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%d_%s_strata%d.pdf", saveName,10*q, parameterSave, X, strataName, strata)
-        path_save2 <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%d_%s_strata%d_zoom.pdf", saveName,10*q, parameterSave, X, strataName, strata)
+        path_save <-  sprintf("../../Result/%s_%s/meanROC_10q%d_%s_%d_%s_strata%d.pdf", saveName, analysis, 10*q, parameterSave, X, strataName, strata)
+        path_save2 <-  sprintf("../../Result/%s_%s/meanROC_10q%d_%s_%d_%s_strata%d_zoom.pdf", saveName, analysis, 10*q, parameterSave, X, strataName, strata)
       } else {
         subtitle=sprintf("Experimental designs with %s %s", Xname, parameterName)
       }
     } else if (all(parameterVector==sequencingDepth)){
       dD=sequencingDepthName[i]
       subtitle=sprintf("Experimental designs with %s %s", parameterName, dD)
-      path_save <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%s.pdf", saveName,10*q, parameterSave, dD)
-      path_save2 <-  sprintf("../../Result/%s/meanROC_10q%d_%s_%s_zoom.pdf", saveName,10*q, parameterSave, dD)
+      path_save <-  sprintf("../../Result/%s_%s/meanROC_10q%d_%s_%s.pdf", saveName, analysis, 10*q, parameterSave, dD)
+      path_save2 <-  sprintf("../../Result/%s_%s/meanROC_10q%d_%s_%s_zoom.pdf", saveName, analysis, 10*q, parameterSave, dD)
     }
     
     if (fillName=="Sequencing depth"){

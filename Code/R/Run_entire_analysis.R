@@ -125,8 +125,8 @@ for (effect in 1:length(effectsizes)) {           # looping over q
         
         # Run the code for resampling and downsampling, or load already resampled and downsampled dataset
         if (loadData==T){
-          DownSampledData<-read.csv(file=sprintf("../../Intermediate/%s/%s/DownSampledData_run%d.csv", saveName, saveExpDesign, run), header = T, row.names = 1)
-          DAGs<-read.csv(file=sprintf("../../Intermediate/%s/%s/DAGs_run%d.csv", saveName, saveExpDesign, run),header = T,row.names = 1)
+          DownSampledData<-read.csv(file=sprintf("../../Intermediate/%s_%s/%s/DownSampledData_run%d.csv", saveName, analysis, saveExpDesign, run), header = T, row.names = 1)
+          DAGs<-read.csv(file=sprintf("../../Intermediate/%s_%s/%s/DAGs_run%d.csv", saveName, analysis, saveExpDesign, run),header = T,row.names = 1)
         } else {      
           source("Resample_datasets.R")
         }
@@ -280,8 +280,8 @@ for (effect in 1:length(effectsizes)) {           # looping over q
         
       # Run the code for resampling and downsampling, or load already resampled and downsampled dataset
       if (loadData==T){
-        DownSampledData<-read.csv(file=sprintf("../../Intermediate/%s/%s/DownSampledData_run%d.csv", saveName, saveExpDesign, run), header = T, row.names = 1)
-        DAGs<-read.csv(file=sprintf("../../Intermediate/%s/%s/DAGs_run%d.csv", saveName, saveExpDesign, run),header = T,row.names = 1)
+        DownSampledData<-read.csv(file=sprintf("../../Intermediate/%s_%s/%s/DownSampledData_run%d.csv", saveName, analysis, saveExpDesign, run), header = T, row.names = 1)
+        DAGs<-read.csv(file=sprintf("../../Intermediate/%s_%s/%s/DAGs_run%d.csv", saveName, analysis, saveExpDesign, run),header = T,row.names = 1)
       } else {      
         source("Resample_datasets.R")
       }
@@ -393,8 +393,8 @@ for (effect in 1:length(effectsizes)) {           # looping over q
   #medianAUCfinal$md[medianAUCfinal$md!="bold"]<-"plain"
   
   # Save tables:
-  write.csv(medianAUCfinal, file=sprintf("../../Result/%s/AUC_10q%d.csv", saveName,10*q))
-  write.csv(medianGenesFDR, file=sprintf("../../Result/%s/GenesFDR_10q%d.csv", saveName,10*q))
+  write.csv(medianAUCfinal, file=sprintf("../../Result/%s_%s/AUC_10q%d.csv", saveName, analysis, 10*q))
+  write.csv(medianGenesFDR, file=sprintf("../../Result/%s_%s/GenesFDR_10q%d.csv", saveName,analysis, 10*q))
   
   if (extraDesigns==T){
     HeatmapData<-data.frame(head(medianAUCfinal,-extraL), head(medianGenesFDR[1:3],-extraL)) 
@@ -443,13 +443,13 @@ for (effect in 1:length(effectsizes)) {           # looping over q
       medianAUCrelationAbundance<-medianAUCrelationAbundance[order(medianAUCrelationAbundance$plotMD, decreasing = TRUE),]
       medianAUCrelationAbundance<-medianAUCrelationAbundance[order(medianAUCrelationAbundance$strata),]
       medianAUCrelationAbundance<-medianAUCrelationAbundance[,-c(4,5,7,8,9)]
-      write.csv(medianAUCrelationAbundance, file=sprintf("../../Result/%s/AUC_Abundance_%d_10q%d.csv", saveName,i,10*q))
+      write.csv(medianAUCrelationAbundance, file=sprintf("../../Result/%s_%s/AUC_Abundance_%d_10q%d.csv", saveName, analysis ,i,10*q))
       
       medianAUCrelationVariability<-medianAUCfinalV[medianAUCfinalV$md==i,]
       medianAUCrelationVariability<-medianAUCrelationVariability[order(medianAUCrelationVariability$plotMD, decreasing = TRUE),]
       medianAUCrelationVariability<-medianAUCrelationVariability[order(medianAUCrelationVariability$strata),]
       medianAUCrelationVariability<-medianAUCrelationVariability[,-c(4,5,7,8,9)]
-      write.csv(medianAUCrelationVariability, file=sprintf("../../Result/%s/AUC_Variability_%d_10q%d.csv", saveName,i,10*q))
+      write.csv(medianAUCrelationVariability, file=sprintf("../../Result/%s_%s/AUC_Variability_%d_10q%d.csv", saveName, analysis, i,10*q))
     
       rm(medianAUCrelationAbundance, medianAUCrelationVariability)
     }
