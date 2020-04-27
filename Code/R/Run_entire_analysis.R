@@ -25,6 +25,7 @@ if (onTerra==F){
   groupSize<-c(3,5)#,10,30)#,30,50)                                            # m = Number of samples in each group (total nr samples = 2*m)
   sequencingDepth<-c(10000,100000)#, 5000000)#,10000,1000000,5000000,10000000)      # d = Desired sequencing depth per sample
   sequencingDepthName<-c("10 k", "100 k")#, "500 k")# "10 k","500 k","1 M", "5 M", "10 M")         # dD = Displayed names for sequencing depths
+  sequencingSaveName<-c("10k", "100k")#, "500 k")# "10 k","500 k","1 M", "5 M", "10 M")         # dD = Displayed names for sequencing depths
 }
 
 # Real settings
@@ -51,6 +52,7 @@ if (extraDesigns==T){
   # The 3 following must have equal lengths!                # Combined they give more results for trade-off curves. Here with m*d = 3M, 3M and 5M respectively
   extraSeqDepth=c(200000,500000,250000)      
   extraSeqDepthName=c("200 k","500 k","250 k")
+  extraSeqSaveName=c("200k","500k","250k")
   extraGroups=c(15,6,20)
   extraL<-length(extraGroups)
 }
@@ -101,6 +103,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
     for (seq in 1:length(sequencingDepth)) {      # looping over d
       d=sequencingDepth[seq]
       dD=sequencingDepthName[seq]
+      dS=sequencingSaveName[seq]
       cat(sprintf("================================== d=%s =====================================\n", dD))
       
       # Creating empty initial result-matrices
@@ -256,6 +259,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
     cat(sprintf("================================== m=%d =======================================\n", m))
     d=extraSeqDepth[i]
     dD=extraSeqDepthName[i]
+    dS=extraSeqSaveName[i]
     cat(sprintf("================================== d=%s =====================================\n", dD))
       
     # Creating empty initial result-matrices

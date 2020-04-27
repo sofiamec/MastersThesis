@@ -21,6 +21,7 @@ if(saveName == "Gut2"){
   if (onTerra==T){
     sequencingDepth<-c(10000,100000,500000,1000000,5000000)
     sequencingDepthName<-c("10 k","100 k","500 k","1 M", "5 M")
+    sequencingSaveName<-c("10k","100k","500k","1M", "5M")
   }
   
   rm(Gut2, Gut2Original, Gut2Intermediate)        # remove original and intermediate datasets
@@ -37,6 +38,7 @@ if(saveName == "Gut2"){
   if (onTerra==T){
     sequencingDepth<-c(10000,100000,500000,1000000,5000000,10000000)
     sequencingDepthName<-c("10 k","100 k","500 k","1 M", "5 M", "10 M")
+    sequencingSaveName<-c("10k","100k","500k","1M", "5M", "10M")
   }
   
   rm(Marine, MarineOriginal, MarineIntermediate)  # remove original and intermediate datasets
@@ -61,6 +63,7 @@ if(saveName == "Gut2"){
   if (onTerra==T){
     sequencingDepth<-c(10000,100000,500000,1000000,5000000,10000000) #c(10000,100000,500000,1000000,5000000,10000000)
     sequencingDepthName<-c("10 k","100 k","500 k","1 M", "5 M", "10 M") #c("10k","100k","500k","1M", "5M", "10M")
+    sequencingSaveName<-c("10k","100k","500k","1M", "5M", "10M") #c("10k","100k","500k","1M", "5M", "10M")
   }
   
   rm(Resistance, ResistanceOriginal, ResistanceIntermediate)  # remove original and intermediate datasets
@@ -84,8 +87,9 @@ for (effect in 1:length(effectsizes)) {           # looping over q
     for (seq in 1:length(sequencingDepth)) {      # looping over d
       d=sequencingDepth[seq]
       dD=sequencingDepthName[seq]
+      dS=sequencingSaveName[seq]
       
-      AllSaveDesigns[effect,group,seq] <- sprintf("m%d_d%s_10q%d_f%d",m, dD, q*10, f*100)
+      AllSaveDesigns[effect,group,seq] <- sprintf("m%d_d%s_10q%d_f%d",m, dS, q*10, f*100)
       AllPlotDesigns[effect,group,seq] <- sprintf("m=%d, d=%s, q=%g, f=%d%%",m,dD,q,f*100)
       
       # Create folder for certain case if it doesn't exist
@@ -105,8 +109,9 @@ for (effect in 1:length(effectsizes)) {           # looping over q
       m=extraGroups[i]
       d=extraSeqDepth[i]
       dD=extraSeqDepthName[i]
+      dS=extraSeqSaveName[i]
       
-      AllSaveDesigns[effect,group+i,seq+i] <- sprintf("m%d_d%s_10q%d_f%d", m, dD, q*10, f*100)
+      AllSaveDesigns[effect,group+i,seq+i] <- sprintf("m%d_d%s_10q%d_f%d", m, dS, q*10, f*100)
       AllPlotDesigns[effect,group+i,seq+i] <- sprintf("m=%d, d=%s, q=%g, f=%d%%",m,dD,q,f*100)
       
       # Create folder for certain case if it doesn't exist
@@ -120,4 +125,4 @@ for (effect in 1:length(effectsizes)) {           # looping over q
     }}
 }
 
-rm(d,dD,effect, group, m, q, seq, remove_low_counts, DESeq2_for_strata)
+rm(d,dD, dS,effect, group, m, q, seq, remove_low_counts, DESeq2_for_strata)

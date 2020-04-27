@@ -28,6 +28,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
     for (seq in 1:length(sequencingDepth)) {      # looping over d
       d=sequencingDepth[seq]
       dD=sequencingDepthName[seq]
+      dS=sequencingSaveName[seq]
       cat(sprintf("================================== d=%s =====================================\n", dD))
       
       # Creating empty initial result-matrices
@@ -183,6 +184,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
     cat(sprintf("================================== m=%d =======================================\n", m))
     d=extraSeqDepth[i]
     dD=extraSeqDepthName[i]
+    dS=extraSeqSaveName[i]
     cat(sprintf("================================== d=%s =====================================\n", dD))
       
     # Creating empty initial result-matrices

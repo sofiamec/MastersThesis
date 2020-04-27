@@ -20,6 +20,7 @@ if (onTerra==F){
   groupSize<-c(3)#,5)#,10,30)#,30,50)                                            # m = Number of samples in each group (total nr samples = 2*m)
   sequencingDepth<-c(10000)#, 20000)#,100000)#, 5000000)#,10000,1000000,5000000,10000000)      # d = Desired sequencing depth per sample
   sequencingDepthName<-c("10 k")#, "20 k")#, "100 k")#, "500 k")# "10 k","500 k","1 M", "5 M", "10 M")         # dD = Displayed names for sequencing depths
+  sequencingSaveName<-c("10k")#, "20 k")#, "100 k")#, "500 k")# "10 k","500 k","1 M", "5 M", "10 M")         # dD = Displayed names for sequencing depths
 }
 
 # Real settings
@@ -46,6 +47,7 @@ if (extraDesigns==T){
   # The 3 following must have equal lengths!                # Combined they give more results for trade-off curves. Here with m*d = 3M, 3M and 5M respectively
   extraSeqDepth=c(200000,500000,250000)      
   extraSeqDepthName=c("200 k","500 k","250 k")
+  extraSeqSaveName=c("200k","500k","250k")
   extraGroups=c(15,6,20)
   extraL<-length(extraGroups)
 }
@@ -74,6 +76,7 @@ if(saveName == "Gut2"){
   if (onTerra==T){
     sequencingDepth<-c(10000,100000,500000,1000000,5000000)
     sequencingDepthName<-c("10 k","100 k","500 k","1 M", "5 M")
+    sequencingSaveName<-c("10k","100k","500k","1M", "5M")
   }
   
   rm(Gut2, Gut2Original, Gut2Intermediate)        # remove original and intermediate datasets
@@ -90,6 +93,7 @@ if(saveName == "Gut2"){
   if (onTerra==T){
     sequencingDepth<-c(10000,100000,500000,1000000,5000000,10000000)
     sequencingDepthName<-c("10 k","100 k","500 k","1 M", "5 M", "10 M")
+    sequencingSaveName<-c("10k","100k","500k","1M", "5M", "10M")
   }
   
   rm(Marine, MarineOriginal, MarineIntermediate)  # remove original and intermediate datasets
@@ -114,6 +118,7 @@ if(saveName == "Gut2"){
   if (onTerra==T){
     sequencingDepth<-c(10000,100000,500000,1000000,5000000,10000000) #c(10000,100000,500000,1000000,5000000,10000000)
     sequencingDepthName<-c("10 k","100 k","500 k","1 M", "5 M", "10 M") #c("10k","100k","500k","1M", "5M", "10M")
+    sequencingSaveName<-c("10k","100k","500k","1M", "5M", "10M")
   }
   
   rm(Resistance, ResistanceOriginal, ResistanceIntermediate)  # remove original and intermediate datasets
@@ -137,8 +142,9 @@ for (effect in 1:length(effectsizes)) {           # looping over q
     for (seq in 1:length(sequencingDepth)) {      # looping over d
       d=sequencingDepth[seq]
       dD=sequencingDepthName[seq]
+      dS=sequencingSaveName[seq]
       
-      AllSaveDesigns[effect,group,seq] <- sprintf("m%d_d%s_10q%d_f%d",m, dD, q*10, f*100)
+      AllSaveDesigns[effect,group,seq] <- sprintf("m%d_d%s_10q%d_f%d",m, dS, q*10, f*100)
       AllPlotDesigns[effect,group,seq] <- sprintf("m=%d, d=%s, q=%g, f=%d%%",m,dD,q,f*100)
       
       for (analysis in analyses){
@@ -161,8 +167,9 @@ for (effect in 1:length(effectsizes)) {           # looping over q
       m=extraGroups[i]
       d=extraSeqDepth[i]
       dD=extraSeqDepthName[i]
+      dS=extraSeqSaveName[i]
       
-      AllSaveDesigns[effect,group+i,seq+i] <- sprintf("m%d_d%s_10q%d_f%d", m, dD, q*10, f*100)
+      AllSaveDesigns[effect,group+i,seq+i] <- sprintf("m%d_d%s_10q%d_f%d", m, dS, q*10, f*100)
       AllPlotDesigns[effect,group+i,seq+i] <- sprintf("m=%d, d=%s, q=%g, f=%d%%",m,dD,q,f*100)
       
       # Create folder for certain case if it doesn't exist

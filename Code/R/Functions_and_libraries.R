@@ -485,10 +485,11 @@ plot_combined_meanROCs<-function(plotData, variable, parameterVector, parameterN
         subtitle=sprintf("Experimental designs with %s %s", Xname, parameterName)
       }
     } else if (all(parameterVector==sequencingDepth)){
-      dD=sequencingDepthName[i]
-      subtitle=sprintf("Experimental designs with %s %s", parameterName, dD)
-      path_save <-  sprintf("../../Result/%s_%s/meanROC_10q%d_%s_%s.pdf", saveName, analysis, 10*q, parameterSave, dD)
-      path_save2 <-  sprintf("../../Result/%s_%s/meanROC_10q%d_%s_%s_zoom.pdf", saveName, analysis, 10*q, parameterSave, dD)
+      #dD=sequencingDepthName[i]
+      dS=sequencingSaveName[i]
+      subtitle=sprintf("Experimental designs with %s %s", parameterName, dS)
+      path_save <-  sprintf("../../Result/%s_%s/meanROC_10q%d_%s_%s.pdf", saveName, analysis, 10*q, parameterSave, dS)
+      #path_save2 <-  sprintf("../../Result/%s_%s/meanROC_10q%d_%s_%s_zoom.pdf", saveName, analysis, 10*q, parameterSave, dS)
     }
     
     if (fillName=="Sequencing depth"){
