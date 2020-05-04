@@ -480,7 +480,7 @@ plot_combined_meanROCs<-function(plotData, variable, parameterVector, parameterN
       if (strata != 0){
         subtitle=sprintf("Experimental designs with %s %s for %s", Xname, parameterName, strataText)
         path_save <-  sprintf("../../Result/%s_%s/meanROC_10q%d_%s_%d_%s_strata%d.pdf", saveName, analysis, 10*q, parameterSave, X, strataName, strata)
-        path_save2 <-  sprintf("../../Result/%s_%s/meanROC_10q%d_%s_%d_%s_strata%d_zoom.pdf", saveName, analysis, 10*q, parameterSave, X, strataName, strata)
+        #path_save2 <-  sprintf("../../Result/%s_%s/meanROC_10q%d_%s_%d_%s_strata%d_zoom.pdf", saveName, analysis, 10*q, parameterSave, X, strataName, strata)
       } else {
         subtitle=sprintf("Experimental designs with %s %s", Xname, parameterName)
       }
