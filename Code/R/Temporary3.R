@@ -29,14 +29,15 @@ print(xtable(AUC3, digits = 3), include.rownames = F)
 #-----------------------------------------------------------------------------------------------------------------#
 
 ## FUNCTION to generate trade-off AUC tables for strata
-# input: total amount of reads (3000000 or 5000000), q-value (1.5 or 3)
+# input:  reads = total amount of reads (3000000 or 5000000)
+#         q = q-value (1.5 or 3)
 # output: table containing the trade-off designs and their AUC0.01 values for each stratum
 
 AUC_strata=function(reads,q){
   
   # Read AUC-tables  
-  AUCAbun <- read.csv(sprintf("../../Result/Marine_DESeq/AUC_Abundance_%d_10q%d.csv",reads,q), header = T)[,c("plotMD","AUC1","strata")]
-  AUCVar <- read.csv(sprintf("../../Result/Marine_DESeq/AUC_Variability_%d_10q%d.csv",reads,q), header = T)[,c("plotMD","AUC1","strata")]
+  AUCAbun <- read.csv(sprintf("../../Result/Marine_DESeq/AUC_Abundance_%d_10q%d.csv",reads,q*10), header = T)[,c("plotMD","AUC1","strata")]
+  AUCVar <- read.csv(sprintf("../../Result/Marine_DESeq/AUC_Variability_%d_10q%d.csv",reads,q*10), header = T)[,c("plotMD","AUC1","strata")]
   
   if(reads==3000000){
     AUCAbun <- AUCAbun[c(which(AUCAbun$plotMD=="m=3, d=1 M"), which(AUCAbun$plotMD=="m=6, d=500 k"), 
@@ -65,9 +66,9 @@ AUC_strata=function(reads,q){
 }
 
 # Generate tables:
-AUC3Mq15=AUC_strata(3000000,15)
-AUC5Mq15=AUC_strata(5000000,15)
-AUC3Mq30=AUC_strata(3000000,30)
-AUC5Mq30=AUC_strata(5000000,30)
+AUC3Mq15=AUC_strata(3000000,1.5)
+AUC5Mq15=AUC_strata(5000000,1.5)
+AUC3Mq30=AUC_strata(3000000,3)
+AUC5Mq30=AUC_strata(5000000,3)
 
 

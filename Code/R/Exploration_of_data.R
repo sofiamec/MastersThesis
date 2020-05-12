@@ -11,7 +11,7 @@ library(tidyverse)
 #library(plyr)
 library(viridis)
 library(DESeq2)
-library(pracma)
+#library(pracma)
 library("readxl")
 #======================================== Functions ======================================#
 
@@ -317,79 +317,12 @@ gene_histogram(ResistanceGGOriginal, bins=30, "Gene Abundance in Antibiotic Resi
 #==================================== Stratified Datasets ==================================#
 Gut2Strata<- DESeq2_for_strata(Gut2,3)
 MarineStrata<-DESeq2_for_strata(Marine,3)
+ResistanceStrata<-DESeq2_for_strata(Resistance,3)
 
 # Table containing a summary for each strata
 Gut2StrataSummary=strata_summary(Gut2Strata,3)
 MarineStrataSummary=strata_summary(MarineStrata,3)
-
-Gut2Strata5<- DESeq2_for_strata(Gut2,5)
-MarineStrata5<-DESeq2_for_strata(Marine,5)
-
-# Table containing a summary for each strata
-Gut2StrataSummary5=strata_summary(Gut2Strata5,5)
-MarineStrataSummary5=strata_summary(MarineStrata5,5)
-
-#=============================================================================================================================#
-#====================================== Example plots for the report ==================================================================#
-
-## Creating three cases for example ROC-plots
-#Bad
-TPR<-c(1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13,14,14,15,15,16,16,17,17,18,18,19,19,20,20,21,21,22,22,23,23,24,24,25,25,26,26,27,27,28,28,29,29,30,30,31,31,32,32,33,33,34,34,35,35,36,36,37,37,38,38,39,39,40,40,41,41,42,42,43,43,44,44,45,45)/45
-FPR<-c(0,1,1,2,2,3,3,4,4,5,5,6,6,7,7,8,8,9,9,10,10,11,11,12,12,13,13,14,14,15,15,16,16,17,17,18,18,19,19,20,20,21,21,22,22,23,23,24,24,25,25,26,26,27,27,28,28,29,29,30,30,31,31,32,32,33,33,34,34,35,35,36,36,37,37,38,38,39,39,40,40,41,41,42,42,43,43,44,44,45)/45
-Class<-rep("Bad/Random",90)
-ROCData1<-data.frame(TPR,FPR,Class)  
-
-#Perfect
-TPR<-c(1:30, rep(30,30))/30
-FPR<-c(rep(0,30),1:30)/30
-Class<-rep("Perfect",60)
-ROCData3<-data.frame(TPR,FPR,Class)
-
-#Good
-TPR<-c(1,2,3,4,5,5,6,7,8,8,9,10,11,12,12,13,14,15,15,16,17,17,18,18,19,20,21,21,22,23,24,25,25,26,26,27,28,28,28,29,29,29,30,30,30,30,30,30,30,31,31,31,31,31,31,31,31,31,31,31,31,31,32,32,32,32,32,32,32,32,rep(33,30))/33
-FPR<-c(0,0,0,0,0,1,1,1,1,2,2,2,2,2,3,3,3,3,4,4,4,5,5,6,6,6,6,7,7,7,7,7,8,8,9,9,9,10,11,11,12,13,13,14,15,16,17,18,19,19,20,21,22,23,24,25,26,27,28,29,30,31,31,32,33,34,35,36,37,38,38:67)/67
-Class<-rep("Good",100)
-ROCData2<-data.frame(TPR,FPR,Class)
-
-## Creating Example AUC-plots based on the "Good" ROC-curve
-ROCData2_1<-data.frame(TPR[1:6],FPR[1:6],rep("1",6))
-ROCData2_5<-data.frame(TPR[1:15],FPR[1:15],rep("2",15))
-colnames(ROCData2_1)<-colnames(ROCData2)
-colnames(ROCData2_5)<-colnames(ROCData2)
-
-ROCData2_all<-rbind(ROCData2,ROCData2_5,ROCData2_1)
-
-AUCtot<-trapz(FPR,TPR)
-AUC1<-trapz(FPR[1:6],TPR[1:6])
-AUC5<-trapz(FPR[1:16],TPR[1:16])
-
-AUCplot <- ggplot(data=ROCData2_all, aes(x=FPR, y=TPR, group=Class, fill=Class)) +  geom_line(aes(color=Class)) + 
-  #geom_point(aes(color=Class),size=1) + 
-  geom_ribbon(aes(ymin=0, ymax=TPR), alpha=0.2) + 
-  annotate("text", x = 0.5, y = 0.5, label = "total AUC = 0.900") + annotate("text", x = 0.51, y = 0.4, label = expression("AUC"[0.05]*" = 0.010")) + annotate("text", x = 0.51, y = 0.3, label = expression("AUC"[0.01]*" = 0.002")) + 
-  theme(legend.position = "none") +
-  theme(plot.title = element_text(hjust = 0.5)) +  #theme_minimal() + 
-  scale_color_viridis(begin = 0, end = 0, discrete=TRUE) + scale_fill_viridis(begin = 0, end = 1, discrete=TRUE) +
-  labs(#title="ROC-curves for various classifiers", 
-    x = "False Positive Rate", y = "True Positive Rate") + 
-  ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2))
-print(AUCplot)
-ggsave(filename = "../../Result/Example_AUCplot.pdf", plot = AUCplot, height = 5, width = 6)
-
-
-## Creating Example ROC-plots based on the "Good" "Bad" and "Perfect" ROC-curve
-ROCData<-rbind(ROCData1,ROCData2,ROCData3)
-
-ROCplot <- ggplot(data=ROCData, aes(x=FPR, y=TPR, group=Class)) +  geom_line(aes(color=Class)) + 
-  #geom_point(aes(color=Class),size=1) + #geom_ribbon(aes(ymin=0, ymax=TPR), alpha=0.2) +
-  theme(plot.title = element_text(hjust = 0.5)) +  #theme_minimal() + 
-  scale_color_viridis(begin = 0, end = 0.85, discrete=TRUE) + scale_fill_viridis(begin = 0, end = 0.85, discrete=TRUE) +
-  labs(#title="ROC-curves for various classifiers", 
-    colour="Classifier Performance", x = "False Positive Rate", y = "True Positive Rate") +
-  ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2)) + theme(legend.position = c(0.82, 0.18))
-print(ROCplot)
-
-ggsave(filename = "../../Result/Example_ROCplot.pdf", plot = ROCplot, height = 5, width = 6)
+ResistanceStrataSummary=strata_summary(ResistanceStrata,3)
 
 #=============================================================================================================================#
 #====================================== Example tables for Skype ==================================================================#
