@@ -72,7 +72,7 @@ if(saveName == "Gut2"){
   Data = Gut2
   
   boldvalue2="0"
-  relations<-c(3000000)
+  relations<-c(3000000, 5000000)
   if (onTerra==T){
     sequencingDepth<-c(10000,100000,500000,1000000,5000000)
     sequencingDepthName<-c("10 k","100 k","500 k","1 M", "5 M")
