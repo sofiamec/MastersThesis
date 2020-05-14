@@ -177,8 +177,8 @@ for (saveName in Datasets) {
   
   # Generate tables:
   AUC3Mq15=AUC_strata(3000000,1.5)
-  AUC5Mq15=AUC_strata(5000000,1.5)
   AUC3Mq30=AUC_strata(3000000,3)
+  AUC5Mq15=AUC_strata(5000000,1.5)
   AUC5Mq30=AUC_strata(5000000,3)
   
   
