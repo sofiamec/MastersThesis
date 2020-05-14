@@ -144,31 +144,32 @@ for (saveName in Datasets) {
   #---------------------------------------------- Trade-off tables -------------------------------------------------#
   #-----------------------------------------------------------------------------------------------------------------#
   
-  # Read AUC-tables
+  # Read AUC-tables 
   AUCq15 <- read.csv(sprintf("../../Result/%s_DESeq/AUC_10q15.csv", saveName), header = T)[,c("plotMD","AUC1")]
   AUCq30 <- read.csv(sprintf("../../Result/%s_DESeq/AUC_10q30.csv", saveName), header = T)[,c("plotMD","AUC1")]
   
-  # Create table for trade-off for 6 M reads in total
-  AUC6 <- cbind(AUCq15[c(which(AUCq15$plotMD=="m=3, d=1 M"), which(AUCq15$plotMD=="m=6, d=500 k"), 
-                         which(AUCq15$plotMD=="m=15, d=200 k"), which(AUCq15$plotMD=="m=30, d=100 k")), ],
-                AUCq30[c(which(AUCq30$plotMD=="m=3, d=1 M"), which(AUCq30$plotMD=="m=6, d=500 k"), 
-                         which(AUCq30$plotMD=="m=15, d=200 k"), which(AUCq30$plotMD=="m=30, d=100 k")),"AUC1"])
-  colnames(AUC6) <-c("Experimental Desgin", "AUC0.01 (q=1.5)", "AUC0.01 (q=3)")
+  # Create table for trade-off for q=1.5
+  AUC15 <- cbind(AUCq15[c(which(AUCq15$plotMD=="m=3, d=1 M"), which(AUCq15$plotMD=="m=6, d=500 k"), 
+                          which(AUCq15$plotMD=="m=15, d=200 k"), which(AUCq15$plotMD=="m=30, d=100 k")), ],
+                 AUCq15[c(which(AUCq15$plotMD=="m=5, d=1 M"), which(AUCq15$plotMD=="m=10, d=500 k"), 
+                          which(AUCq15$plotMD=="m=20, d=250 k"), which(AUCq15$plotMD=="m=50, d=100 k")), ])
+  colnames(AUC15) <-c("Experimental Desgin (3M)", "AUC0.01", "Experimental Design (5M)","AUC0.01")
   
-  # Create table for trade-off for 10 M reads in total
-  AUC10 <- cbind(AUCq15[c(which(AUCq15$plotMD=="m=5, d=1 M"), which(AUCq15$plotMD=="m=10, d=500 k"), 
-                          which(AUCq15$plotMD=="m=20, d=250 k"), which(AUCq15$plotMD=="m=50, d=100 k")), ],
-                 AUCq30[c(which(AUCq30$plotMD=="m=5, d=1 M"), which(AUCq30$plotMD=="m=10, d=500 k"), 
-                          which(AUCq30$plotMD=="m=20, d=250 k"), which(AUCq30$plotMD=="m=50, d=100 k")),"AUC1" ])
-  colnames(AUC10) <-c("Experimental Desgin", "AUC0.01 (q=1.5)", "AUC0.01 (q=3)")
+  # Create table for trade-off for q=3
+  AUC3 <- cbind(AUCq30[c(which(AUCq30$plotMD=="m=3, d=1 M"), which(AUCq30$plotMD=="m=6, d=500 k"), 
+                         which(AUCq30$plotMD=="m=15, d=200 k"), which(AUCq30$plotMD=="m=30, d=100 k")), ],
+                AUCq30[c(which(AUCq30$plotMD=="m=5, d=1 M"), which(AUCq30$plotMD=="m=10, d=500 k"), 
+                         which(AUCq30$plotMD=="m=20, d=250 k"), which(AUCq30$plotMD=="m=50, d=100 k")), ])
+  colnames(AUC3) <-c("Experimental Desgin (3M)", "AUC0.01", "Experimental Design (5M)","AUC0.01")
   
   # print LaTex-code for the tables
-  cat(sprintf("======== AUC tradeoff-table for %s 6 M reads in total =========\n", saveName))
-  print(xtable(AUC6, digits = 2), include.rownames = F)
+  cat(sprintf("======== AUC tradeoff-table for %s q = 1.5 =========\n", saveName))
+  print(xtable(AUC15, digits = 2), include.rownames = F)
   cat("\n")
-  cat(sprintf("======== AUC tradeoff-table for %s 10 M reads in total =========\n", saveName))
-  print(xtable(AUC10, digits = 2), include.rownames = F)
+  cat(sprintf("======== AUC tradeoff-table for %s q = 3 =========\n", saveName))
+  print(xtable(AUC3, digits = 2), include.rownames = F)
   cat("\n")
+  
   
   #-----------------------------------------------------------------------------------------------------------------#
   #----------------------------------- Trade-off tables for strata -------------------------------------------------#
