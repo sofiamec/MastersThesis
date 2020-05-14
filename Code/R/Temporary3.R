@@ -2,27 +2,27 @@
 
 library(xtable)
 
-# Read AUC-tables q=1.5 
+# Read AUC-tables
 AUCq15 <- read.csv("../../Result/Marine_DESeq/AUC_10q15.csv", header = T)[,c("plotMD","AUC1")]
 AUCq30 <- read.csv("../../Result/Marine_DESeq/AUC_10q30.csv", header = T)[,c("plotMD","AUC1")]
 
-# Create table for trade-off for q=1.5
-AUC15 <- cbind(AUCq15[c(which(AUCq15$plotMD=="m=3, d=1 M"), which(AUCq15$plotMD=="m=6, d=500 k"), 
-                   which(AUCq15$plotMD=="m=15, d=200 k"), which(AUCq15$plotMD=="m=30, d=100 k")), ],
-               AUCq15[c(which(AUCq15$plotMD=="m=5, d=1 M"), which(AUCq15$plotMD=="m=10, d=500 k"), 
-                        which(AUCq15$plotMD=="m=20, d=250 k"), which(AUCq15$plotMD=="m=50, d=100 k")), ])
-colnames(AUC15) <-c("Experimental Desgin (3M)", "AUC0.01", "Experimental Design (5M)","AUC0.01")
+# Create table for trade-off for 6 M reads in total
+AUC6 <- cbind(AUCq15[c(which(AUCq15$plotMD=="m=3, d=1 M"), which(AUCq15$plotMD=="m=6, d=500 k"), 
+                        which(AUCq15$plotMD=="m=15, d=200 k"), which(AUCq15$plotMD=="m=30, d=100 k")), ],
+              AUCq30[c(which(AUCq30$plotMD=="m=3, d=1 M"), which(AUCq30$plotMD=="m=6, d=500 k"), 
+                       which(AUCq30$plotMD=="m=15, d=200 k"), which(AUCq30$plotMD=="m=30, d=100 k")),"AUC1"])
+colnames(AUC6) <-c("Experimental Desgin", "AUC0.01 (q=1.5)", "AUC0.01 (q=3)")
 
-# Create table for trade-off for q=3
-AUC3 <- cbind(AUCq30[c(which(AUCq30$plotMD=="m=3, d=1 M"), which(AUCq30$plotMD=="m=6, d=500 k"), 
-                       which(AUCq30$plotMD=="m=15, d=200 k"), which(AUCq30$plotMD=="m=30, d=100 k")), ],
-               AUCq30[c(which(AUCq30$plotMD=="m=5, d=1 M"), which(AUCq30$plotMD=="m=10, d=500 k"), 
-                        which(AUCq30$plotMD=="m=20, d=250 k"), which(AUCq30$plotMD=="m=50, d=100 k")), ])
-colnames(AUC3) <-c("Experimental Desgin (3M)", "AUC0.01", "Experimental Design (5M)","AUC0.01")
+# Create table for trade-off for 10 M reads in total
+AUC10 <- cbind(AUCq15[c(which(AUCq15$plotMD=="m=5, d=1 M"), which(AUCq15$plotMD=="m=10, d=500 k"), 
+                        which(AUCq15$plotMD=="m=20, d=250 k"), which(AUCq15$plotMD=="m=50, d=100 k")), ],
+              AUCq30[c(which(AUCq30$plotMD=="m=5, d=1 M"), which(AUCq30$plotMD=="m=10, d=500 k"), 
+                       which(AUCq30$plotMD=="m=20, d=250 k"), which(AUCq30$plotMD=="m=50, d=100 k")),"AUC1" ])
+colnames(AUC10) <-c("Experimental Desgin", "AUC0.01 (q=1.5)", "AUC0.01 (q=3)")
 
 # print LaTex-code for the tables
-print(xtable(AUC15, digits = 3), include.rownames = F)
-print(xtable(AUC3, digits = 3), include.rownames = F)
+print(xtable(AUC6, digits = 2), include.rownames = F)
+print(xtable(AUC10, digits = 2), include.rownames = F)
 
 #-----------------------------------------------------------------------------------------------------------------#
 #----------------------------------- Trade-off tables for strata -------------------------------------------------#
@@ -67,8 +67,8 @@ AUC_strata=function(reads,q){
 
 # Generate tables:
 AUC3Mq15=AUC_strata(3000000,1.5)
-AUC5Mq15=AUC_strata(5000000,1.5)
 AUC3Mq30=AUC_strata(3000000,3)
+AUC5Mq15=AUC_strata(5000000,1.5)
 AUC5Mq30=AUC_strata(5000000,3)
 
 
