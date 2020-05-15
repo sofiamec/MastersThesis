@@ -12,7 +12,7 @@ library(tidyverse)
 library(viridis)
 library(DESeq2)
 #library(pracma)
-library("readxl")
+library(readxl)
 #======================================== Functions ======================================#
 
 ## Remove low counts 
@@ -327,37 +327,37 @@ ResistanceStrataSummary=strata_summary(ResistanceStrata,3)
 #=============================================================================================================================#
 #====================================== Example tables for Skype ==================================================================#
 
-AUCAb15<-read.csv("../../Result/Gut2/AUC_Abundance_3000000_10q15.csv")[,-1]
-AUCV15<-read.csv("../../Result/Gut2/AUC_Variability_3000000_10q15.csv")[,-1]
-
-AUCAb30<-read.csv("../../Result/Gut2/AUC_Abundance_3000000_10q30.csv")[,-1]
-AUCV30<-read.csv("../../Result/Gut2/AUC_Variability_3000000_10q30.csv")[,-1]
-
-print(xtable(AUCAb15[AUCAb15$strata==1,c(2,5)],caption = "High abundance"), include.rownames=FALSE)
-print(xtable(AUCAb15[AUCAb15$strata==2,c(2,5)],caption = "Medium abundance"), include.rownames=FALSE)
-print(xtable(AUCAb15[AUCAb15$strata==3,c(2,5)],caption = "Low abundance"), include.rownames=FALSE)
-
-print(xtable(AUCAb15[AUCV15$strata==1,c(2,5)],caption = "Low variability"), include.rownames=FALSE)
-print(xtable(AUCAb15[AUCV15$strata==2,c(2,5)],caption = "Medium variability"), include.rownames=FALSE)
-print(xtable(AUCAb15[AUCV15$strata==3,c(2,5)],caption = "High variability"), include.rownames=FALSE)
-
-print(xtable(AUCAb15[AUCAb30$strata==1,c(2,5)],caption = "High abundance"), include.rownames=FALSE)
-print(xtable(AUCAb15[AUCAb30$strata==2,c(2,5)],caption = "Medium abundance"), include.rownames=FALSE)
-print(xtable(AUCAb15[AUCAb30$strata==3,c(2,5)],caption = "Low abundance"), include.rownames=FALSE)
-
-print(xtable(AUCAb15[AUCV30$strata==1,c(2,5)],caption = "Low variability"), include.rownames=FALSE)
-print(xtable(AUCAb15[AUCV30$strata==2,c(2,5)],caption = "Medium variability"), include.rownames=FALSE)
-print(xtable(AUCAb15[AUCV30$strata==3,c(2,5)],caption = "High variability"), include.rownames=FALSE)
-
-
-Genes15<-read.csv("../../Result/Marine/GenesFDR_10q15.csv")[,-1]
-Genes30<-read.csv("../../Result/Marine/GenesFDR_10q30.csv")[,-1]
-
-print(xtable(Genes15),include.rownames = F)
-print(xtable(Genes30),include.rownames = F)
-
-Genes15<-read.csv("../../Result/Marine_oGLM/GenesFDR_10q15.csv")[,-1]
-Genes30<-read.csv("../../Result/Marine_oGLM/GenesFDR_10q30.csv")[,-1]
-
-print(xtable(Genes15),include.rownames = F)
-print(xtable(Genes30),include.rownames = F)
+# AUCAb15<-read.csv("../../Result/Gut2/AUC_Abundance_3000000_10q15.csv")[,-1]
+# AUCV15<-read.csv("../../Result/Gut2/AUC_Variability_3000000_10q15.csv")[,-1]
+# 
+# AUCAb30<-read.csv("../../Result/Gut2/AUC_Abundance_3000000_10q30.csv")[,-1]
+# AUCV30<-read.csv("../../Result/Gut2/AUC_Variability_3000000_10q30.csv")[,-1]
+# 
+# print(xtable(AUCAb15[AUCAb15$strata==1,c(2,5)],caption = "High abundance"), include.rownames=FALSE)
+# print(xtable(AUCAb15[AUCAb15$strata==2,c(2,5)],caption = "Medium abundance"), include.rownames=FALSE)
+# print(xtable(AUCAb15[AUCAb15$strata==3,c(2,5)],caption = "Low abundance"), include.rownames=FALSE)
+# 
+# print(xtable(AUCAb15[AUCV15$strata==1,c(2,5)],caption = "Low variability"), include.rownames=FALSE)
+# print(xtable(AUCAb15[AUCV15$strata==2,c(2,5)],caption = "Medium variability"), include.rownames=FALSE)
+# print(xtable(AUCAb15[AUCV15$strata==3,c(2,5)],caption = "High variability"), include.rownames=FALSE)
+# 
+# print(xtable(AUCAb15[AUCAb30$strata==1,c(2,5)],caption = "High abundance"), include.rownames=FALSE)
+# print(xtable(AUCAb15[AUCAb30$strata==2,c(2,5)],caption = "Medium abundance"), include.rownames=FALSE)
+# print(xtable(AUCAb15[AUCAb30$strata==3,c(2,5)],caption = "Low abundance"), include.rownames=FALSE)
+# 
+# print(xtable(AUCAb15[AUCV30$strata==1,c(2,5)],caption = "Low variability"), include.rownames=FALSE)
+# print(xtable(AUCAb15[AUCV30$strata==2,c(2,5)],caption = "Medium variability"), include.rownames=FALSE)
+# print(xtable(AUCAb15[AUCV30$strata==3,c(2,5)],caption = "High variability"), include.rownames=FALSE)
+# 
+# 
+# Genes15<-read.csv("../../Result/Marine/GenesFDR_10q15.csv")[,-1]
+# Genes30<-read.csv("../../Result/Marine/GenesFDR_10q30.csv")[,-1]
+# 
+# print(xtable(Genes15),include.rownames = F)
+# print(xtable(Genes30),include.rownames = F)
+# 
+# Genes15<-read.csv("../../Result/Marine_oGLM/GenesFDR_10q15.csv")[,-1]
+# Genes30<-read.csv("../../Result/Marine_oGLM/GenesFDR_10q30.csv")[,-1]
+# 
+# print(xtable(Genes15),include.rownames = F)
+# print(xtable(Genes30),include.rownames = F)

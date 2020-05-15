@@ -413,29 +413,12 @@ plot_heatmaps<-function(variable,variableName, variableValue, fillName, variable
     
   } else if (variableSave=="FDR"){
     titleName <- bquote("True FDR for"~.(plotName)~"with effect"~.(q))
-    #elementColour = variable
-    #elementColour[elementColour <= 0.05] = 0
-    
-    #cutOffs <-rev(c(0.05, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1))
-    #for (i in 1:length(cutOffs)){
-    #  elementText[variable <= cutOffs[i]] = sprintf("\u2264 %g", cutOffs[i])
-    #  elementColour[]
-    #}
-    #fillScale = scale_fill_manual(values = alpha(c("\u2264 1" = "#9E0142", "\u2264 0.9" = "#8F1257", "\u2264 0.8" = "#81236C", "\u2264 0.7" = "#733582", "\u2264 0.6" = "#654697", "\u2264 0.5" = "#5955A4", "\u2264 0.4" = "#4F62AB", "\u2264 0.3" = "#456EB1", "\u2264 0.2" = "#3B7BB7", "\u2264 0.1" = "#3288BD", "\u2264 0.05" = "#00BC77"), .6), na.value="grey50")
-    
-    #fillCondition = elementColour
-    #if (min(elementColour, na.rm = T)>0){
-    #  fillScale=scale_fill_viridis_c(begin = 0.6, end = 0, alpha = 0.5, na.value = "grey90", values) 
-      
-    #} else {
-    #   fillScale=scale_fill_viridis_c(begin = 0.8, end = 0, alpha = 0.5, na.value = "grey90")  
-    #}
     fillCondition = variable
     fillScale = scale_fill_viridis_c(begin = 0, end=0.8, alpha = 0.5, rescaler = function(variable, to = c(0,1), from = NULL){
         ifelse(variable>0.06, 
                scales::rescale(variable,
                                to = c(0.9, 0),
-                               from = c(min(variable, na.rm = TRUE), 1)),1)}) 
+                               from = c(min(variable, na.rm = TRUE), max(variable,na.rm = T))),1)}) 
   }
 
   heatmap <-ggplot(HeatmapData, aes(x=m, y=d, fill=fillCondition)) +
@@ -473,9 +456,9 @@ plot_combined_meanROCs<-function(plotData, variable, parameterVector, parameterN
     if (all(parameterVector==relations)){
       plotWidth = 7.5
       if (X==3000000){
-        Xname = "3 M"
+        Xname = "6 M"         # For consistancy with report, in order to get the total amount of reads in both groups (2*d*m)
       } else if (X==5000000){
-        Xname = "5 M"
+        Xname = "10 M"
       }
       if (strata != 0){
         subtitle=sprintf("Experimental designs with %s %s for %s", Xname, parameterName, strataText)

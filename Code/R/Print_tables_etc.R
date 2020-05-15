@@ -50,8 +50,8 @@ AUC_strata=function(reads,q){
                           "Low Variability", "Medium Variability", "High Variability")
   
   # print LaTex-code for the table
-  cat(sprintf("======== AUC table for %s strata, tradeoff = %d q = %g  =========\n", saveName, reads, q/10))
-  print(xtable(AUCTable, digits = 2), include.rownames = F)
+  cat(sprintf("======== AUC table for %s strata, tradeoff = %d q = %g  =========\n", saveName, reads, q))
+  print(xtable(AUCTable, digits = 3), include.rownames = F)
   cat("\n")
   
   return(AUCTable)
@@ -60,14 +60,14 @@ AUC_strata=function(reads,q){
 ## FUNCTION for plotting AUC per cost for different designs
 AUCPerCost_barplot <- function(Data, tradeoff){
   if (saveName=="Marine"){
-    title = bquote("AUC per dollar based on"~AUC[0.01]~"for Marine")
-    yMax = 0.00020
+    title = bquote("Performance / "*10^3 *" $ for Marine")
+    yMax = 0.20
   } else if (saveName=="Gut2"){
-    title = bquote("AUC per dollar based on"~AUC[0.01]~"for Human Gut II")
-    yMax = 0.00025
+    title = bquote("Performance / "*10^3 * " $ for Human Gut II")
+    yMax = 0.25
   }
   AUC_cost_plot <- ggplot() + geom_bar(mapping = aes(x=Data$plotMD, y=Data$costAUC, group = Data$q, fill = Data$q), stat = "identity", position=position_dodge()) +
-    labs( title = title, fill = "Effect",  x = "Experimental design", y = "AUC per dollar") + 
+    labs( title = title, fill = "Effect",  x = "Experimental design", y = bquote("Performance / "*10^3*" $")) + 
     scale_fill_viridis_d(begin = 0.8, end = 0.6) + ylim(0, yMax)
   
   ggsave(filename = sprintf("../../Result/%s_DESeq/AUCPerCostplot_%s.pdf", saveName, tradeoff), plot = AUC_cost_plot, height = 5, width = 6)
@@ -107,14 +107,14 @@ ROCData2_all<-rbind(ROCData2_tot,ROCData2_1)
 
 # Computing AUC values
 AUCtot<-trapz(FPR,TPR)
-AUC1<-trapz(FPR[1:6],TPR[1:6])
+AUC1<-trapz(FPR[1:6],TPR[1:6])/0.01
 
 # Print AUC plot
 AUCplot <- ggplot(data=ROCData2_all, aes(x=FPR, y=TPR, group=Class, fill=Class)) +  geom_line(color='black') + 
   geom_ribbon(aes(ymin=0, ymax=TPR), alpha=0.5) + 
   scale_fill_viridis(begin = 0.35, end = 1, discrete=TRUE) +
   labs(x = "False Positive Rate", y = "True Positive Rate", fill = "AUC values", tag = bquote(atop("AUC"[tot]*"   = 0.900", " AUC"[0.01]*" =  0.002"))) +
-  theme(legend.text=element_text(color="white"), plot.tag = element_text(size=10), plot.tag.position = c(0.987, 0.487), plot.margin=margin(t = 0.2, r = 1.5, b = 0.2, l = 0.2, unit = "cm")) + guides(color = FALSE) +
+  theme(legend.text=element_text(color="white"), plot.tag = element_text(size=10), plot.tag.position = c(0.987, 0.513), plot.margin=margin(t = 0.2, r = 1.5, b = 0.2, l = 0.2, unit = "cm")) + guides(color = FALSE) +
   ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2))
 print(AUCplot)
 ggsave(filename = "../../Result/Example_AUCplot.pdf", plot = AUCplot, height = 5, width = 7)
@@ -135,7 +135,7 @@ ggsave(filename = "../../Result/Example_ROCplot.pdf", plot = ROCplot, height = 5
 #------------------------------------------- Dataset selection ---------------------------------------------------#
 #-----------------------------------------------------------------------------------------------------------------#
 
-Datasets = c("Gut2", "Marine")
+Datasets = c("Marine", "Gut2")
 
 for (saveName in Datasets) {
 
@@ -191,7 +191,7 @@ for (saveName in Datasets) {
   Data30<-read.csv(sprintf("../../Result/%s_DESeq/AUC_10q30.csv", saveName))[,-1]
   Data<-rbind(data.frame(Data15, MD=Data15$m*Data15$d, q=1.5), data.frame(Data30, MD=Data15$m*Data15$d, q=3))
   cost=(2*Data$m*100 + Data$d/10000*2*Data$m)
-  Data<-data.frame(Data, cost, AUCcost = (cost/Data$AUC1), costAUC = (Data$AUC1/cost))
+  Data<-data.frame(Data, cost, AUCcost = (cost/Data$AUC1/1000), costAUC = (1000*Data$AUC1/cost))
   Data$plotMD <- factor(Data$plotMD, levels = c("m=3, d=10 k", "m=3, d=100 k", "m=3, d=500 k", "m=3, d=1 M", "m=3, d=5 M", "m=3, d=10 M",
                                                 "m=5, d=10 k", "m=5, d=100 k", "m=5, d=500 k", "m=5, d=1 M", "m=5, d=5 M", "m=5, d=10 M",
                                                 "m=6, d=500 k", 
@@ -218,10 +218,10 @@ for (saveName in Datasets) {
   Data3M$cost<-as.character(Data3M$cost)
   Data3M <- Data3M[order(Data3M$plotMD),]
   table3M<-data.frame(Data3M[Data3M$q==1.5,c(9,12,1,14)],Data3M[Data3M$q==3,c(1,14)])
-  colnames(table3M)<-c("Experimental design", "Sequencing cost", "AUC$_{0.01}$, q=1.5", "AUC per US dollar, q=1.5", "AUC$_{0.01}$, q=3", "AUC per US dollar, q=3")
+  colnames(table3M)<-c("Experimental design", "Sequencing cost", "AUC$_{0.01}$, q=1.5", "Performance per 1000 US dollar, q=1.5", "AUC$_{0.01}$, q=3", "Performance per 1000 US dollar, q=3")
   
   cat(sprintf("======== Cost table for %s tradeoff 3M =========\n", saveName))
-  print(xtable(table3M, digits = -2), include.rownames = F)
+  print(xtable(table3M, digits = 2), include.rownames = F)
   cat("\n")
   
   # Print tables for trade-off 5M
@@ -232,7 +232,7 @@ for (saveName in Datasets) {
   colnames(table5M)<-colnames(table3M)
   
   cat(sprintf("======== Cost table for %s tradeoff 5M =========\n", saveName))
-  print(xtable(table5M, digits = -2), include.rownames = F)
+  print(xtable(table5M, digits = 2), include.rownames = F)
   cat("\n")
 
 }
