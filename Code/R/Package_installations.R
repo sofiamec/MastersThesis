@@ -1,22 +1,22 @@
-# Packages required to run Run_entire_analysis.R
+# Packages required to run Exploration_of_data.R and Master.R
 
-# for plotting
+# For plotting
 install.packages("ggplot2")
 
-# for reshaping the dataset to works for ggplot
+# For reshaping the dataset to works for ggplot
 install.packages("reshape2")
 
-# for visualisation in nice colours
+# For visualisation in nice colours
 install.packages("RColorBrewer")
 install.packages("viridis")
 
-# for printing tables compatible with LaTeX
+# For printing tables compatible with LaTeX
 install.packages("xtable")
 
-# enables the use of strings (for plot titles etc.)
+# Enables the use of strings (for plot titles etc.)
 install.packages("tidyverse")
 
-# for analysing the datasets and identify DAGs
+# For analysing the datasets and identify DAGs
 if (!requireNamespace("BiocManager", quietly = TRUE))
   install.packages("BiocManager")
 BiocManager::install("DESeq2")
@@ -24,8 +24,8 @@ BiocManager::install("DESeq2")
 # For computing AUCs with trapeziodal rule
 install.packages("pracma")
 
-# for loading excel-files
+# For loading excel-files
 install.packages("readxl")
 
-# Chack! Cannot remember
+# For handling ROC and AUC matrixes
 install.packages("plyr")
