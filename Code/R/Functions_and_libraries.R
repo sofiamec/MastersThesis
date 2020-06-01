@@ -1,12 +1,11 @@
 #===================================================================================================================================
 # FUNCTION AND LIBRARIES SECTION
 #===================================================================================================================================
-# The listed libraries and functions in this script are required for running Run_entire_analysis
+# The listed libraries and functions in this script are required for running Analysis.R
 
 #===========================================================================================================================================
 #=========================================== Global Libraries ==============================================================================
 ## Loading Libraries:
-
 library(plyr)
 library(viridis)
 library(DESeq2)
@@ -28,9 +27,10 @@ round2 <- function(x, n) {
 #=========================================== Setup Functions ===============================================================================
 
 ## FUNCTION to Remove low counts 
-# For a given dataset, this function removes genes with low counts (>75 % or an average count <3).
+# For a given dataset, this function removes genes with low counts (>75 % or an average count <3). 
+#     If the given dataset is Resistance, genes with an average count <10 are removed.
 # input: Data = the data to remove genes from
-# output: 
+# output: Filtered data
 remove_low_counts=function(Data){
   
   if (saveName!="Resistance"){
@@ -44,7 +44,6 @@ remove_low_counts=function(Data){
     FilteredData=Data[r==0,]
     
   } else if (saveName=="Resistance") {
-    # ?ndra eventuellt senare!
     a=rowMeans(Data)<10
     FilteredData=Data[a==F,]
   }
@@ -62,7 +61,7 @@ remove_low_counts=function(Data){
 #                  as well as the corresponding abundance- and variability-strata for each gene
 DESeq2_for_strata=function(Data,numberOfStrata){
   
-  DesignMatrix <- data.frame(group=factor(rep(1,(ncol(Data)))))                        # all samples belong to the same group 
+  DesignMatrix <- data.frame(group=factor(rep(1,(ncol(Data)))))                 # all samples belong to the same group 
   CountsDataset<-DESeqDataSetFromMatrix(countData=Data,DesignMatrix, design=~1) # combine design matrix and data into a dataset
   ResultDESeq<-suppressMessages(DESeq(CountsDataset))                           # Perform analysis (suppress messages from it) 
   Res=results(ResultDESeq,independentFiltering=FALSE,cooksCutoff=FALSE)         # extract results
@@ -99,12 +98,12 @@ DESeq2_for_strata=function(Data,numberOfStrata){
 #=========================================== Resample Functions ============================================================================
 
 # FUNCTION for Resampling
-# This function resamples a new datasets with m*2 samples and d reads in each sample (depth) 
+# This function resamples a new datasets with m*2 samples and d reads in each sample
 # input arguments:
 # Data = the data to sample from
 # m = number of samples in the new datasets
 # d = sequencing depth for each sample in the new datasets
-# output:  the resampled data in a large dataframe containing m*2 groups
+# output:  the resampled data in a large dataframe containing m*2 samples 
 resample = function(Data, m, d){
   sampleVector=sample(ncol(Data), 2*m)                      # vector w. the columnnumber of the sampled samples for both datasets
   DataNew=data.frame(row.names(Data), stringsAsFactors = F) # dataframe to put the resampled data in
@@ -233,7 +232,7 @@ DESeq2_analysis=function(Data){
   return(ResultSorted)
 }
 
-## FUNCTION for OGLM-analysis
+## FUNCTION for OGLM and F-test analysis
 # This function uses OGLM and ANOVA to identfy DAGs in a dataset containing two groups
 # Input:  Data = the data to analyse (DownsampledData)
 # Output: ResOGLM = a dataframe containing the p-value and the adjusted p-value for each gene, ordered with increading p-values
@@ -264,36 +263,6 @@ OGLM_analysis<-function(Data){
   return(ResOGLM)
 }
 
-
-## FUNCTION for t-test-analysis
-# This function uses t-test to identfy DAGs in a dataset containing two groups
-# Input:  Data = the data to analyse (DownsampledData)
-# Output: ResTTest = a dataframe containing the p-value and the adjusted p-value for each gene, ordered with increading p-values
-
-ttest_analysis=function(Data){
-  GeneNames<-rownames(Data)                                          
-  Results <- data.frame(Gene=numeric(0), pValue=numeric(0))     # Dataframe to put results in
-  
-  for (i in 1:nrow(Data)) {                                     # loop over all genes, make one t-test for each gene
-    
-    # If both groups have variance=0 the p-value is set to NA
-    if(var(as.numeric(sqrt(Data[i,1:m])))==0 & var(as.numeric(sqrt(Data[i,(m+1):(2*m)])))==0){
-      Results=rbind(Results, data.frame(Gene=GeneNames[i],pValue=NA))
-    }
-    # If not, calculate p-values with t-test
-    else {
-      Res=t.test(sqrt(Data[i,1:m]),sqrt(Data[i,(m+1):(2*m)]))
-      Results=rbind(Results, data.frame(Gene=GeneNames[i],pValue=Res$p.value)) 
-    }
-  }
-  
-  Results<-data.frame(row.names = Results[,1], Results[,2], 
-                      p.adjust(Results[,2], method = "BH"))       # calculate adjusted p-values
-  colnames(Results)<-c("p-value", "adjusted p-value")             # structure results
-  ResTTest<-Results[order(Results[,1]),]                          # order results by increasing p-values
-  
-  return(ResTTest)
-}
 
 ## FUNCTION for computing ROC-curves and AUC-values
 # For the results from analysing DAGs in a dataset and the corresponding known DAGs,
