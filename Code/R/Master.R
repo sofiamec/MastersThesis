@@ -295,11 +295,7 @@ for (effect in 1:length(effectsizes)) {           # looping over q
   
   #===================================================================================================================================
   ### Summarising results:
-  
-  # Read tables:
-  # medianAUCfinal <- read.csv(file=sprintf("../../Result/%s_DESeq/AUC_10q%d.csv", saveName,10*q))[,-1]
-  # medianGenesFDR <- read.csv(file=sprintf("../../Result/%s_DESeq/GenesFDR_10q%d.csv", saveName,10*q))[,-1]
-  
+
   colnames(medianAUCfinal)<-c("AUC1", "AUC5", "AUCtot", "TPR1", "TPR5", "AUC1 Non-NA", "AUC5 Non-NA", "AUCtot Non-NA", "TPR1 Non-NA", "TPR5 Non-NA", "d", "m" ,"md","plotMD")
   colnames(meanROCfinal)<-c("FPR", "N", "meanTPR", "min", "max", "d", "m" ,"md","plotMD")
   colnames(medianGenesFDR)<-c("Median TP count",  "Median FP count",  "Median true FDR", "TP Non-NA", "FP Non-NA", "FDR Non-NA","plotMD")
@@ -324,6 +320,18 @@ for (effect in 1:length(effectsizes)) {           # looping over q
   # Save tables:
   write.csv(medianAUCfinal, file=sprintf("../../Result/%s_%s/AUC_10q%d.csv", saveName, analysis, 10*q))
   write.csv(medianGenesFDR, file=sprintf("../../Result/%s_%s/GenesFDR_10q%d.csv", saveName,analysis, 10*q))
+  
+  
+  # # Read tables:
+  # saveName="Gut2"
+  # plotName="Human Gut II"
+  # analysis="DESeq"
+  # q=3
+  # extraDesigns=T
+  # extraL=3
+  # savePlot=T
+  # medianAUCfinal <- read.csv(file=sprintf("../../Result/%s_DESeq/AUC_10q%d.csv", saveName,10*q))[,-1]
+  # medianGenesFDR <- read.csv(file=sprintf("../../Result/%s_DESeq/GenesFDR_10q%d.csv", saveName,10*q))[,-1]
   
   if (extraDesigns==T){
     HeatmapData<-data.frame(head(medianAUCfinal,-extraL), head(medianGenesFDR[1:3],-extraL)) 

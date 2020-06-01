@@ -60,14 +60,14 @@ AUC_strata=function(reads,q){
 ## FUNCTION for plotting AUC per cost for different designs
 AUCPerCost_barplot <- function(Data, tradeoff){
   if (saveName=="Marine"){
-    title = bquote("Performance / "*10^3 *" $ for Marine")
+    title = bquote("Performance / $"*1000 * " for Marine") # tidigare " $ for Marine"
     yMax = 0.20
   } else if (saveName=="Gut2"){
-    title = bquote("Performance / "*10^3 * " $ for Human Gut II")
+    title = bquote("Performance / $"*1000 * " for Human Gut II")
     yMax = 0.25
   }
   AUC_cost_plot <- ggplot() + geom_bar(mapping = aes(x=Data$plotMD, y=Data$costAUC, group = Data$q, fill = Data$q), stat = "identity", position=position_dodge()) +
-    labs( title = title, fill = "Effect",  x = "Experimental design", y = bquote("Performance / "*10^3*" $")) + 
+    labs( title = title, fill = "Effect",  x = "Experimental design", y = bquote("Performance / $"*1000)) + # tidigare / "*10^3*" $"
     scale_fill_viridis_d(begin = 0.8, end = 0.6) + ylim(0, yMax)
   
   ggsave(filename = sprintf("../../Result/%s_DESeq/AUCPerCostplot_%s.pdf", saveName, tradeoff), plot = AUC_cost_plot, height = 5, width = 6)
@@ -125,11 +125,11 @@ ROCData<-rbind(ROCData1,ROCData2,ROCData3)
 ROCplot <- ggplot(data=ROCData, aes(x=FPR, y=TPR, group=Class)) +  geom_line(aes(color=Class)) + 
   theme(plot.title = element_text(hjust = 0.5)) +
   scale_color_viridis(begin = 0, end = 0.85, discrete=TRUE) + scale_fill_viridis(begin = 0, end = 0.85, discrete=TRUE) +
-  labs(colour="Classifier Performance", x = "False Positive Rate", y = "True Positive Rate") +
-  ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2)) + theme(legend.position = c(0.82, 0.18))
+  labs(colour=sprintf("Classifier Performance"), x = "False Positive Rate", y = "True Positive Rate") +
+  ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2)) #+ theme(legend.position = c(0.82, 0.18))
 print(ROCplot)
 
-ggsave(filename = "../../Result/Example_ROCplot.pdf", plot = ROCplot, height = 5, width = 6)
+ggsave(filename = "../../Result/Example_ROCplot.pdf", plot = ROCplot, height = 5, width = 7)
 
 #-----------------------------------------------------------------------------------------------------------------#
 #------------------------------------------- Dataset selection ---------------------------------------------------#

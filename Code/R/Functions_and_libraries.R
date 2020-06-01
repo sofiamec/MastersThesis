@@ -406,13 +406,19 @@ plot_heatmaps<-function(variable,variableName, variableValue, fillName, variable
     fillCondition=variable 
     fillScale=scale_fill_viridis_c(begin = 0, end = 1, alpha = 0.5)  
     if (variableName=="AUC"){
-    titleName <- bquote(AUC[.(variableValue)]~"for"~.(plotName)~"with effect"~.(q))
+    titleName <- bquote(AUC[.(variableValue)]*" for "*.(plotName)*" with effect "*.(q))
     } else if (variableName=="TPR"){
-    titleName <- bquote(TPR[.(variableValue)]~"for"~.(plotName)~"with effect"~.(q))
+    titleName <- bquote(TPR[.(variableValue)]*" for "*.(plotName)*" with effect "*.(q))
     }
     
   } else if (variableSave=="FDR"){
-    titleName <- bquote("True FDR for"~.(plotName)~"with effect"~.(q))
+    if (analysis=="DESeq"){
+      
+      titleName <- bquote("True FDR for"~.(plotName)~"with effect "*.(q)*" for DESeq2")
+    } else if (analysis=="OGLM"){
+      
+      titleName <- bquote("True FDR for"~.(plotName)~"with effect "*.(q)*" for OGLM")
+    }
     fillCondition = variable
     fillScale = scale_fill_viridis_c(begin = 0, end=0.8, alpha = 0.5, rescaler = function(variable, to = c(0,1), from = NULL){
         ifelse(variable>0.06, 
