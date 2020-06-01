@@ -5,6 +5,61 @@
 # Setup script for assigning correct names for a given design as well as preprocessing of datasets
 # This script has to be run in combination with the "Run_entire_analysis"-script
 
+####################################################################################################################################
+#===================================================================================================================================
+#                      Only change these parameters for different results! 
+#                            (the rest of the code should adjust)
+#===================================================================================================================================
+# Test-settings (Remove this in final script!)
+if (onTerra==F){
+  repeats = 2                                               # sets the number of runs for each case (experimental design and q)
+  limitNA = 0                                                   # the lowest amount of observaitons needed to produce a results other than NA
+  savePlot = T                                              # use T when plots should be saved (for many repeats)
+  #loadData = F                                              # use T if it is a rerun of existing results
+  effectsizes=c(1.5)#,3)                                             # q = Fold-change for downsampling
+  groupSize<-c(3)#,5)#,10,30)#,30,50)                                            # m = Number of samples in each group (total nr samples = 2*m)
+  sequencingDepth<-c(10000)#, 20000)#,100000)#, 5000000)#,10000,1000000,5000000,10000000)      # d = Desired sequencing depth per sample
+  sequencingDepthName<-c("10 k")#, "20 k")#, "100 k")#, "500 k")# "10 k","500 k","1 M", "5 M", "10 M")         # dD = Displayed names for sequencing depths
+  sequencingSaveName<-c("10k")#, "20 k")#, "100 k")#, "500 k")# "10 k","500 k","1 M", "5 M", "10 M")         # dD = Displayed names for sequencing depths
+}
+
+# Real settings
+if (onTerra==T){
+  repeats = 100                                              # sets the number of runs for each case (experimental design and q)
+  limitNA = 10                                                   # the lowest amount of observaitons needed to produce a results other than NA
+  savePlot = T                                              # use T when plots should be saved (for many repeats)
+  loadData = F                                              # use T if it is a rerun of existing results
+  
+  # flytta eventuellt allt detta till setup-skriptet
+  if (saveName =="Resistance"){
+    effectsizes=c(5,10)                                     # q = Fold-change for downsampling
+  } else {
+    effectsizes=c(1.5,3)                                   # q = Fold-change for downsampling
+  }
+  
+  groupSize<-c(3,5,10,30,50)                                # m = Number of samples in each group (total nr samples = 2*m)
+  # sequencing depths are set later depending on dataset    # d and dD = Desired sequencing depths and how it should be displayed
+}
+
+# Extra-settings
+extraL=0                                                    # unless extraDesigns are added, the length of added designs is 0                               
+if (extraDesigns==T){
+  # The 3 following must have equal lengths!                # Combined they give more results for trade-off curves. Here with m*d = 3M, 3M and 5M respectively
+  extraSeqDepth=c(200000,500000,250000)      
+  extraSeqDepthName=c("200 k","500 k","250 k")
+  extraSeqSaveName=c("200k","500k","250k")
+  extraGroups=c(15,6,20)
+  extraL<-length(extraGroups)
+}
+# Strata-settings
+if (runStrata==T){
+  numberOfStrata = 3                                        # sets the number of groups for dividing gene abundance and variability
+  strataClass<-factor(c("low","medium","high"), levels=c("low","medium","high")) #strataClass<-c("low","medium", "high")                      # should correspond to the number of stratas
+}
+#===================================================================================================================================
+#===================================================================================================================================
+####################################################################################################################################
+
 ## Loading original data
 #  filtering out samples not meeting expDesign requirements
 #  filtering out genes with too low counts
@@ -17,7 +72,7 @@ if(saveName == "Gut2"){
   Data = Gut2
   
   boldvalue2="0"
-  relations<-c(3000000)
+  relations<-c(3000000, 5000000)
   if (onTerra==T){
     sequencingDepth<-c(10000,100000,500000,1000000,5000000)
     sequencingDepthName<-c("10 k","100 k","500 k","1 M", "5 M")
@@ -63,7 +118,7 @@ if(saveName == "Gut2"){
   if (onTerra==T){
     sequencingDepth<-c(10000,100000,500000,1000000,5000000,10000000) #c(10000,100000,500000,1000000,5000000,10000000)
     sequencingDepthName<-c("10 k","100 k","500 k","1 M", "5 M", "10 M") #c("10k","100k","500k","1M", "5M", "10M")
-    sequencingSaveName<-c("10k","100k","500k","1M", "5M", "10M") #c("10k","100k","500k","1M", "5M", "10M")
+    sequencingSaveName<-c("10k","100k","500k","1M", "5M", "10M")
   }
   
   rm(Resistance, ResistanceOriginal, ResistanceIntermediate)  # remove original and intermediate datasets
@@ -92,14 +147,17 @@ for (effect in 1:length(effectsizes)) {           # looping over q
       AllSaveDesigns[effect,group,seq] <- sprintf("m%d_d%s_10q%d_f%d",m, dS, q*10, f*100)
       AllPlotDesigns[effect,group,seq] <- sprintf("m=%d, d=%s, q=%g, f=%d%%",m,dD,q,f*100)
       
-      # Create folder for certain case if it doesn't exist
-      if (!dir.exists(sprintf("../../Intermediate/%s/%s", saveName, AllSaveDesigns[effect,group,seq]))){
-        dir.create(file.path("../../Intermediate", sprintf("%s", saveName), sprintf("%s", AllSaveDesigns[effect,group,seq])), recursive = T)
+      for (analysis in analyses){
+        # Create folder for certain case if it doesn't exist
+        if (!dir.exists(sprintf("../../Intermediate/%s/%s", saveName, AllSaveDesigns[effect,group,seq]))){
+          dir.create(file.path("../../Intermediate", sprintf("%s", saveName), sprintf("%s", AllSaveDesigns[effect,group,seq])), recursive = T)
+        }
+        
+        if (!dir.exists(sprintf("../../Result/%s_%s/IntermediatePlots", saveName, analysis))){
+          dir.create(file.path("../../Result", sprintf("%s_%s", saveName, analysis), "/IntermediatePlots"), recursive = T)
+        }
       }
       
-      if (!dir.exists(sprintf("../../Result/%s_%s/IntermediatePlots", saveName, analysis))){
-        dir.create(file.path("../../Result", sprintf("%s_%s", saveName, analysis), "/IntermediatePlots"), recursive = T)
-      }
     }
   }
   
@@ -125,4 +183,4 @@ for (effect in 1:length(effectsizes)) {           # looping over q
     }}
 }
 
-rm(d,dD, dS,effect, group, m, q, seq, remove_low_counts, DESeq2_for_strata)
+rm(d,dD,effect, group, m, q, seq)
