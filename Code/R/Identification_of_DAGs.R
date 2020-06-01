@@ -1,18 +1,6 @@
 #===================================================================================================================================
 # ANALYSIS SECTION
 #===================================================================================================================================
-# statistical analysis of DAGs in the resampled datasets
-
-# Required "inputs"
-
-# seed = selectedSeed 
-# saveName = "Gut2"
-# plotName = "Human Gut II"
-# saveExpDesign = 
-# plotExpDesign =
-# run =
-
-#===================================================================================================================================
 
 if (analysis=="DESeq"){
   
@@ -28,13 +16,7 @@ if (analysis=="DESeq"){
   ResDAGsAnalysis<-ResOGLM
   rm(ResOGLM)
   
-} else if (analysis=="t-test") {
-  
-  ######## t-test ##########
-  ResTTest=ttest_analysis(Data = DownSampledData)
-  ResDAGsAnalysis<-ResTTest
-  rm(ResTTest)
-}
+} 
 
 cat(sprintf("Significant genes for %s:    %d     (exp. design: %s)\n", saveName, sum(ResDAGsAnalysis[,2]<0.05, na.rm = T),plotExpDesign))
 
