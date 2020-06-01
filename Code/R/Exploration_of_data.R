@@ -1,6 +1,5 @@
 
-## Exploration of data
-
+## Exploration of original metagenomic data
 
 #======================================== Libraries ======================================#
 library(ggplot2)
@@ -8,10 +7,8 @@ library(reshape2)
 library(RColorBrewer)
 library(xtable)
 library(tidyverse)
-#library(plyr)
 library(viridis)
 library(DESeq2)
-#library(pracma)
 library(readxl)
 #======================================== Functions ======================================#
 
@@ -19,7 +16,7 @@ library(readxl)
 # For a given dataset, this function removes genes with low counts (>75 % or an average count <3).
 # input: Data = the data to remove genes from
 #        filterAll = if T, both kriteria are checked (75%, <3). If F, only kriteria <3 is checked
-# output: 
+# output:  filtered dataset
 remove_low_counts=function(Data, filterAll){
   a=rowSums(Data)<3
   
@@ -323,41 +320,3 @@ ResistanceStrata<-DESeq2_for_strata(Resistance,3)
 Gut2StrataSummary=strata_summary(Gut2Strata,3)
 MarineStrataSummary=strata_summary(MarineStrata,3)
 ResistanceStrataSummary=strata_summary(ResistanceStrata,3)
-
-#=============================================================================================================================#
-#====================================== Example tables for Skype ==================================================================#
-
-# AUCAb15<-read.csv("../../Result/Gut2/AUC_Abundance_3000000_10q15.csv")[,-1]
-# AUCV15<-read.csv("../../Result/Gut2/AUC_Variability_3000000_10q15.csv")[,-1]
-# 
-# AUCAb30<-read.csv("../../Result/Gut2/AUC_Abundance_3000000_10q30.csv")[,-1]
-# AUCV30<-read.csv("../../Result/Gut2/AUC_Variability_3000000_10q30.csv")[,-1]
-# 
-# print(xtable(AUCAb15[AUCAb15$strata==1,c(2,5)],caption = "High abundance"), include.rownames=FALSE)
-# print(xtable(AUCAb15[AUCAb15$strata==2,c(2,5)],caption = "Medium abundance"), include.rownames=FALSE)
-# print(xtable(AUCAb15[AUCAb15$strata==3,c(2,5)],caption = "Low abundance"), include.rownames=FALSE)
-# 
-# print(xtable(AUCAb15[AUCV15$strata==1,c(2,5)],caption = "Low variability"), include.rownames=FALSE)
-# print(xtable(AUCAb15[AUCV15$strata==2,c(2,5)],caption = "Medium variability"), include.rownames=FALSE)
-# print(xtable(AUCAb15[AUCV15$strata==3,c(2,5)],caption = "High variability"), include.rownames=FALSE)
-# 
-# print(xtable(AUCAb15[AUCAb30$strata==1,c(2,5)],caption = "High abundance"), include.rownames=FALSE)
-# print(xtable(AUCAb15[AUCAb30$strata==2,c(2,5)],caption = "Medium abundance"), include.rownames=FALSE)
-# print(xtable(AUCAb15[AUCAb30$strata==3,c(2,5)],caption = "Low abundance"), include.rownames=FALSE)
-# 
-# print(xtable(AUCAb15[AUCV30$strata==1,c(2,5)],caption = "Low variability"), include.rownames=FALSE)
-# print(xtable(AUCAb15[AUCV30$strata==2,c(2,5)],caption = "Medium variability"), include.rownames=FALSE)
-# print(xtable(AUCAb15[AUCV30$strata==3,c(2,5)],caption = "High variability"), include.rownames=FALSE)
-# 
-# 
-# Genes15<-read.csv("../../Result/Marine/GenesFDR_10q15.csv")[,-1]
-# Genes30<-read.csv("../../Result/Marine/GenesFDR_10q30.csv")[,-1]
-# 
-# print(xtable(Genes15),include.rownames = F)
-# print(xtable(Genes30),include.rownames = F)
-# 
-# Genes15<-read.csv("../../Result/Marine_oGLM/GenesFDR_10q15.csv")[,-1]
-# Genes30<-read.csv("../../Result/Marine_oGLM/GenesFDR_10q30.csv")[,-1]
-# 
-# print(xtable(Genes15),include.rownames = F)
-# print(xtable(Genes30),include.rownames = F)
