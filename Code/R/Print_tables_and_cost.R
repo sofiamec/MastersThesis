@@ -107,13 +107,13 @@ ROCData2_all<-rbind(ROCData2_tot,ROCData2_1)
 
 # Computing AUC values
 AUCtot<-trapz(FPR,TPR)
-AUC1<-trapz(FPR[1:6],TPR[1:6])/0.01
+AUC1<-trapz(FPR[1:6],TPR[1:6])/FPR[6]
 
 # Print AUC plot
 AUCplot <- ggplot(data=ROCData2_all, aes(x=FPR, y=TPR, group=Class, fill=Class)) +  geom_line(color='black') + 
   geom_ribbon(aes(ymin=0, ymax=TPR), alpha=0.5) + 
   scale_fill_viridis(begin = 0.35, end = 1, discrete=TRUE) +
-  labs(x = "False Positive Rate", y = "True Positive Rate", fill = "AUC values", tag = bquote(atop("AUC"[tot]*"   = 0.900", " AUC"[0.01]*" =  0.002"))) +
+  labs(x = "False Positive Rate", y = "True Positive Rate", fill = "AUC values", tag = bquote(atop("AUC"[tot]*"   = 0.90", " AUC"[0.01]*" =  0.15"))) +
   theme(legend.text=element_text(color="white"), plot.tag = element_text(size=10), plot.tag.position = c(0.987, 0.513), plot.margin=margin(t = 0.2, r = 1.5, b = 0.2, l = 0.2, unit = "cm")) + guides(color = FALSE) +
   ylim(0, 1) + scale_x_continuous(limits = c(0,1), breaks = seq(0,1,0.2))
 print(AUCplot)
